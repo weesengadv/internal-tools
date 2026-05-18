@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Gcode Editor</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar" aria-label="Shortcut menu">
+        <div class="brand">
+          <span class="brand-mark">G</span>
+          <span>
+            <strong data-i18n="appName">Gcode Editor</strong>
+            <small data-i18n="tagline">Print recovery tools</small>
+          </span>
+        </div>
+
+        <nav class="shortcut-menu" aria-label="Editor tools">
+          <button class="shortcut active" type="button" data-tool="resume-print" title="Resume Print">
+            <span class="shortcut-icon">R</span>
+            <span data-i18n="resumePrint">Resume Print</span>
+          </button>
+          <button class="shortcut" type="button" disabled title="Coming later">
+            <span class="shortcut-icon">+</span>
+            <span data-i18n="addTool">Add Tool</span>
+          </button>
+        </nav>
+      </aside>
+
+      <main class="workspace">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow" data-i18n="feature">Feature</p>
+            <h1 data-i18n="appName">Gcode Editor</h1>
+          </div>
+          <div class="topbar-actions">
+            <label class="language-control">
+              <span data-i18n="language">Language</span>
+              <select id="languageSelect">
+                <option value="en">EN</option>
+                <option value="cn">CN</option>
+              </select>
+            </label>
+            <div class="status-pill" id="fileStatus">No file loaded</div>
+          </div>
+        </header>
+
+        <section class="tool-panel" id="resumePrintPanel">
+          <div class="panel-header">
+            <div>
+              <p class="eyebrow" data-i18n="function">Function</p>
+              <h2 data-i18n="resumePrint">Resume Print</h2>
+            </div>
+            <div class="actions">
+              <label class="file-input-wrap" for="fileInput">
+                <span class="file-input-label" data-i18n="openGcode">Open G-code</span>
+                <input id="fileInput" class="file-input-control" type="file" accept=".gcode,.gco,.gc,.txt">
+              </label>
+              <button class="icon-button" id="sampleButton" type="button" title="Load sample" data-i18n="sample">Sample</button>
+            </div>
+          </div>
+
+          <div class="settings-grid">
+            <label>
+              <span data-i18n="startZ">Start Z</span>
+              <input id="startZ" type="text" inputmode="decimal" value="0.40" placeholder="0.40">
+            </label>
+            <label>
+              <span data-i18n="nextZ">Next Z</span>
+              <input id="nextZ" type="text" inputmode="decimal" value="0.60" placeholder="0.60">
+            </label>
+            <div class="cut-summary">
+              <span data-i18n="resumeCutTitle">Resume cut</span>
+              <strong data-i18n="resumeCutDescription">Remove start layer and keep next layer marker</strong>
+            </div>
+          </div>
+
+          <div class="editor-grid">
+            <div class="editor-column">
+              <div class="editor-title">
+                <strong data-i18n="inputGcode">Input G-code</strong>
+                <span id="inputStats">0 lines</span>
+              </div>
+              <textarea id="inputGcode" spellcheck="false" data-i18n-placeholder="pasteGcode" placeholder="Paste G-code here..."></textarea>
+            </div>
+
+            <div class="editor-column">
+              <div class="editor-title">
+                <strong data-i18n="editedGcode">Edited G-code</strong>
+                <span id="outputStats">0 lines</span>
+              </div>
+              <textarea id="outputGcode" spellcheck="false" readonly data-i18n-placeholder="outputPlaceholder" placeholder="Processed output appears here..."></textarea>
+            </div>
+          </div>
+
+          <div class="command-row">
+            <button class="primary-button" id="processButton" type="button" data-i18n="runResumePrint">Run Resume Print</button>
+            <button class="secondary-button" id="copyButton" type="button" data-i18n="copyOutput">Copy Output</button>
+            <button class="secondary-button" id="downloadButton" type="button" data-i18n="downloadGcode">Download .gcode</button>
+          </div>
+
+          <progress class="load-progress" id="loadProgress" value="0" max="100" hidden></progress>
+          <output class="result-log" id="resultLog" aria-live="polite" data-i18n="ready">Ready.</output>
+        </section>
+      </main>
+    </div>
+
+    <script src="app.js"></script>
+  </body>
+</html>
