@@ -4,6 +4,7 @@ const languageSelect = document.getElementById("languageSelect");
 const sampleButton = document.getElementById("sampleButton");
 const startZInput = document.getElementById("startZ");
 const nextZInput = document.getElementById("nextZ");
+const previewToggle = document.getElementById("previewToggle");
 const inputGcode = document.getElementById("inputGcode");
 const outputGcode = document.getElementById("outputGcode");
 const inputStats = document.getElementById("inputStats");
@@ -24,6 +25,7 @@ let sourceLayers = [];
 let sourceLineCount = 0;
 let sourceIndexDirty = true;
 let editedLineCount = 0;
+let showGcodePreview = localStorage.getItem("gcodeEditorShowPreview") === "true";
 
 const previewLimit = 1500000;
 const messages = {
@@ -49,6 +51,7 @@ const messages = {
     runResumePrint: "Run Resume Print",
     sample: "Sample",
     sampleFile: "Sample G-code",
+    showPreview: "Show G-code preview",
     startZ: "Start Z",
     tagline: "Print recovery tools",
     copied: "Edited G-code copied.",
@@ -76,6 +79,8 @@ const messages = {
     outputRequiredCopy: "Run Resume Print before copying.",
     outputRequiredDownload: "Run Resume Print before downloading.",
     previewHidden: "; --- {label} preview only: {size} hidden in the middle ---",
+    previewOffInput: "Preview is off for speed. Full input G-code is loaded and ready for processing.",
+    previewOffOutput: "Preview is off for speed. Full edited G-code is ready for copy/download.",
     previewNote: "; --- Full file is still used for processing and download ---",
     renderingPreview: "Rendering {fileName} preview...",
     sampleLoaded: "Sample loaded.",
@@ -104,6 +109,7 @@ const messages = {
     runResumePrint: "执行续打",
     sample: "范例",
     sampleFile: "范例 G-code",
+    showPreview: "\u663e\u793a G-code \u9884\u89c8",
     startZ: "起始 Z",
     tagline: "打印恢复工具",
     copied: "已复制编辑后的 G-code。",
@@ -131,6 +137,8 @@ const messages = {
     outputRequiredCopy: "请先执行续打再复制。",
     outputRequiredDownload: "请先执行续打再下载。",
     previewHidden: "; --- {label} 仅显示预览：中间隐藏 {size} ---",
+    previewOffInput: "\u4e3a\u4e86\u63d0\u5347\u901f\u5ea6\uff0c\u9884\u89c8\u5df2\u5173\u95ed\u3002\u5b8c\u6574\u8f93\u5165 G-code \u5df2\u8f7d\u5165\uff0c\u53ef\u4ee5\u5904\u7406\u3002",
+    previewOffOutput: "\u4e3a\u4e86\u63d0\u5347\u901f\u5ea6\uff0c\u9884\u89c8\u5df2\u5173\u95ed\u3002\u5b8c\u6574\u7f16\u8f91\u540e G-code \u5df2\u51c6\u5907\u597d\uff0c\u53ef\u590d\u5236\u6216\u4e0b\u8f7d\u3002",
     previewNote: "; --- 处理和下载仍然会使用完整文件 ---",
     renderingPreview: "正在渲染 {fileName} 预览...",
     sampleLoaded: "范例已载入。",
@@ -171,6 +179,7 @@ function applyLanguage() {
   document.documentElement.lang = activeLanguage === "cn" ? "zh-CN" : "en";
   document.title = t("appName");
   languageSelect.value = activeLanguage;
+  previewToggle.checked = showGcodePreview;
 
   document.querySelectorAll("[data-i18n]").forEach((element) => {
     element.textContent = t(element.dataset.i18n);
@@ -290,6 +299,13 @@ function buildPreview(text, label) {
 }
 
 function renderInputGcode() {
+  if (!showGcodePreview && sourceGcode) {
+    inputGcode.value = t("previewOffInput");
+    inputGcode.readOnly = true;
+    inputStats.textContent = lineLabel(sourceLineCount || countLines(sourceGcode));
+    return;
+  }
+
   const preview = buildPreview(sourceGcode, t("inputGcode"));
   inputGcode.value = preview.text;
   inputGcode.readOnly = preview.isPreview;
@@ -297,6 +313,12 @@ function renderInputGcode() {
 }
 
 function renderOutputGcode() {
+  if (!showGcodePreview && editedGcode) {
+    outputGcode.value = t("previewOffOutput");
+    outputStats.textContent = lineLabel(editedLineCount || countLines(editedGcode));
+    return;
+  }
+
   const preview = buildPreview(editedGcode, t("editedGcode"));
   outputGcode.value = preview.text;
   outputStats.textContent = lineLabel(editedLineCount || countLines(editedGcode), preview.isPreview);
@@ -690,6 +712,16 @@ languageSelect.addEventListener("change", () => {
     renderOutputGcode();
   } else {
     outputStats.textContent = lineLabel(0);
+  }
+});
+
+previewToggle.addEventListener("change", () => {
+  showGcodePreview = previewToggle.checked;
+  localStorage.setItem("gcodeEditorShowPreview", String(showGcodePreview));
+  renderInputGcode();
+
+  if (editedGcode) {
+    renderOutputGcode();
   }
 });
 

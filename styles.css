@@ -242,6 +242,32 @@ h2 {
   font-size: 13px;
 }
 
+.preview-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 42px;
+  padding: 8px 11px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #f9fbfc;
+  cursor: pointer;
+}
+
+.preview-toggle input {
+  width: 18px;
+  height: 18px;
+  min-height: 0;
+  accent-color: var(--accent);
+}
+
+.preview-toggle span {
+  margin: 0;
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 800;
+}
+
 label span {
   display: block;
   margin-bottom: 6px;
