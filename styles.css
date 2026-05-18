@@ -217,6 +217,10 @@ h2 {
   margin-bottom: 16px;
 }
 
+.tool-settings[hidden] {
+  display: none;
+}
+
 .cut-summary {
   min-height: 42px;
   padding: 8px 11px;

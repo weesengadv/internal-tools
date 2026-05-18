@@ -1,10 +1,17 @@
 const fileInput = document.getElementById("fileInput");
 const fileStatus = document.getElementById("fileStatus");
 const languageSelect = document.getElementById("languageSelect");
+const toolTitle = document.getElementById("toolTitle");
+const shortcutButtons = document.querySelectorAll(".shortcut[data-tool]");
+const resumeSettings = document.getElementById("resumeSettings");
+const simp3dSettings = document.getElementById("simp3dSettings");
 const sampleButton = document.getElementById("sampleButton");
 const startZInput = document.getElementById("startZ");
 const nextZInput = document.getElementById("nextZ");
+const simp3dLayersInput = document.getElementById("simp3dLayers");
+const simp3dHeightInput = document.getElementById("simp3dHeight");
 const previewToggle = document.getElementById("previewToggle");
+const simp3dPreviewToggle = document.getElementById("simp3dPreviewToggle");
 const inputGcode = document.getElementById("inputGcode");
 const outputGcode = document.getElementById("outputGcode");
 const inputStats = document.getElementById("inputStats");
@@ -20,6 +27,8 @@ let sourceBaseName = "edited";
 let sourceGcode = "";
 let editedGcode = "";
 let lastProcessedNextZ = "";
+let lastSimp3dTargetZ = "";
+let activeTool = localStorage.getItem("gcodeEditorActiveTool") || "resume-print";
 let activeLanguage = localStorage.getItem("gcodeEditorLanguage") || "en";
 let sourceLayers = [];
 let sourceLineCount = 0;
@@ -52,6 +61,17 @@ const messages = {
     sample: "Sample",
     sampleFile: "Sample G-code",
     showPreview: "Show G-code preview",
+    simp3dCutDescription: "Keep 3 startup lines after PRINT_START, then resume at calculated Z",
+    simp3dCutTitle: "SIMP3D cut",
+    simp3dHeightInvalid: "Layer height must be a number greater than 0.",
+    simp3dLayerInvalid: "Layer count must be a number greater than 0.",
+    simp3dMissingPrintStart: "Could not find PRINT_START at the start of a line.",
+    simp3dMissingTarget: "Could not find calculated target ;Z:{targetZ}.",
+    simp3dResumeDone: "Kept 3 startup lines after PRINT_START, removed code before ;Z:{targetZ}. {count} line(s) removed.",
+    simp3dResumePrint: "SIMP3D Resume Print",
+    runSimp3dResumePrint: "Run SIMP3D Resume Print",
+    layerCount: "Layer count",
+    layerHeight: "Layer height",
     startZ: "Start Z",
     tagline: "Print recovery tools",
     copied: "Edited G-code copied.",
@@ -110,6 +130,17 @@ const messages = {
     sample: "范例",
     sampleFile: "范例 G-code",
     showPreview: "\u663e\u793a G-code \u9884\u89c8",
+    simp3dCutDescription: "\u4fdd\u7559 PRINT_START \u540e\u7684 3 \u884c\u542f\u52a8\u4ee3\u7801\uff0c\u7136\u540e\u5728\u8ba1\u7b97\u7684 Z \u7eed\u6253",
+    simp3dCutTitle: "SIMP3D \u7eed\u6253\u88c1\u5207",
+    simp3dHeightInvalid: "\u5c42\u9ad8\u5fc5\u987b\u662f\u5927\u4e8e 0 \u7684\u6570\u5b57\u3002",
+    simp3dLayerInvalid: "\u5c42\u6570\u5fc5\u987b\u662f\u5927\u4e8e 0 \u7684\u6570\u5b57\u3002",
+    simp3dMissingPrintStart: "\u627e\u4e0d\u5230\u884c\u9996\u7684 PRINT_START\u3002",
+    simp3dMissingTarget: "\u627e\u4e0d\u5230\u8ba1\u7b97\u51fa\u7684\u76ee\u6807 ;Z:{targetZ}\u3002",
+    simp3dResumeDone: "\u5df2\u4fdd\u7559 PRINT_START \u540e\u7684 3 \u884c\u542f\u52a8\u4ee3\u7801\uff0c\u5e76\u5220\u9664\u5230 ;Z:{targetZ} \u524d\u7684\u4ee3\u7801\uff0c\u5171\u5220\u9664 {count} \u884c\u3002",
+    simp3dResumePrint: "SIMP3D \u7eed\u6253",
+    runSimp3dResumePrint: "\u6267\u884c SIMP3D \u7eed\u6253",
+    layerCount: "\u5c42\u6570",
+    layerHeight: "\u5c42\u9ad8",
     startZ: "起始 Z",
     tagline: "打印恢复工具",
     copied: "已复制编辑后的 G-code。",
@@ -151,6 +182,10 @@ if (!messages[activeLanguage]) {
   activeLanguage = "en";
 }
 
+if (!["resume-print", "simp3d-resume"].includes(activeTool)) {
+  activeTool = "resume-print";
+}
+
 const sampleGcode = [
   ";FLAVOR:Marlin",
   ";TIME:220",
@@ -170,6 +205,21 @@ const sampleGcode = [
   "M106 S255"
 ].join("\n");
 
+const simp3dSampleGcode = [
+  ";HEADER:SIMP3D",
+  "PRINT_START",
+  "G28",
+  "M104 S210",
+  "M109 S210",
+  "G1 X10 Y10 E0.10",
+  ";Z:0.20",
+  "G1 X12 Y10 E0.20",
+  ";Z:0.40",
+  "G1 X15 Y10 E0.30",
+  ";Z:0.60",
+  "G1 X18 Y12 E0.40"
+].join("\n");
+
 function t(key, replacements = {}) {
   const template = messages[activeLanguage][key] || messages.en[key] || key;
   return template.replace(/\{(\w+)\}/g, (_, name) => replacements[name] ?? "");
@@ -180,6 +230,7 @@ function applyLanguage() {
   document.title = t("appName");
   languageSelect.value = activeLanguage;
   previewToggle.checked = showGcodePreview;
+  simp3dPreviewToggle.checked = showGcodePreview;
 
   document.querySelectorAll("[data-i18n]").forEach((element) => {
     element.textContent = t(element.dataset.i18n);
@@ -196,6 +247,29 @@ function applyLanguage() {
   } else if (sourceBaseName === "manual") {
     fileStatus.textContent = t("manualInput");
   }
+
+  applyToolUi();
+}
+
+function applyToolUi() {
+  const isSimp3d = activeTool === "simp3d-resume";
+  resumeSettings.hidden = isSimp3d;
+  resumeSettings.style.display = isSimp3d ? "none" : "";
+  simp3dSettings.hidden = !isSimp3d;
+  simp3dSettings.style.display = isSimp3d ? "" : "none";
+  toolTitle.textContent = t(isSimp3d ? "simp3dResumePrint" : "resumePrint");
+  processButton.textContent = t(isSimp3d ? "runSimp3dResumePrint" : "runResumePrint");
+  shortcutButtons.forEach((button) => {
+    button.classList.toggle("active", button.dataset.tool === activeTool);
+  });
+}
+
+function setActiveTool(tool) {
+  activeTool = tool;
+  localStorage.setItem("gcodeEditorActiveTool", activeTool);
+  clearOutput();
+  applyToolUi();
+  setLog(t("ready"));
 }
 
 function normalizeZ(value) {
@@ -242,6 +316,7 @@ function clearOutput() {
   editedLineCount = 0;
   outputGcode.value = "";
   lastProcessedNextZ = "";
+  lastSimp3dTargetZ = "";
   outputStats.textContent = lineLabel(0);
 }
 
@@ -488,6 +563,10 @@ function zFilePart(value) {
 }
 
 function buildDownloadFileName() {
+  if (activeTool === "simp3d-resume") {
+    return `${sanitizeFilePart(sourceBaseName)}.simp3d-resume.Z-${zFilePart(lastSimp3dTargetZ)}.gcode`;
+  }
+
   return `${sanitizeFilePart(sourceBaseName)}.resume.nextZ-${zFilePart()}.gcode`;
 }
 
@@ -579,6 +658,79 @@ function removeResumePrintSection(gcode, index, startZ, nextZ) {
   };
 }
 
+function calculateSimp3dTarget() {
+  const layerCount = Number(simp3dLayersInput.value);
+  const layerHeight = Number(simp3dHeightInput.value);
+
+  if (!Number.isFinite(layerCount) || layerCount <= 0) {
+    setLog(t("simp3dLayerInvalid"), "warning");
+    simp3dLayersInput.focus();
+    return null;
+  }
+
+  if (!Number.isFinite(layerHeight) || layerHeight <= 0) {
+    setLog(t("simp3dHeightInvalid"), "warning");
+    simp3dHeightInput.focus();
+    return null;
+  }
+
+  return layerCount * layerHeight;
+}
+
+function findSimp3dCut(text, targetNumber) {
+  let lineStart = 0;
+  let lineNumber = 1;
+  let printStart = null;
+  let startupLines = 0;
+  let keepStart = 0;
+  let keepEnd = null;
+  let targetLayer = null;
+
+  while (lineStart <= text.length) {
+    let lineEnd = text.indexOf("\n", lineStart);
+    if (lineEnd === -1) {
+      lineEnd = text.length;
+    }
+
+    const line = readLineAt(text, lineStart, lineEnd).trim();
+
+    if (!printStart && line.toUpperCase() === "PRINT_START") {
+      printStart = { index: lineStart, lineNumber };
+      keepStart = lineEnd < text.length ? lineEnd + 1 : text.length;
+    } else if (printStart && keepEnd === null) {
+      startupLines += 1;
+
+      if (startupLines === 3) {
+        keepEnd = lineEnd < text.length ? lineEnd + 1 : text.length;
+      }
+    } else if (keepEnd !== null && zMatches(getZValue(line), String(targetNumber))) {
+      targetLayer = { index: lineStart, lineNumber, zText: getZValue(line) };
+      break;
+    }
+
+    if (lineEnd === text.length) {
+      break;
+    }
+
+    lineNumber += 1;
+    lineStart = lineEnd + 1;
+  }
+
+  if (!printStart) {
+    throw new Error(t("simp3dMissingPrintStart"));
+  }
+
+  if (!targetLayer || keepEnd === null) {
+    throw new Error(t("simp3dMissingTarget", { targetZ: formatZ(targetNumber) }));
+  }
+
+  return {
+    text: text.slice(0, printStart.index) + text.slice(keepStart, keepEnd) + text.slice(targetLayer.index),
+    removedLines: targetLayer.lineNumber - printStart.lineNumber - 3,
+    targetZ: targetLayer.zText || formatZ(targetNumber)
+  };
+}
+
 function runResumePrint() {
   const source = inputGcode.readOnly ? sourceGcode : inputGcode.value;
   const startZ = normalizeZ(startZInput.value);
@@ -622,6 +774,41 @@ function runResumePrint() {
   }
 }
 
+function runSimp3dResumePrint() {
+  const source = inputGcode.readOnly ? sourceGcode : inputGcode.value;
+  const targetNumber = calculateSimp3dTarget();
+
+  if (!source.trim()) {
+    setLog(t("emptySource"), "warning");
+    return;
+  }
+
+  if (targetNumber === null) {
+    return;
+  }
+
+  try {
+    if (source !== sourceGcode) {
+      sourceGcode = source;
+      sourceLineCount = countLines(sourceGcode);
+      sourceIndexDirty = true;
+    }
+
+    const result = findSimp3dCut(source, targetNumber);
+    editedGcode = result.text;
+    editedLineCount = sourceLineCount ? sourceLineCount - result.removedLines : countLines(editedGcode);
+    lastSimp3dTargetZ = formatZ(Number(result.targetZ));
+    renderOutputGcode();
+    setLog(t("simp3dResumeDone", { targetZ: result.targetZ, count: result.removedLines }), "success");
+  } catch (error) {
+    editedGcode = "";
+    editedLineCount = 0;
+    outputGcode.value = "";
+    updateStats();
+    setLog(error.message, "warning");
+  }
+}
+
 fileInput.addEventListener("click", () => {
   fileInput.value = "";
   fileStatus.textContent = t("waitingForFile");
@@ -641,13 +828,18 @@ fileInput.addEventListener("cancel", () => {
 sampleButton.addEventListener("click", () => {
   sourceBaseName = "sample";
   loadedFileName = "sample.resume.gcode";
-  sourceGcode = sampleGcode;
+  sourceGcode = activeTool === "simp3d-resume" ? simp3dSampleGcode : sampleGcode;
   sourceIndexDirty = true;
   rebuildSourceIndex();
   renderInputGcode();
   clearOutput();
-  startZInput.value = "0.40";
-  nextZInput.value = "0.60";
+  if (activeTool === "simp3d-resume") {
+    simp3dLayersInput.value = "3";
+    simp3dHeightInput.value = "0.20";
+  } else {
+    startZInput.value = "0.40";
+    nextZInput.value = "0.60";
+  }
   fileStatus.textContent = t("sampleFile");
   updateStats();
   setLog(t("sampleLoaded"));
@@ -667,7 +859,14 @@ inputGcode.addEventListener("input", () => {
   fileStatus.textContent = inputGcode.value ? t("manualInput") : t("noFileLoaded");
 });
 
-processButton.addEventListener("click", runResumePrint);
+processButton.addEventListener("click", () => {
+  if (activeTool === "simp3d-resume") {
+    runSimp3dResumePrint();
+    return;
+  }
+
+  runResumePrint();
+});
 
 copyButton.addEventListener("click", async () => {
   const output = editedGcode || outputGcode.value;
@@ -717,12 +916,30 @@ languageSelect.addEventListener("change", () => {
 
 previewToggle.addEventListener("change", () => {
   showGcodePreview = previewToggle.checked;
+  simp3dPreviewToggle.checked = showGcodePreview;
   localStorage.setItem("gcodeEditorShowPreview", String(showGcodePreview));
   renderInputGcode();
 
   if (editedGcode) {
     renderOutputGcode();
   }
+});
+
+simp3dPreviewToggle.addEventListener("change", () => {
+  showGcodePreview = simp3dPreviewToggle.checked;
+  previewToggle.checked = showGcodePreview;
+  localStorage.setItem("gcodeEditorShowPreview", String(showGcodePreview));
+  renderInputGcode();
+
+  if (editedGcode) {
+    renderOutputGcode();
+  }
+});
+
+shortcutButtons.forEach((button) => {
+  button.addEventListener("click", () => {
+    setActiveTool(button.dataset.tool);
+  });
 });
 
 applyLanguage();

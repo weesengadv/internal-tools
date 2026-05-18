@@ -22,6 +22,10 @@
             <span class="shortcut-icon">R</span>
             <span data-i18n="resumePrint">Resume Print</span>
           </button>
+          <button class="shortcut" type="button" data-tool="simp3d-resume" title="SIMP3D Resume Print">
+            <span class="shortcut-icon">S</span>
+            <span data-i18n="simp3dResumePrint">SIMP3D Resume Print</span>
+          </button>
           <button class="shortcut" type="button" disabled title="Coming later">
             <span class="shortcut-icon">+</span>
             <span data-i18n="addTool">Add Tool</span>
@@ -51,7 +55,7 @@
           <div class="panel-header">
             <div>
               <p class="eyebrow" data-i18n="function">Function</p>
-              <h2 data-i18n="resumePrint">Resume Print</h2>
+              <h2 id="toolTitle" data-i18n="resumePrint">Resume Print</h2>
             </div>
             <div class="actions">
               <label class="file-input-wrap" for="fileInput">
@@ -62,7 +66,7 @@
             </div>
           </div>
 
-          <div class="settings-grid">
+          <div class="settings-grid tool-settings" id="resumeSettings">
             <label>
               <span data-i18n="startZ">Start Z</span>
               <input id="startZ" type="text" inputmode="decimal" value="0.40" placeholder="0.40">
@@ -77,6 +81,25 @@
             </div>
             <label class="preview-toggle">
               <input id="previewToggle" type="checkbox">
+              <span data-i18n="showPreview">Show G-code preview</span>
+            </label>
+          </div>
+
+          <div class="settings-grid tool-settings" id="simp3dSettings" hidden>
+            <label>
+              <span data-i18n="layerCount">Layer count</span>
+              <input id="simp3dLayers" type="text" inputmode="decimal" placeholder="200">
+            </label>
+            <label>
+              <span data-i18n="layerHeight">Layer height</span>
+              <input id="simp3dHeight" type="text" inputmode="decimal" placeholder="0.20">
+            </label>
+            <div class="cut-summary">
+              <span data-i18n="simp3dCutTitle">SIMP3D cut</span>
+              <strong data-i18n="simp3dCutDescription">Keep 3 startup lines after PRINT_START, then resume at calculated Z</strong>
+            </div>
+            <label class="preview-toggle">
+              <input id="simp3dPreviewToggle" type="checkbox">
               <span data-i18n="showPreview">Show G-code preview</span>
             </label>
           </div>
