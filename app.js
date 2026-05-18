@@ -20,6 +20,10 @@ let sourceGcode = "";
 let editedGcode = "";
 let lastProcessedNextZ = "";
 let activeLanguage = localStorage.getItem("gcodeEditorLanguage") || "en";
+let sourceLayers = [];
+let sourceLineCount = 0;
+let sourceIndexDirty = true;
+let editedLineCount = 0;
 
 const previewLimit = 1500000;
 const messages = {
@@ -213,8 +217,10 @@ function lineLabel(count, isPreview = false) {
 }
 
 function updateStats() {
-  inputStats.textContent = lineLabel(countLines(sourceGcode || inputGcode.value), inputGcode.readOnly);
-  outputStats.textContent = lineLabel(countLines(editedGcode || outputGcode.value), outputGcode.value.includes("preview only"));
+  const inputLineCount = sourceLineCount || countLines(sourceGcode || inputGcode.value);
+  const outputLineCount = editedLineCount || countLines(editedGcode || outputGcode.value);
+  inputStats.textContent = lineLabel(inputLineCount, inputGcode.readOnly);
+  outputStats.textContent = lineLabel(outputLineCount, outputGcode.value.includes("preview only"));
 }
 
 function setLog(message, type = "") {
@@ -224,6 +230,7 @@ function setLog(message, type = "") {
 
 function clearOutput() {
   editedGcode = "";
+  editedLineCount = 0;
   outputGcode.value = "";
   lastProcessedNextZ = "";
   outputStats.textContent = lineLabel(0);
@@ -286,13 +293,13 @@ function renderInputGcode() {
   const preview = buildPreview(sourceGcode, t("inputGcode"));
   inputGcode.value = preview.text;
   inputGcode.readOnly = preview.isPreview;
-  inputStats.textContent = lineLabel(countLines(sourceGcode), preview.isPreview);
+  inputStats.textContent = lineLabel(sourceLineCount || countLines(sourceGcode), preview.isPreview);
 }
 
 function renderOutputGcode() {
   const preview = buildPreview(editedGcode, t("editedGcode"));
   outputGcode.value = preview.text;
-  outputStats.textContent = lineLabel(countLines(editedGcode), preview.isPreview);
+  outputStats.textContent = lineLabel(editedLineCount || countLines(editedGcode), preview.isPreview);
 }
 
 function readFileText(file) {
@@ -325,6 +332,75 @@ function readFileText(file) {
   });
 }
 
+function readLineAt(text, start, end) {
+  let lineEnd = end;
+  if (lineEnd > start && text.charCodeAt(lineEnd - 1) === 13) {
+    lineEnd -= 1;
+  }
+  return text.slice(start, lineEnd);
+}
+
+function buildGcodeIndex(text) {
+  const layers = [];
+  let lineNumber = 1;
+  let lineStart = 0;
+  let pendingLayer = null;
+
+  while (lineStart <= text.length) {
+    let lineEnd = text.indexOf("\n", lineStart);
+    if (lineEnd === -1) {
+      lineEnd = text.length;
+    }
+
+    const line = readLineAt(text, lineStart, lineEnd).trim();
+
+    if (line.toUpperCase() === ";LAYER_CHANGE") {
+      pendingLayer = {
+        index: lineStart,
+        lineNumber
+      };
+    } else if (pendingLayer) {
+      const zText = getZValue(line);
+      const zNumber = Number(zText);
+
+      if (zText && Number.isFinite(zNumber)) {
+        layers.push({
+          index: pendingLayer.index,
+          lineNumber: pendingLayer.lineNumber,
+          zText,
+          zNumber
+        });
+      }
+
+      pendingLayer = null;
+    }
+
+    if (lineEnd === text.length) {
+      break;
+    }
+
+    lineNumber += 1;
+    lineStart = lineEnd + 1;
+  }
+
+  return {
+    layers,
+    lineCount: text ? lineNumber : 0
+  };
+}
+
+function rebuildSourceIndex() {
+  const index = buildGcodeIndex(sourceGcode);
+  sourceLayers = index.layers;
+  sourceLineCount = index.lineCount;
+  sourceIndexDirty = false;
+  return index;
+}
+
+function getSourceIndex() {
+  return sourceIndexDirty ? rebuildSourceIndex() : { layers: sourceLayers, lineCount: sourceLineCount };
+}
+
 async function loadGcodeFile(file) {
   if (!file) {
     fileStatus.textContent = inputGcode.value ? loadedFileName : t("noFileLoaded");
@@ -338,6 +414,8 @@ async function loadGcodeFile(file) {
     sourceBaseName = file.name.replace(/\.(gcode|gco|gc|txt)$/i, "") || "edited";
     loadedFileName = `${sourceBaseName}.resume.gcode`;
     sourceGcode = await readFileText(file);
+    sourceIndexDirty = true;
+    rebuildSourceIndex();
     setLog(t("renderingPreview", { fileName: file.name }), "info");
     await nextPaint();
     renderInputGcode();
@@ -357,10 +435,6 @@ async function loadGcodeFile(file) {
   }
 }
 
-function isLayerChange(line) {
-  return line.trim().toUpperCase() === ";LAYER_CHANGE";
-}
-
 function getZValue(line) {
   const match = line.trim().match(/^;Z:\s*([+-]?\d+(?:\.\d+)?)/i);
   return match ? match[1] : "";
@@ -375,43 +449,6 @@ function zMatches(found, expected) {
   }
 
   return found === expected;
-}
-
-function findLayerIndex(lines, zValue, fromIndex = 0) {
-  for (let index = fromIndex; index < lines.length - 1; index += 1) {
-    if (isLayerChange(lines[index]) && zMatches(getZValue(lines[index + 1]), zValue)) {
-      return index;
-    }
-  }
-  return -1;
-}
-
-function findNextLayerIndex(lines, fromIndex) {
-  for (let index = fromIndex + 1; index < lines.length; index += 1) {
-    if (isLayerChange(lines[index])) {
-      return index;
-    }
-  }
-  return -1;
-}
-
-function getLayerChanges(lines) {
-  const layers = [];
-
-  for (let index = 0; index < lines.length - 1; index += 1) {
-    if (!isLayerChange(lines[index])) {
-      continue;
-    }
-
-    const zText = getZValue(lines[index + 1]);
-    const zNumber = Number(zText);
-
-    if (zText && Number.isFinite(zNumber)) {
-      layers.push({ index, zText, zNumber });
-    }
-  }
-
-  return layers;
 }
 
 function formatZ(value) {
@@ -432,7 +469,7 @@ function buildDownloadFileName() {
   return `${sanitizeFilePart(sourceBaseName)}.resume.nextZ-${zFilePart()}.gcode`;
 }
 
-function resolveNextZ(lines, startZ, requestedNextZ) {
+function resolveNextZ(index, startZ, requestedNextZ) {
   if (!requestedNextZ) {
     return "";
   }
@@ -445,7 +482,7 @@ function resolveNextZ(lines, startZ, requestedNextZ) {
     return null;
   }
 
-  const layers = getLayerChanges(lines);
+  const layers = index.layers;
   const startLayer = layers.find((layer) => zMatches(layer.zText, startZ));
 
   if (!startLayer) {
@@ -492,31 +529,31 @@ function resolveNextZ(lines, startZ, requestedNextZ) {
   return nearest.zText;
 }
 
-function removeResumePrintSection(gcode, startZ, nextZ) {
-  const newline = gcode.includes("\r\n") ? "\r\n" : "\n";
-  const lines = gcode.split(/\r\n|\r|\n/);
-  const startIndex = findLayerIndex(lines, startZ);
+function removeResumePrintSection(gcode, index, startZ, nextZ) {
+  const layers = index.layers;
+  const startLayerIndex = layers.findIndex((layer) => zMatches(layer.zText, startZ));
 
-  if (startIndex === -1) {
+  if (startLayerIndex === -1) {
     throw new Error(t("couldNotFindStart", { startZ }));
   }
 
-  const nextIndex = nextZ
-    ? findLayerIndex(lines, nextZ, startIndex + 1)
-    : findNextLayerIndex(lines, startIndex);
+  const nextLayerIndex = nextZ
+    ? layers.findIndex((layer, indexValue) => indexValue > startLayerIndex && zMatches(layer.zText, nextZ))
+    : startLayerIndex + 1;
 
-  if (nextIndex === -1) {
+  if (nextLayerIndex === -1 || nextLayerIndex >= layers.length) {
     throw new Error(t("couldNotFindNextLayer", { nextZ }));
   }
 
-  const editedLines = [...lines];
-  const removedLines = nextIndex - startIndex;
-  editedLines.splice(startIndex, removedLines);
+  const startLayer = layers[startLayerIndex];
+  const nextLayer = layers[nextLayerIndex];
+  const removedLines = nextLayer.lineNumber - startLayer.lineNumber;
 
   return {
-    text: editedLines.join(newline),
+    text: gcode.slice(0, startLayer.index) + gcode.slice(nextLayer.index),
     removedLines,
-    nextZ: getZValue(lines[nextIndex + 1]) || nextZ
+    nextZ: nextLayer.zText,
+    lineCount: index.lineCount - removedLines
   };
 }
 
@@ -537,15 +574,21 @@ function runResumePrint() {
   }
 
   try {
-    const lines = source.split(/\r\n|\r|\n/);
-    const nextZ = resolveNextZ(lines, startZ, requestedNextZ);
+    if (source !== sourceGcode) {
+      sourceGcode = source;
+      sourceIndexDirty = true;
+    }
+
+    const index = getSourceIndex();
+    const nextZ = resolveNextZ(index, startZ, requestedNextZ);
 
     if (nextZ === null) {
       return;
     }
 
-    const result = removeResumePrintSection(source, startZ, nextZ);
+    const result = removeResumePrintSection(source, index, startZ, nextZ);
     editedGcode = result.text;
+    editedLineCount = result.lineCount;
     lastProcessedNextZ = formatZ(Number(result.nextZ));
     renderOutputGcode();
     setLog(t("resumeDone", { startZ, nextZ: result.nextZ, count: result.removedLines }), "success");
@@ -577,6 +620,8 @@ sampleButton.addEventListener("click", () => {
   sourceBaseName = "sample";
   loadedFileName = "sample.resume.gcode";
   sourceGcode = sampleGcode;
+  sourceIndexDirty = true;
+  rebuildSourceIndex();
   renderInputGcode();
   clearOutput();
   startZInput.value = "0.40";
@@ -592,8 +637,11 @@ inputGcode.addEventListener("input", () => {
   }
 
   sourceGcode = inputGcode.value;
+  sourceLineCount = countLines(sourceGcode);
+  sourceIndexDirty = true;
   sourceBaseName = "manual";
   clearOutput();
+  inputStats.textContent = lineLabel(sourceLineCount);
   fileStatus.textContent = inputGcode.value ? t("manualInput") : t("noFileLoaded");
 });
 
