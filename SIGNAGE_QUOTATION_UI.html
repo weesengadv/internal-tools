@@ -1,0 +1,845 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Weeseng Advertising - AI Signage Quotation UI</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #f4f7f8;
+        --panel: #ffffff;
+        --ink: #172026;
+        --muted: #65727c;
+        --line: #d8e0e5;
+        --accent: #0f766e;
+        --accent-strong: #115e59;
+        --surface: #f9fbfc;
+        --warn: #9a3412;
+        --blue: #1d4ed8;
+        --shadow: 0 18px 45px rgba(22, 32, 38, 0.12);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background: var(--bg);
+        color: var(--ink);
+        font-family: Inter, "Segoe UI", Arial, sans-serif;
+      }
+
+      button,
+      input,
+      select,
+      textarea {
+        font: inherit;
+      }
+
+      .app-shell {
+        display: grid;
+        grid-template-columns: 260px minmax(0, 1fr);
+        min-height: 100vh;
+      }
+
+      .sidebar {
+        background: #162126;
+        color: #eff7f6;
+        padding: 24px 18px;
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 30px;
+      }
+
+      .brand-mark {
+        display: grid;
+        place-items: center;
+        width: 42px;
+        height: 42px;
+        border-radius: 8px;
+        background: #2dd4bf;
+        color: #10201f;
+        font-weight: 900;
+      }
+
+      .brand strong,
+      .brand small {
+        display: block;
+      }
+
+      .brand small {
+        margin-top: 2px;
+        color: #a7bbb9;
+        font-size: 12px;
+      }
+
+      .shortcut-menu {
+        display: grid;
+        gap: 8px;
+      }
+
+      .shortcut-group {
+        margin: 12px 8px 2px;
+        color: #8fb0ac;
+        font-size: 11px;
+        font-weight: 900;
+        text-transform: uppercase;
+      }
+
+      .shortcut {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-height: 44px;
+        border: 1px solid transparent;
+        border-radius: 8px;
+        padding: 0 12px;
+        background: transparent;
+        color: #d8e7e5;
+        font-weight: 800;
+      }
+
+      .shortcut.active {
+        background: rgba(45, 212, 191, 0.14);
+        border-color: rgba(45, 212, 191, 0.34);
+      }
+
+      .shortcut-icon {
+        display: grid;
+        place-items: center;
+        width: 28px;
+        height: 28px;
+        border-radius: 6px;
+        background: rgba(255, 255, 255, 0.08);
+        font-size: 12px;
+        font-weight: 900;
+      }
+
+      .workspace {
+        min-width: 0;
+        padding: 28px;
+      }
+
+      .topbar,
+      .panel-header,
+      .toolbar,
+      .quote-actions,
+      .step-list {
+        display: flex;
+        align-items: center;
+      }
+
+      .topbar {
+        justify-content: space-between;
+        gap: 18px;
+        margin-bottom: 20px;
+      }
+
+      .eyebrow {
+        margin: 0 0 4px;
+        color: var(--accent-strong);
+        font-size: 12px;
+        font-weight: 900;
+        text-transform: uppercase;
+      }
+
+      h1,
+      h2,
+      h3 {
+        margin: 0;
+      }
+
+      h1 {
+        font-size: 28px;
+      }
+
+      h2 {
+        font-size: 20px;
+      }
+
+      h3 {
+        font-size: 16px;
+      }
+
+      .status-pill {
+        max-width: 44vw;
+        padding: 8px 12px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: #fff;
+        color: var(--muted);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .tool-panel {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        box-shadow: var(--shadow);
+        padding: 20px;
+      }
+
+      .panel-header {
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 18px;
+      }
+
+      .toolbar,
+      .quote-actions {
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      .primary-button,
+      .secondary-button,
+      .tool-button {
+        display: inline-grid;
+        place-items: center;
+        min-height: 40px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 0 14px;
+        cursor: default;
+        font-weight: 900;
+      }
+
+      .primary-button {
+        border-color: var(--accent);
+        background: var(--accent);
+        color: #fff;
+      }
+
+      .secondary-button,
+      .tool-button {
+        background: var(--surface);
+        color: var(--ink);
+      }
+
+      .tool-button.active {
+        border-color: var(--accent);
+        color: var(--accent-strong);
+      }
+
+      .step-list {
+        align-items: stretch;
+        gap: 8px;
+        margin-bottom: 14px;
+        overflow-x: auto;
+      }
+
+      .step {
+        min-width: 142px;
+        padding: 10px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: #fff;
+      }
+
+      .step.active {
+        border-color: #99f6e4;
+        background: #f0fdfa;
+      }
+
+      .step span {
+        display: block;
+        color: var(--muted);
+        font-size: 11px;
+        font-weight: 900;
+        text-transform: uppercase;
+      }
+
+      .step strong {
+        display: block;
+        margin-top: 3px;
+        font-size: 13px;
+      }
+
+      .quote-layout {
+        display: grid;
+        grid-template-columns: minmax(0, 1.1fr) minmax(380px, 0.9fr);
+        gap: 14px;
+      }
+
+      .section {
+        padding: 14px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--surface);
+      }
+
+      .section + .section {
+        margin-top: 14px;
+      }
+
+      .section h3 {
+        margin-bottom: 12px;
+      }
+
+      .form-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+      }
+
+      label span {
+        display: block;
+        margin-bottom: 6px;
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 800;
+      }
+
+      input,
+      select,
+      textarea {
+        width: 100%;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: #fff;
+        color: var(--ink);
+      }
+
+      input,
+      select {
+        min-height: 42px;
+        padding: 0 11px;
+      }
+
+      textarea {
+        min-height: 78px;
+        padding: 11px;
+        resize: vertical;
+      }
+
+      .photo-board {
+        position: relative;
+        min-height: 520px;
+        overflow: hidden;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background:
+          linear-gradient(180deg, #dce6ea 0 38%, #b7c4c9 38% 39%, #eef1f2 39% 100%);
+      }
+
+      .building {
+        position: absolute;
+        left: 8%;
+        right: 8%;
+        bottom: 11%;
+        height: 58%;
+        border: 1px solid #9aa9af;
+        background: #eef1f2;
+      }
+
+      .window-grid {
+        position: absolute;
+        inset: 18% 7% 18%;
+        display: grid;
+        grid-template-columns: repeat(6, 1fr);
+        gap: 8px;
+      }
+
+      .window-grid span {
+        border: 1px solid #c3cdd1;
+        background: #d8e3e7;
+      }
+
+      .sign-backing {
+        position: absolute;
+        left: 18%;
+        right: 18%;
+        top: 21%;
+        height: 22%;
+        border: 3px solid #0f766e;
+        background: rgba(15, 118, 110, 0.08);
+      }
+
+      .word-group {
+        position: absolute;
+        left: 26%;
+        top: 27%;
+        width: 48%;
+        height: 9%;
+        border: 2px dashed var(--blue);
+        border-radius: 6px;
+      }
+
+      .letter-box {
+        position: absolute;
+        top: 28%;
+        width: 5.3%;
+        height: 7%;
+        border: 2px solid #dc2626;
+        border-radius: 4px;
+        background: rgba(220, 38, 38, 0.08);
+      }
+
+      .letter-box::after {
+        content: attr(data-letter);
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        font-weight: 900;
+      }
+
+      .letter-w { left: 28%; width: 6.6%; }
+      .letter-e1 { left: 36%; }
+      .letter-e2 { left: 43%; }
+      .letter-s1 { left: 50%; }
+      .letter-e3 { left: 57%; }
+      .letter-n { left: 64%; }
+      .letter-g { left: 71%; }
+
+      .measure-line {
+        position: absolute;
+        left: 18%;
+        right: 18%;
+        top: 47%;
+        height: 2px;
+        background: #9a3412;
+      }
+
+      .measure-line::before,
+      .measure-line::after {
+        content: "";
+        position: absolute;
+        top: -5px;
+        width: 2px;
+        height: 12px;
+        background: #9a3412;
+      }
+
+      .measure-line::before { left: 0; }
+      .measure-line::after { right: 0; }
+
+      .measure-tag {
+        position: absolute;
+        left: 50%;
+        top: 49%;
+        transform: translateX(-50%);
+        padding: 6px 8px;
+        border: 1px solid #fed7aa;
+        border-radius: 8px;
+        background: #fff7ed;
+        color: var(--warn);
+        font-size: 12px;
+        font-weight: 900;
+      }
+
+      .canvas-label {
+        position: absolute;
+        left: 12px;
+        top: 12px;
+        padding: 7px 9px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.92);
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 900;
+      }
+
+      .metric-row {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 10px;
+        margin-top: 12px;
+      }
+
+      .metric,
+      .ai-note {
+        padding: 10px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: #fff;
+      }
+
+      .metric span,
+      .ai-note span {
+        display: block;
+        color: var(--muted);
+        font-size: 11px;
+        font-weight: 900;
+        text-transform: uppercase;
+      }
+
+      .metric strong {
+        display: block;
+        margin-top: 4px;
+        font-size: 17px;
+      }
+
+      .ai-note {
+        border-color: #bfdbfe;
+        background: #eff6ff;
+        color: var(--blue);
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        overflow: hidden;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: #fff;
+      }
+
+      th,
+      td {
+        padding: 10px;
+        border-bottom: 1px solid var(--line);
+        text-align: left;
+        vertical-align: top;
+      }
+
+      th {
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 900;
+        text-transform: uppercase;
+      }
+
+      tr:last-child td {
+        border-bottom: 0;
+      }
+
+      .confidence {
+        display: inline-block;
+        padding: 3px 7px;
+        border-radius: 999px;
+        background: #dcfce7;
+        color: #166534;
+        font-size: 11px;
+        font-weight: 900;
+      }
+
+      .confidence.warning {
+        background: #fff7ed;
+        color: var(--warn);
+      }
+
+      .quote-total {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-top: 12px;
+        padding: 14px;
+        border: 1px solid #99f6e4;
+        border-radius: 8px;
+        background: #f0fdfa;
+        color: var(--accent-strong);
+      }
+
+      .quote-total strong {
+        font-size: 22px;
+      }
+
+      .config-card {
+        display: grid;
+        gap: 8px;
+      }
+
+      .config-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 9px 10px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: #fff;
+      }
+
+      .config-row span {
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 900;
+      }
+
+      .config-row strong {
+        text-align: right;
+      }
+
+      @media (max-width: 980px) {
+        .app-shell,
+        .quote-layout {
+          grid-template-columns: 1fr;
+        }
+
+        .sidebar {
+          padding: 14px;
+        }
+
+        .shortcut-menu {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .workspace {
+          padding: 18px;
+        }
+
+        .topbar,
+        .panel-header {
+          align-items: flex-start;
+          flex-direction: column;
+        }
+      }
+
+      @media (max-width: 640px) {
+        .form-grid,
+        .metric-row {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <div class="brand">
+          <span class="brand-mark">W</span>
+          <span>
+            <strong>Weeseng Advertising</strong>
+            <small>Production tools</small>
+          </span>
+        </div>
+
+        <nav class="shortcut-menu">
+          <div class="shortcut-group">Tools G-code Editor</div>
+          <div class="shortcut"><span class="shortcut-icon">R</span><span>Resume Print</span></div>
+          <div class="shortcut"><span class="shortcut-icon">S</span><span>SIMP3D Resume Print</span></div>
+          <div class="shortcut-group">3D Viewer</div>
+          <div class="shortcut"><span class="shortcut-icon">3D</span><span>3D Viewer - Area Checker</span></div>
+          <div class="shortcut-group">Quotation</div>
+          <div class="shortcut active"><span class="shortcut-icon">AI</span><span>Signage Quotation</span></div>
+        </nav>
+      </aside>
+
+      <main class="workspace">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">AI Quotation</p>
+            <h1>Weeseng Advertising</h1>
+          </div>
+          <div class="status-pill">Config: signage-config.json loaded</div>
+        </header>
+
+        <section class="tool-panel">
+          <div class="panel-header">
+            <div>
+              <p class="eyebrow">Tool</p>
+              <h2>Signage Quotation</h2>
+            </div>
+            <div class="toolbar">
+              <button class="secondary-button" type="button">Upload photo</button>
+              <button class="secondary-button" type="button">Run AI recognition</button>
+              <button class="primary-button" type="button">Generate quote draft</button>
+            </div>
+          </div>
+
+          <div class="step-list">
+            <div class="step active"><span>Step 1</span><strong>Mark backing / guideline</strong></div>
+            <div class="step active"><span>Step 2</span><strong>AI detect letters</strong></div>
+            <div class="step"><span>Step 3</span><strong>Material + model</strong></div>
+            <div class="step"><span>Step 4</span><strong>Sheet pricing</strong></div>
+            <div class="step"><span>Step 5</span><strong>Review draft</strong></div>
+            <div class="step"><span>Step 6</span><strong>Print / save image</strong></div>
+          </div>
+
+          <div class="quote-layout">
+            <div>
+              <section class="section">
+                <h3>Photo + AI Recognition</h3>
+                <div class="toolbar">
+                  <button class="tool-button active" type="button">Guideline</button>
+                  <button class="tool-button" type="button">Backing box</button>
+                  <button class="tool-button" type="button">AI word group</button>
+                  <button class="tool-button" type="button">AI alphabet box</button>
+                  <button class="tool-button" type="button">Manual rectangle</button>
+                  <button class="tool-button" type="button">Pen fallback</button>
+                </div>
+
+                <div class="photo-board">
+                  <div class="canvas-label">AI detects word group and alphabet boxes after guideline size is provided</div>
+                  <div class="building">
+                    <div class="window-grid">
+                      <span></span><span></span><span></span><span></span><span></span><span></span>
+                      <span></span><span></span><span></span><span></span><span></span><span></span>
+                      <span></span><span></span><span></span><span></span><span></span><span></span>
+                    </div>
+                  </div>
+                  <div class="sign-backing"></div>
+                  <div class="word-group"></div>
+                  <div class="letter-box letter-w" data-letter="W"></div>
+                  <div class="letter-box letter-e1" data-letter="E"></div>
+                  <div class="letter-box letter-e2" data-letter="E"></div>
+                  <div class="letter-box letter-s1" data-letter="S"></div>
+                  <div class="letter-box letter-e3" data-letter="E"></div>
+                  <div class="letter-box letter-n" data-letter="N"></div>
+                  <div class="letter-box letter-g" data-letter="G"></div>
+                  <div class="measure-line"></div>
+                  <div class="measure-tag">Guideline: backing width 144 in</div>
+                </div>
+
+                <div class="metric-row">
+                  <div class="metric">
+                    <span>Backing size</span>
+                    <strong>144 in x 36 in</strong>
+                  </div>
+                  <div class="metric">
+                    <span>Word group</span>
+                    <strong>WEESENG, 112 in x 18 in</strong>
+                  </div>
+                  <div class="metric">
+                    <span>AI confidence</span>
+                    <strong>92%</strong>
+                  </div>
+                </div>
+              </section>
+
+              <section class="section">
+                <h3>AI Detection Review</h3>
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Letter</th>
+                      <th>Width</th>
+                      <th>Height</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr><td>W</td><td>18.5 in</td><td>18.0 in</td><td><span class="confidence">92%</span></td></tr>
+                    <tr><td>E</td><td>12.0 in</td><td>17.8 in</td><td><span class="confidence">94%</span></td></tr>
+                    <tr><td>E</td><td>12.1 in</td><td>17.9 in</td><td><span class="confidence">93%</span></td></tr>
+                    <tr><td>S</td><td>11.8 in</td><td>17.6 in</td><td><span class="confidence warning">Review</span></td></tr>
+                    <tr><td>E</td><td>12.0 in</td><td>17.8 in</td><td><span class="confidence">94%</span></td></tr>
+                    <tr><td>N</td><td>13.4 in</td><td>18.1 in</td><td><span class="confidence">90%</span></td></tr>
+                    <tr><td>G</td><td>13.0 in</td><td>17.9 in</td><td><span class="confidence">89%</span></td></tr>
+                  </tbody>
+                </table>
+                <div class="form-grid" style="margin-top: 12px;">
+                  <label>
+                    <span>Correction prompt</span>
+                    <textarea>Letter S height is 18 inch. Use backing width as 144 inch and recalculate.</textarea>
+                  </label>
+                  <label>
+                    <span>Manual fallback note</span>
+                    <textarea>If AI cannot recognize an alphabet, draw rectangle or pen shape and enter the real size.</textarea>
+                  </label>
+                </div>
+              </section>
+            </div>
+
+            <div>
+              <section class="section">
+                <h3>Config File</h3>
+                <div class="config-card">
+                  <div class="config-row"><span>File</span><strong>signage-config.json</strong></div>
+                  <div class="config-row"><span>AI API</span><strong>OpenAI-compatible</strong></div>
+                  <div class="config-row"><span>Model</span><strong>gpt-4.1-mini / configurable</strong></div>
+                  <div class="config-row"><span>Google Sheet</span><strong>published CSV URL</strong></div>
+                  <div class="config-row"><span>Unit</span><strong>inch input, sqft pricing</strong></div>
+                </div>
+              </section>
+
+              <section class="section">
+                <h3>Material + Model</h3>
+                <div class="form-grid">
+                  <label>
+                    <span>Backing material</span>
+                    <select>
+                      <option>ACP backing</option>
+                      <option>Acrylic backing</option>
+                      <option>Aluminium box-up</option>
+                    </select>
+                  </label>
+                  <label>
+                    <span>Emboss material</span>
+                    <select>
+                      <option>Acrylic emboss</option>
+                      <option>Stainless steel emboss</option>
+                      <option>Aluminium emboss</option>
+                    </select>
+                  </label>
+                  <label>
+                    <span>Emboss model</span>
+                    <select>
+                      <option>Front lit</option>
+                      <option>Back lit</option>
+                      <option>No lit</option>
+                    </select>
+                  </label>
+                  <label>
+                    <span>Letter height band</span>
+                    <input value="18 inch band">
+                  </label>
+                </div>
+              </section>
+
+              <section class="section">
+                <h3>Quote Draft</h3>
+                <div class="ai-note" style="margin-bottom: 12px;">
+                  <span>AI draft note</span>
+                  AI detected one letter needing review. Pricing below is calculated from sheet rates, not guessed by AI.
+                </div>
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Item</th>
+                      <th>Qty</th>
+                      <th>Total</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>Backing panel, 36.00 sqft</td>
+                      <td>1</td>
+                      <td>RM 1,080.00</td>
+                    </tr>
+                    <tr>
+                      <td>Emboss alphabet set, acrylic, front lit, 18 inch band</td>
+                      <td>7 letters</td>
+                      <td>RM 2,240.00</td>
+                    </tr>
+                    <tr>
+                      <td>LED module and wiring</td>
+                      <td>1</td>
+                      <td>RM 380.00</td>
+                    </tr>
+                    <tr>
+                      <td>PSU 12V 200W, sheet-driven watt rule</td>
+                      <td>2</td>
+                      <td>RM 260.00</td>
+                    </tr>
+                  </tbody>
+                </table>
+                <div class="quote-total">
+                  <span>Total quotation</span>
+                  <strong>RM 3,960.00</strong>
+                </div>
+                <div class="quote-actions" style="margin-top: 12px;">
+                  <button class="secondary-button" type="button">Re-run AI with correction</button>
+                  <button class="secondary-button" type="button">Print / PDF</button>
+                  <button class="primary-button" type="button">Save quote as PNG</button>
+                </div>
+              </section>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+  </body>
+</html>
