@@ -26,6 +26,10 @@
             <span class="shortcut-icon">S</span>
             <span data-i18n="simp3dResumePrint">SIMP3D Resume Print</span>
           </button>
+          <button class="shortcut" type="button" data-tool="stl-viewer" title="STL Viewer">
+            <span class="shortcut-icon">3D</span>
+            <span data-i18n="stlViewer">STL Viewer</span>
+          </button>
           <button class="shortcut" type="button" disabled title="Coming later">
             <span class="shortcut-icon">+</span>
             <span data-i18n="addTool">Add Tool</span>
@@ -104,7 +108,107 @@
             </label>
           </div>
 
-          <div class="editor-grid">
+          <div class="settings-grid tool-settings" id="stlSettings" hidden>
+            <label>
+              <span data-i18n="displayUnit">Display unit</span>
+              <select id="stlUnit">
+                <option value="mm">mm</option>
+                <option value="cm">cm</option>
+                <option value="inch">inch</option>
+                <option value="meter">meter</option>
+              </select>
+            </label>
+            <label>
+              <span data-i18n="resizeMode">Resize mode</span>
+              <select id="stlResizeMode">
+                <option value="uniform" data-i18n="uniformScale">Uniform scale</option>
+                <option value="free" data-i18n="freeScale">Free X/Y/Z scale</option>
+              </select>
+            </label>
+            <label class="preview-toggle">
+              <input id="stlLockProportions" type="checkbox" checked>
+              <span data-i18n="lockProportions">Lock proportions</span>
+            </label>
+            <div class="cut-summary">
+              <span data-i18n="stlMeasureTitle">Model measurements</span>
+              <strong data-i18n="stlMeasureDescription">View dimensions, volume, and surface area</strong>
+            </div>
+          </div>
+
+          <div class="stl-workspace" id="stlWorkspace" hidden>
+            <div class="stl-viewer">
+              <canvas id="stlCanvas"></canvas>
+              <div class="stl-empty" id="stlEmpty" data-i18n="stlEmpty">Open or sample an STL file to view the model.</div>
+            </div>
+
+            <div class="stl-panel">
+              <section class="stl-card">
+                <h3 data-i18n="measurements">Measurements</h3>
+                <dl class="metric-grid">
+                  <div>
+                    <dt data-i18n="dimensionX">X size</dt>
+                    <dd id="stlDimensionX">-</dd>
+                  </div>
+                  <div>
+                    <dt data-i18n="dimensionY">Y size</dt>
+                    <dd id="stlDimensionY">-</dd>
+                  </div>
+                  <div>
+                    <dt data-i18n="dimensionZ">Z size</dt>
+                    <dd id="stlDimensionZ">-</dd>
+                  </div>
+                  <div>
+                    <dt data-i18n="meshVolume">Volume</dt>
+                    <dd id="stlVolume">-</dd>
+                  </div>
+                  <div>
+                    <dt data-i18n="surfaceArea">Surface area</dt>
+                    <dd id="stlSurfaceArea">-</dd>
+                  </div>
+                </dl>
+              </section>
+
+              <section class="stl-card">
+                <h3 data-i18n="resizeModel">Resize model</h3>
+                <div class="resize-grid">
+                  <label>
+                    <span data-i18n="scalePercent">Scale %</span>
+                    <input id="stlScalePercent" type="number" min="0.01" step="1" value="100">
+                  </label>
+                  <label>
+                    <span data-i18n="scaleX">Scale X %</span>
+                    <input id="stlScaleX" type="number" min="0.01" step="1" value="100">
+                  </label>
+                  <label>
+                    <span data-i18n="scaleY">Scale Y %</span>
+                    <input id="stlScaleY" type="number" min="0.01" step="1" value="100">
+                  </label>
+                  <label>
+                    <span data-i18n="scaleZ">Scale Z %</span>
+                    <input id="stlScaleZ" type="number" min="0.01" step="1" value="100">
+                  </label>
+                  <label>
+                    <span data-i18n="targetX">Target X</span>
+                    <input id="stlTargetX" type="number" min="0.01" step="0.01">
+                  </label>
+                  <label>
+                    <span data-i18n="targetY">Target Y</span>
+                    <input id="stlTargetY" type="number" min="0.01" step="0.01">
+                  </label>
+                  <label>
+                    <span data-i18n="targetZ">Target Z</span>
+                    <input id="stlTargetZ" type="number" min="0.01" step="0.01">
+                  </label>
+                </div>
+                <div class="stl-actions">
+                  <button class="secondary-button" id="stlResetButton" type="button" data-i18n="resetScale">Reset scale</button>
+                  <button class="primary-button" id="stlExportButton" type="button" data-i18n="exportResizedStl">Export resized STL</button>
+                </div>
+              </section>
+            </div>
+          </div>
+
+          <div class="editor-grid" id="gcodeWorkspace">
             <div class="editor-column">
               <div class="editor-title">
                 <strong data-i18n="inputGcode">Input G-code</strong>
@@ -122,7 +226,7 @@
             </div>
           </div>
 
-          <div class="command-row">
+          <div class="command-row" id="gcodeActions">
             <button class="primary-button" id="processButton" type="button" data-i18n="runResumePrint">Run Resume Print</button>
             <button class="secondary-button" id="copyButton" type="button" data-i18n="copyOutput">Copy Output</button>
             <button class="secondary-button" id="downloadButton" type="button" data-i18n="downloadGcode">Download .gcode</button>
@@ -134,6 +238,14 @@
       </main>
     </div>
 
-    <script src="app.js"></script>
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.module.js",
+          "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.164.1/examples/jsm/"
+        }
+      }
+    </script>
+    <script type="module" src="app.js"></script>
   </body>
 </html>
