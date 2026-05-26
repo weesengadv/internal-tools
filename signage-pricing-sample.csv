@@ -1,0 +1,10 @@
+type,key,value
+backing,backingRateSqft,30
+emboss,front-lit,20
+emboss,back-lit,18
+emboss,no-lit,13
+led,ledWattPerLetter,12
+led,ledCostPerWatt,4.5
+psu,psuWatt,200
+psu,psuUsableFactor,0.8
+psu,psuCost,130

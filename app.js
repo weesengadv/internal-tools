@@ -13,6 +13,8 @@ const resumeSettings = document.getElementById("resumeSettings");
 const simp3dSettings = document.getElementById("simp3dSettings");
 const stlSettings = document.getElementById("stlSettings");
 const stlWorkspace = document.getElementById("stlWorkspace");
+const signageSettings = document.getElementById("signageSettings");
+const signageWorkspace = document.getElementById("signageWorkspace");
 const gcodeWorkspace = document.getElementById("gcodeWorkspace");
 const gcodeActions = document.getElementById("gcodeActions");
 const sampleButton = document.getElementById("sampleButton");
@@ -50,6 +52,25 @@ const stlTargetYInput = document.getElementById("stlTargetY");
 const stlTargetZInput = document.getElementById("stlTargetZ");
 const stlResetButton = document.getElementById("stlResetButton");
 const stlExportButton = document.getElementById("stlExportButton");
+const signageConfigStatus = document.getElementById("signageConfigStatus");
+const signageGuidelineSizeInput = document.getElementById("signageGuidelineSize");
+const signageLightingSelect = document.getElementById("signageLighting");
+const signageMaterialSelect = document.getElementById("signageMaterial");
+const signageCanvas = document.getElementById("signageCanvas");
+const signageEmpty = document.getElementById("signageEmpty");
+const signageDetections = document.getElementById("signageDetections");
+const signageQuoteLines = document.getElementById("signageQuoteLines");
+const signageQuoteTotal = document.getElementById("signageQuoteTotal");
+const signageBackingSize = document.getElementById("signageBackingSize");
+const signageWordGroup = document.getElementById("signageWordGroup");
+const signageConfidence = document.getElementById("signageConfidence");
+const signageAiNote = document.getElementById("signageAiNote");
+const signageCorrectionPrompt = document.getElementById("signageCorrectionPrompt");
+const signageRerunButton = document.getElementById("signageRerunButton");
+const signagePrintButton = document.getElementById("signagePrintButton");
+const signagePngButton = document.getElementById("signagePngButton");
+const signagePromptButtons = document.querySelectorAll("[data-prompt]");
+const signageRefreshQuoteButton = document.getElementById("signageRefreshQuoteButton");
 
 let loadedFileName = "edited.gcode";
 let sourceBaseName = "edited";
@@ -78,6 +99,16 @@ let stlControls = null;
 let stlResizeObserver = null;
 let stlAnimationStarted = false;
 let isUpdatingStlControls = false;
+let signagePhotoDataUrl = "";
+let signagePhotoImage = null;
+let signageActiveTool = "guideline";
+let signageCalibration = { x1: 216, y1: 338, x2: 984, y2: 338, inches: 144 };
+let signageRecognition = null;
+let signagePricing = null;
+let signageQuote = null;
+let signageCurrency = "MYR";
+let signageDragStart = null;
+let signageLetterTooltip = null;
 
 const previewLimit = 1500000;
 const messages = {
@@ -104,6 +135,8 @@ const messages = {
     nextZ: "Next Z",
     noFileLoaded: "No file loaded",
     openGcode: "Open G-code",
+    openManual: "Open manual",
+    openSignagePhoto: "Upload photo",
     openStl: "Open STL",
     outputPlaceholder: "Processed output appears here...",
     pasteGcode: "Paste G-code here...",
@@ -148,6 +181,62 @@ const messages = {
     surfaceArea: "Surface area",
     tagline: "Production tools",
     viewerGroup: "3D Viewer",
+    quotationGroup: "Quotation",
+    signageQuotation: "Signage Quotation",
+    signageConfig: "Config file",
+    signageGuideline: "Guideline size (inch)",
+    signageLighting: "Lighting",
+    signageMaterial: "Emboss material/model",
+    quoteAction: "Quote action",
+    refreshQuote: "Refresh quote",
+    frontLit: "Front lit",
+    backLit: "Back lit",
+    noLit: "No lit",
+    stepGuideline: "Mark guideline",
+    stepRecognize: "AI recognize",
+    stepMaterial: "Material",
+    stepPricing: "Sheet pricing",
+    stepReview: "Review draft",
+    stepExport: "Print / image",
+    guidelineTool: "Guideline",
+    backingBoxTool: "Backing box",
+    letterBoxTool: "Letter box",
+    manualFallbackTool: "Manual shape",
+    signageEmpty: "Upload or sample a signage photo, then mark the backing or guideline size.",
+    correctionPrompt: "AI correction prompt",
+    correctionPlaceholder: "Tell AI what to fix. Example: The word is HAPPY, backing is 96 x 24 inch, letter H is 18 inch tall.",
+    promptReadAll: "Read all words",
+    promptUseScale: "Use scale",
+    promptCorrectOnly: "Correct unclear",
+    rerunAi: "Re-run AI with correction",
+    aiDetectionReview: "AI Detection Review",
+    backingSize: "Backing size",
+    wordGroup: "Word group",
+    aiConfidence: "AI confidence",
+    letter: "Letter",
+    widthIn: "Width",
+    heightIn: "Height",
+    confidence: "Confidence",
+    quoteDraft: "Quote Draft",
+    aiNoteEmpty: "Run AI recognition to draft the quote.",
+    quoteItem: "Item",
+    quantity: "Qty",
+    quoteTotal: "Total",
+    totalQuotation: "Total quotation",
+    printQuote: "Print / PDF",
+    saveQuotePng: "Save quote as PNG",
+    signagePhotoLoaded: "Loaded signage photo. Mark the guideline/backing size, then run AI recognition.",
+    signageSampleLoaded: "Sample signage photo loaded. Guideline is set to 144 inch.",
+    signageRecognizing: "AI is reading the photo and alphabet dimensions...",
+    signagePricingLoading: "Loading Google Sheet pricing...",
+    signageDrafting: "AI is writing the quotation note...",
+    signageNeedPhoto: "Please upload a signage photo or click Sample before running AI.",
+    signageRecognized: "AI recognized {count} alphabet item(s). Review and correct before printing.",
+    signageRecognizeFailed: "AI recognition failed: {message}",
+    signageQuoteReady: "Quote draft is ready from Google Sheet pricing.",
+    signageQuoteRefreshed: "Quotation refreshed for selected material and lighting.",
+    signageNoQuoteToRefresh: "Run AI recognition or load Sample before refreshing the quote.",
+    signagePngSaved: "Saved {fileName}.",
     targetX: "Target X",
     targetY: "Target Y",
     targetZ: "Target Z",
@@ -208,6 +297,8 @@ const messages = {
     nextZ: "下一层 Z",
     noFileLoaded: "尚未载入文件",
     openGcode: "打开 G-code",
+    openManual: "打开说明",
+    openSignagePhoto: "上传照片",
     openStl: "打开 STL",
     outputPlaceholder: "处理后的输出会显示在这里...",
     pasteGcode: "在这里粘贴 G-code...",
@@ -252,6 +343,62 @@ const messages = {
     surfaceArea: "表面积",
     tagline: "生产工具",
     viewerGroup: "3D 查看器",
+    quotationGroup: "报价",
+    signageQuotation: "招牌报价",
+    signageConfig: "配置文件",
+    signageGuideline: "参考尺寸（inch）",
+    signageLighting: "灯光",
+    signageMaterial: "立体字材料/型号",
+    quoteAction: "报价操作",
+    refreshQuote: "刷新报价",
+    frontLit: "正发光",
+    backLit: "背发光",
+    noLit: "不发光",
+    stepGuideline: "标参考线",
+    stepRecognize: "AI 识别",
+    stepMaterial: "材料",
+    stepPricing: "表格价格",
+    stepReview: "检查报价",
+    stepExport: "打印 / 图片",
+    guidelineTool: "参考线",
+    backingBoxTool: "底板框",
+    letterBoxTool: "字母框",
+    manualFallbackTool: "手动形状",
+    signageEmpty: "上传或载入招牌照片，然后标底板或参考尺寸。",
+    correctionPrompt: "AI 修正提示",
+    correctionPlaceholder: "告诉 AI 要修正什么。例如：字是 HAPPY，底板 96 x 24 inch，H 字高 18 inch。",
+    promptReadAll: "识别全部字",
+    promptUseScale: "使用比例",
+    promptCorrectOnly: "只修正不清楚",
+    rerunAi: "用修正重新识别",
+    aiDetectionReview: "AI 识别检查",
+    backingSize: "底板尺寸",
+    wordGroup: "文字组",
+    aiConfidence: "AI 信心",
+    letter: "字母",
+    widthIn: "宽度",
+    heightIn: "高度",
+    confidence: "信心",
+    quoteDraft: "报价草稿",
+    aiNoteEmpty: "运行 AI 识别后生成报价。",
+    quoteItem: "项目",
+    quantity: "数量",
+    quoteTotal: "合计",
+    totalQuotation: "报价总额",
+    printQuote: "打印 / PDF",
+    saveQuotePng: "保存报价 PNG",
+    signagePhotoLoaded: "已载入招牌照片。请标参考尺寸，然后运行 AI 识别。",
+    signageSampleLoaded: "范例招牌已载入，参考线为 144 inch。",
+    signageRecognizing: "AI 正在读取照片和字母尺寸...",
+    signagePricingLoading: "正在读取 Google Sheet 价格...",
+    signageDrafting: "AI 正在写报价说明...",
+    signageNeedPhoto: "请先上传招牌照片，或点击示例后再运行 AI。",
+    signageRecognized: "AI 已识别 {count} 个字母项目。请检查后再打印。",
+    signageRecognizeFailed: "AI 识别失败：{message}",
+    signageQuoteReady: "已根据 Google Sheet 价格生成报价草稿。",
+    signageQuoteRefreshed: "已根据选择的材料和灯光刷新报价。",
+    signageNoQuoteToRefresh: "请先运行 AI 识别或载入示例，再刷新报价。",
+    signagePngSaved: "已保存 {fileName}。",
     targetX: "目标 X",
     targetY: "目标 Y",
     targetZ: "目标 Z",
@@ -295,7 +442,7 @@ if (!messages[activeLanguage]) {
   activeLanguage = "en";
 }
 
-if (!["resume-print", "simp3d-resume", "stl-viewer"].includes(activeTool)) {
+if (!["resume-print", "simp3d-resume", "stl-viewer", "signage-quotation"].includes(activeTool)) {
   activeTool = "resume-print";
 }
 
@@ -367,6 +514,7 @@ function applyLanguage() {
 function applyToolUi() {
   const isSimp3d = activeTool === "simp3d-resume";
   const isStl = activeTool === "stl-viewer";
+  const isSignage = activeTool === "signage-quotation";
   const isResume = activeTool === "resume-print";
 
   resumeSettings.hidden = !isResume;
@@ -375,18 +523,22 @@ function applyToolUi() {
   simp3dSettings.style.display = isSimp3d ? "" : "none";
   stlSettings.hidden = !isStl;
   stlSettings.style.display = isStl ? "" : "none";
+  signageSettings.hidden = !isSignage;
+  signageSettings.style.display = isSignage ? "" : "none";
   stlWorkspace.hidden = !isStl;
   stlWorkspace.style.display = isStl ? "" : "none";
-  gcodeWorkspace.hidden = isStl;
-  gcodeWorkspace.style.display = isStl ? "none" : "";
-  gcodeActions.hidden = isStl;
-  gcodeActions.style.display = isStl ? "none" : "";
+  signageWorkspace.hidden = !isSignage;
+  signageWorkspace.style.display = isSignage ? "" : "none";
+  gcodeWorkspace.hidden = isStl || isSignage;
+  gcodeWorkspace.style.display = isStl || isSignage ? "none" : "";
+  gcodeActions.hidden = isStl || isSignage;
+  gcodeActions.style.display = isStl || isSignage ? "none" : "";
 
-  const titleKey = isStl ? "stlViewer" : isSimp3d ? "simp3dResumePrint" : "resumePrint";
+  const titleKey = isSignage ? "signageQuotation" : isStl ? "stlViewer" : isSimp3d ? "simp3dResumePrint" : "resumePrint";
   toolTitle.textContent = t(titleKey);
   processButton.textContent = t(isSimp3d ? "runSimp3dResumePrint" : "runResumePrint");
-  fileInput.accept = isStl ? ".stl" : ".gcode,.gco,.gc,.txt";
-  fileInputLabel.textContent = t(isStl ? "openStl" : "openGcode");
+  fileInput.accept = isSignage ? "image/*" : isStl ? ".stl" : ".gcode,.gco,.gc,.txt";
+  fileInputLabel.textContent = t(isSignage ? "openSignagePhoto" : isStl ? "openStl" : "openGcode");
   shortcutButtons.forEach((button) => {
     button.classList.toggle("active", button.dataset.tool === activeTool);
   });
@@ -396,6 +548,16 @@ function applyToolUi() {
     resizeStlRenderer();
     updateStlControlMode();
     fileStatus.textContent = stlGeometry ? `${stlSourceName}.stl` : t("noFileLoaded");
+  }
+
+  if (isSignage) {
+    initSignageCanvas();
+    loadSignagePricing().then(() => {
+      if (signageRecognition) {
+        refreshSignageQuoteFromEdits();
+      }
+    });
+    fileStatus.textContent = signagePhotoDataUrl ? "Signage photo loaded" : t("noFileLoaded");
   }
 }
 
@@ -1096,6 +1258,696 @@ async function loadStlFile(file) {
   }
 }
 
+function initSignageCanvas() {
+  renderSignageCanvas();
+  renderSignageDetections();
+  renderSignageQuote();
+}
+
+function signageContext() {
+  return signageCanvas.getContext("2d");
+}
+
+function renderSignageCanvas() {
+  const context = signageContext();
+  context.clearRect(0, 0, signageCanvas.width, signageCanvas.height);
+
+  if (signagePhotoImage) {
+    context.drawImage(signagePhotoImage, 0, 0, signageCanvas.width, signageCanvas.height);
+    signageEmpty.hidden = true;
+  } else {
+    drawSampleSignageBackground(context);
+    signageEmpty.hidden = false;
+  }
+
+  drawLine(context, signageCalibration, "#9a3412", `${signageCalibration.inches} in`);
+
+  if (signageRecognition) {
+    drawBox(context, signageRecognition.backing?.box, "#0f766e", "Backing");
+    (signageRecognition.wordGroups || []).forEach((group) => {
+      drawBox(context, group.box, "#1d4ed8", `${group.text} ${formatControlNumber(group.widthIn)} in`);
+    });
+
+    (signageRecognition.letters || []).forEach((letter) => {
+      const color = letter.confidence >= 0.85 ? "#dc2626" : "#9a3412";
+      drawBox(context, letter.box, color, `${letter.text} ${formatControlNumber(letter.heightIn)} in`);
+    });
+  }
+}
+
+function drawSampleSignageBackground(context) {
+  context.fillStyle = "#dce6ea";
+  context.fillRect(0, 0, signageCanvas.width, signageCanvas.height * 0.38);
+  context.fillStyle = "#eef1f2";
+  context.fillRect(0, signageCanvas.height * 0.38, signageCanvas.width, signageCanvas.height * 0.62);
+  context.strokeStyle = "#9aa9af";
+  context.lineWidth = 2;
+  context.strokeRect(96, 224, 1008, 360);
+  context.fillStyle = "#d8e3e7";
+
+  for (let row = 0; row < 3; row += 1) {
+    for (let column = 0; column < 6; column += 1) {
+      context.fillRect(170 + column * 145, 292 + row * 72, 96, 38);
+      context.strokeRect(170 + column * 145, 292 + row * 72, 96, 38);
+    }
+  }
+
+  context.fillStyle = "#172026";
+  context.font = "bold 58px Segoe UI, Arial";
+  context.fillText("WEESENG", 360, 276);
+}
+
+function signageCalibrationBox() {
+  return { x: 216, y: 150, width: 768, height: 158 };
+}
+
+function drawBox(context, box, color, label) {
+  if (!box) {
+    return;
+  }
+
+  context.save();
+  context.strokeStyle = color;
+  context.fillStyle = `${color}22`;
+  context.lineWidth = 5;
+  context.fillRect(box.x, box.y, box.width, box.height);
+  context.strokeRect(box.x, box.y, box.width, box.height);
+  context.fillStyle = color;
+  context.font = "bold 18px Segoe UI, Arial";
+  context.fillText(label, box.x + 8, Math.max(22, box.y - 8));
+  context.restore();
+}
+
+function drawLine(context, line, color, label) {
+  context.save();
+  context.strokeStyle = color;
+  context.fillStyle = color;
+  context.lineWidth = 9;
+  context.lineCap = "round";
+  context.beginPath();
+  context.moveTo(line.x1, line.y1);
+  context.lineTo(line.x2, line.y2);
+  context.stroke();
+  context.beginPath();
+  context.arc(line.x1, line.y1, 10, 0, Math.PI * 2);
+  context.arc(line.x2, line.y2, 10, 0, Math.PI * 2);
+  context.fill();
+  context.font = "bold 18px Segoe UI, Arial";
+  context.fillText(label, (line.x1 + line.x2) / 2 - 28, (line.y1 + line.y2) / 2 + 34);
+  context.restore();
+}
+
+function loadSignageImage(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(reader.error || new Error("Unknown image read error."));
+    reader.onload = () => {
+      const image = new Image();
+      image.onload = () => resolve({ image, dataUrl: String(reader.result || "") });
+      image.onerror = () => reject(new Error("Image could not be loaded."));
+      image.src = String(reader.result || "");
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+async function loadSignagePhoto(file) {
+  if (!file) {
+    fileStatus.textContent = signagePhotoDataUrl ? "Signage photo loaded" : t("noFileLoaded");
+    setLog(t("noFileSelected"), "warning");
+    return;
+  }
+
+  try {
+    setLog(t("fileReading", { fileName: file.name, percent: 0, size: formatBytes(file.size) }), "info");
+    const result = await loadSignageImage(file);
+    signagePhotoImage = result.image;
+    signagePhotoDataUrl = result.dataUrl;
+    signageRecognition = null;
+    signageQuote = null;
+    renderSignageCanvas();
+    renderSignageDetections();
+    renderSignageQuote();
+    fileStatus.textContent = file.name;
+    setLog(t("signagePhotoLoaded"), "success");
+  } catch (error) {
+    setLog(error.message, "warning");
+  }
+}
+
+function loadSampleSignage() {
+  signagePhotoImage = null;
+  signagePhotoDataUrl = "";
+  signageCalibration = { x1: 216, y1: 338, x2: 984, y2: 338, inches: Number(signageGuidelineSizeInput.value) || 144 };
+  signageRecognition = sampleSignageRecognition();
+  signagePricing = signagePricing || sampleSignagePricing();
+  signageQuote = calculateSignageQuote(signageRecognition, signagePricing);
+  renderSignageCanvas();
+  renderSignageDetections();
+  renderSignageQuote();
+  fileStatus.textContent = "Sample signage";
+  setLog(t("signageSampleLoaded"), "success");
+}
+
+function sampleSignageRecognition() {
+  const letters = ["W", "E", "E", "S", "E", "N", "G"];
+  const widths = [18.5, 12, 12.1, 11.8, 12, 13.4, 13];
+  const confidences = [0.92, 0.94, 0.93, 0.78, 0.94, 0.9, 0.89];
+  const startX = 338;
+
+  return {
+    source: "sample",
+    aiNote: "Sample recognition is ready. Letter S needs review before final quotation.",
+    backing: { widthIn: 144, heightIn: 36, areaSqft: 36, box: signageCalibrationBox() },
+    wordGroups: [{ text: "WEESENG", widthIn: 112, heightIn: 18, confidence: 0.92, box: { x: 312, y: 190, width: 576, height: 72 } }],
+    letters: letters.map((text, index) => ({
+      text,
+      widthIn: widths[index],
+      heightIn: index === 3 ? 17.6 : 18,
+      confidence: confidences[index],
+      box: { x: startX + index * 70, y: 202, width: index === 0 ? 64 : 52, height: 58 }
+    })),
+    reviewItems: ["Letter S confidence is low. Confirm its height before final quote."]
+  };
+}
+
+function sampleSignagePricing() {
+  return {
+    currency: "MYR",
+    backingRateSqft: 30,
+    embossRateByLighting: {
+      "front-lit": 20,
+      "back-lit": 18,
+      "no-lit": 13
+    },
+    embossMaterialOptions: ["Acrylic emboss", "Stainless steel emboss", "Aluminium emboss"],
+    ledWattPerLetter: 12,
+    ledCostPerWatt: 4.5,
+    psuWatt: 200,
+    psuUsableFactor: 0.8,
+    psuCost: 130
+  };
+}
+
+function updateSignageMaterialOptions(pricing) {
+  const options = pricing?.embossMaterialOptions || [];
+  if (!options.length) {
+    return;
+  }
+
+  const current = signageMaterialSelect.value;
+  signageMaterialSelect.innerHTML = "";
+  options.forEach((option) => {
+    const element = document.createElement("option");
+    element.value = option;
+    element.textContent = option;
+    signageMaterialSelect.append(element);
+  });
+
+  if (options.includes(current)) {
+    signageMaterialSelect.value = current;
+  }
+}
+
+async function loadSignagePricing() {
+  try {
+    const response = await fetch("/api/signage/pricing");
+    if (!response.ok) {
+      throw new Error(await response.text());
+    }
+
+    signagePricing = await response.json();
+    signageCurrency = signagePricing.currency || "MYR";
+    updateSignageMaterialOptions(signagePricing);
+  } catch {
+    signagePricing = sampleSignagePricing();
+    signageCurrency = signagePricing.currency;
+  }
+  return signagePricing;
+}
+
+async function recognizeSignage() {
+  if (!signagePhotoDataUrl && signageRecognition?.source !== "sample") {
+    signageAiNote.textContent = t("signageNeedPhoto");
+    setLog(t("signageNeedPhoto"), "warning");
+    return;
+  }
+
+  const originalButtonText = signageRerunButton.textContent;
+  signageRerunButton.disabled = true;
+  signageRerunButton.textContent = t("signageRecognizing");
+  signageAiNote.textContent = t("signageRecognizing");
+
+  try {
+    setLog(t("signagePricingLoading"), "info");
+    const pricing = await loadSignagePricing();
+    const payload = {
+      image: signagePhotoDataUrl,
+      guideline: {
+        ...signageCalibration,
+        inches: Number(signageGuidelineSizeInput.value) || signageCalibration.inches
+      },
+      material: signageMaterialSelect.value,
+      lighting: signageLightingSelect.value,
+      correctionPrompt: signageCorrectionPrompt.value
+    };
+    setLog(t("signageRecognizing"), "info");
+    const response = await fetch("/api/signage/recognize", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+
+    if (!response.ok) {
+      throw new Error(await response.text());
+    }
+
+    signageRecognition = normalizeSignageRecognition(await response.json());
+    signageQuote = calculateSignageQuote(signageRecognition, pricing);
+    signageAiNote.textContent = signageRecognition.aiNote;
+    await updateSignageDraft();
+    renderSignageCanvas();
+    renderSignageDetections();
+    renderSignageQuote();
+    setLog(t("signageRecognized", { count: signageRecognition.letters.length }), "success");
+  } catch (error) {
+    signageAiNote.textContent = error.message;
+    renderSignageCanvas();
+    renderSignageDetections();
+    renderSignageQuote();
+    setLog(t("signageRecognizeFailed", { message: error.message }), "warning");
+  } finally {
+    signageRerunButton.disabled = false;
+    signageRerunButton.textContent = originalButtonText || t("rerunAi");
+  }
+}
+
+async function updateSignageDraft() {
+  if (!signageQuote) {
+    return;
+  }
+
+  try {
+    signageAiNote.textContent = t("signageDrafting");
+    const response = await fetch("/api/signage/draft", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        recognition: signageRecognition,
+        quote: signageQuote,
+        material: signageMaterialSelect.value,
+        lighting: signageLightingSelect.value
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error(await response.text());
+    }
+
+    const draft = await response.json();
+    signageQuote.note = draft.draft || signageQuote.note;
+  } catch {
+    signageQuote.note = signageQuote.note || t("signageQuoteReady");
+  }
+}
+
+function normalizeSignageRecognition(result) {
+  const fallbackBox = signageCalibrationBox();
+  const pixelsPerInch = Math.max(1, Math.hypot(signageCalibration.x2 - signageCalibration.x1, signageCalibration.y2 - signageCalibration.y1) / signageCalibration.inches);
+  const backing = result.backing || {
+    widthIn: Math.abs(signageCalibration.x2 - signageCalibration.x1) / pixelsPerInch,
+    heightIn: Math.max(1, Math.abs(signageCalibration.y2 - signageCalibration.y1) / pixelsPerInch),
+    box: fallbackBox
+  };
+  const wordGroups = Array.isArray(result.wordGroups) ? result.wordGroups : [];
+  const letters = Array.isArray(result.letters) ? result.letters : [];
+
+  if (!letters.length) {
+    throw new Error(result.aiNote || "AI did not return any alphabet boxes. Try a clearer guideline or type the expected word in the correction prompt.");
+  }
+
+  return {
+    source: result.source || "ai",
+    aiNote: result.aiNote || "AI recognition completed. Review low-confidence items before final quote.",
+    backing: {
+      ...backing,
+      widthIn: Number(backing.widthIn) || 0,
+      heightIn: Number(backing.heightIn) || 0,
+      areaSqft: Number(backing.areaSqft) || (Number(backing.widthIn || 0) * Number(backing.heightIn || 0)) / 144,
+      box: backing.box || fallbackBox
+    },
+    wordGroups,
+    letters: letters.map((letter, index) => ({
+      ...letter,
+      text: String(letter.text || "?"),
+      widthIn: Number(letter.widthIn) || 0,
+      heightIn: Number(letter.heightIn) || 0,
+      confidence: Number(letter.confidence ?? 0.5),
+      box: letter.box || {
+        x: 260 + index * 64,
+        y: 240,
+        width: Math.max(24, (Number(letter.widthIn) || 8) * pixelsPerInch),
+        height: Math.max(24, (Number(letter.heightIn) || 12) * pixelsPerInch)
+      }
+    })),
+    reviewItems: Array.isArray(result.reviewItems) ? result.reviewItems : []
+  };
+}
+
+function calculateSignageQuote(recognition, pricing) {
+  const rates = pricing || sampleSignagePricing();
+  const lighting = signageLightingSelect.value;
+  const backingArea = Number(recognition.backing.areaSqft) || 0;
+  const letterAreaSqin = recognition.letters.reduce((sum, letter) => {
+    return sum + (Number(letter.widthIn) * Number(letter.heightIn));
+  }, 0);
+  const backingTotal = backingArea * Number(rates.backingRateSqft || 0);
+  const embossPricing = rates.embossPricing;
+  const selectedMaterial = signageMaterialSelect.value;
+  const materialAddon = embossPricing?.materials?.find((material) => material.label === selectedMaterial);
+  const lightingRate = embossPricing?.lighting?.[lighting];
+  const embossTotal = lightingRate
+    ? recognition.letters.reduce((sum, letter) => {
+      const width = Number(letter.widthIn) || 0;
+      const height = Number(letter.heightIn) || 0;
+      const isSmall = height < 12;
+      const base = isSmall
+        ? height * Number(lightingRate.lessThan12PerHeightIn || 0)
+        : width * height * Number(lightingRate.atLeast12PerSqIn || 0);
+      const addon = isSmall
+        ? height * Number(materialAddon?.lessThan12AddPerHeightIn || 0)
+        : width * height * Number(materialAddon?.atLeast12AddPerSqIn || 0);
+      return sum + base + addon;
+    }, 0)
+    : (letterAreaSqin / 144) * Number((rates.embossRateByLighting || {})[lighting] || rates.embossRateSqft || 0) * 5;
+  const ledMeters = lighting === "no-lit" ? 0 : recognition.letters.reduce((sum, letter) => {
+    return sum + (2 * (Number(letter.widthIn) + Number(letter.heightIn))) / 39.3701;
+  }, 0);
+  const sheetLedOption = rates.ledPricing?.options?.[0];
+  const ledTotal = sheetLedOption
+    ? ledMeters * Number(sheetLedOption.ratePerMeter || 0)
+    : recognition.letters.length * Number(rates.ledWattPerLetter || 0) * Number(rates.ledCostPerWatt || 0);
+  const ledWatts = lighting === "no-lit" ? 0 : recognition.letters.length * Number(rates.ledWattPerLetter || 0);
+  const usablePsu = Number(rates.psuWatt || 1) * Number(rates.psuUsableFactor || 0.8);
+  const psuQty = ledTotal > 0 ? Math.max(1, Math.ceil(ledWatts / usablePsu)) : 0;
+  const psuCost = Number(rates.ledPricing?.psuOptions?.[0]?.unitCost || rates.psuCost || 0);
+  const psuTotal = psuQty * psuCost;
+  const lines = [
+    { item: `Backing panel, ${formatControlNumber(backingArea)} sqft`, qty: "1", total: backingTotal },
+    { item: `Emboss alphabet set, ${selectedMaterial}, ${lighting}`, qty: `${recognition.letters.length} letters`, total: embossTotal }
+  ];
+
+  if (ledTotal > 0) {
+    lines.push({ item: `LED module and wiring, ${formatControlNumber(ledMeters)} m`, qty: "1", total: ledTotal });
+    lines.push({ item: `PSU ${rates.psuWatt || 200}W`, qty: String(psuQty), total: psuTotal });
+  }
+
+  return {
+    currency: rates.currency || "MYR",
+    lines,
+    total: lines.reduce((sum, line) => sum + line.total, 0),
+    note: recognition.aiNote || t("signageQuoteReady")
+  };
+}
+
+function money(value, currency = signageCurrency) {
+  return `${currency} ${Number(value || 0).toLocaleString("en-MY", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
+
+function signageLetterQuoteDetails(letter) {
+  const rates = signagePricing || sampleSignagePricing();
+  const lighting = signageLightingSelect.value;
+  const selectedMaterial = signageMaterialSelect.value;
+  const width = Number(letter.widthIn) || 0;
+  const height = Number(letter.heightIn) || 0;
+  const areaSqin = width * height;
+  const isSmall = height < 12;
+  const lightingRate = rates.embossPricing?.lighting?.[lighting];
+  const materialAddon = rates.embossPricing?.materials?.find((material) => material.label === selectedMaterial);
+  let embossBase = 0;
+  let embossAddon = 0;
+  let formula = "";
+
+  if (lightingRate) {
+    if (isSmall) {
+      embossBase = height * Number(lightingRate.lessThan12PerHeightIn || 0);
+      embossAddon = height * Number(materialAddon?.lessThan12AddPerHeightIn || 0);
+      formula = `${formatControlNumber(height)} in height x ${money(Number(lightingRate.lessThan12PerHeightIn || 0))}/height in`;
+    } else {
+      embossBase = areaSqin * Number(lightingRate.atLeast12PerSqIn || 0);
+      embossAddon = areaSqin * Number(materialAddon?.atLeast12AddPerSqIn || 0);
+      formula = `${formatControlNumber(width)} x ${formatControlNumber(height)} = ${formatControlNumber(areaSqin)} sq in x ${money(Number(lightingRate.atLeast12PerSqIn || 0))}/sq in`;
+    }
+  } else {
+    embossBase = (areaSqin / 144) * Number((rates.embossRateByLighting || {})[lighting] || rates.embossRateSqft || 0) * 5;
+    formula = `${formatControlNumber(areaSqin / 144)} sqft x fallback rate`;
+  }
+
+  const ledMeters = lighting === "no-lit" ? 0 : (2 * (width + height)) / 39.3701;
+  const ledRate = Number(rates.ledPricing?.options?.[0]?.ratePerMeter || 0);
+  const ledTotal = ledMeters * ledRate;
+  const psuShare = signageQuote && lighting !== "no-lit" && signageRecognition?.letters?.length
+    ? (signageQuote.lines.find((line) => line.item.startsWith("PSU"))?.total || 0) / signageRecognition.letters.length
+    : 0;
+  const total = embossBase + embossAddon + ledTotal + psuShare;
+  const lines = [
+    `${letter.text || "?"} alphabet quote`,
+    `Size: ${formatControlNumber(width)} in x ${formatControlNumber(height)} in`,
+    `Emboss: ${formula} = ${money(embossBase, rates.currency)}`,
+    `Material add-on: ${selectedMaterial} = ${money(embossAddon, rates.currency)}`
+  ];
+
+  if (lighting !== "no-lit") {
+    lines.push(`LED: perimeter ${formatControlNumber(ledMeters)} m x ${money(ledRate, rates.currency)}/m = ${money(ledTotal, rates.currency)}`);
+    lines.push(`PSU shared estimate: ${money(psuShare, rates.currency)}`);
+  }
+
+  lines.push(`Alphabet total estimate: ${money(total, rates.currency)}`);
+  return lines.join("\n");
+}
+
+function ensureSignageLetterTooltip() {
+  if (!signageLetterTooltip) {
+    signageLetterTooltip = document.createElement("div");
+    signageLetterTooltip.className = "floating-letter-tooltip";
+    document.body.append(signageLetterTooltip);
+  }
+
+  return signageLetterTooltip;
+}
+
+function showSignageLetterTooltip(event) {
+  const row = event.target.closest(".letter-quote-row");
+  if (!row?.dataset.tooltip) {
+    return;
+  }
+
+  const tooltip = ensureSignageLetterTooltip();
+  tooltip.textContent = row.dataset.tooltip;
+  tooltip.hidden = false;
+  moveSignageLetterTooltip(event);
+}
+
+function moveSignageLetterTooltip(event) {
+  if (!signageLetterTooltip || signageLetterTooltip.hidden) {
+    return;
+  }
+
+  const offset = 16;
+  const maxLeft = window.innerWidth - signageLetterTooltip.offsetWidth - 12;
+  const maxTop = window.innerHeight - signageLetterTooltip.offsetHeight - 12;
+  signageLetterTooltip.style.left = `${Math.max(12, Math.min(event.clientX + offset, maxLeft))}px`;
+  signageLetterTooltip.style.top = `${Math.max(12, Math.min(event.clientY + offset, maxTop))}px`;
+}
+
+function hideSignageLetterTooltip(event) {
+  if (!signageLetterTooltip) {
+    return;
+  }
+
+  const nextRow = event.relatedTarget?.closest?.(".letter-quote-row");
+  if (!nextRow) {
+    signageLetterTooltip.hidden = true;
+  }
+}
+
+function renderSignageDetections() {
+  const recognition = signageRecognition;
+  signageDetections.innerHTML = "";
+
+  if (!recognition) {
+    signageBackingSize.textContent = "-";
+    signageWordGroup.textContent = "-";
+    signageConfidence.textContent = "-";
+    return;
+  }
+
+  signageBackingSize.textContent = `${formatControlNumber(recognition.backing.widthIn)} in x ${formatControlNumber(recognition.backing.heightIn)} in`;
+  signageWordGroup.textContent = (recognition.wordGroups || []).map((group) => `${group.text} ${formatControlNumber(group.widthIn)} in`).join(", ");
+  const averageConfidence = recognition.letters.reduce((sum, letter) => sum + Number(letter.confidence || 0), 0) / recognition.letters.length;
+  signageConfidence.textContent = `${Math.round(averageConfidence * 100)}%`;
+
+  recognition.letters.forEach((letter, index) => {
+    const row = document.createElement("tr");
+    row.className = "letter-quote-row";
+    row.dataset.tooltip = signageLetterQuoteDetails(letter);
+    row.innerHTML = [
+      `<td><input data-letter-index="${index}" data-field="text" value="${letter.text}"></td>`,
+      `<td><input data-letter-index="${index}" data-field="widthIn" type="number" step="0.01" value="${formatControlNumber(letter.widthIn)}"></td>`,
+      `<td><input data-letter-index="${index}" data-field="heightIn" type="number" step="0.01" value="${formatControlNumber(letter.heightIn)}"></td>`,
+      `<td><span class="confidence-pill${letter.confidence < 0.85 ? " warning" : ""}">${Math.round(letter.confidence * 100)}%</span></td>`
+    ].join("");
+    signageDetections.append(row);
+  });
+}
+
+function renderSignageQuote() {
+  signageQuoteLines.innerHTML = "";
+
+  if (!signageQuote) {
+    signageAiNote.textContent = t("aiNoteEmpty");
+    signageQuoteTotal.textContent = money(0);
+    return;
+  }
+
+  signageAiNote.textContent = signageQuote.note;
+  signageQuote.lines.forEach((line) => {
+    const row = document.createElement("tr");
+    row.innerHTML = `<td>${line.item}</td><td>${line.qty}</td><td>${money(line.total, signageQuote.currency)}</td>`;
+    signageQuoteLines.append(row);
+  });
+  signageQuoteTotal.textContent = money(signageQuote.total, signageQuote.currency);
+}
+
+function refreshSignageQuoteFromControls() {
+  if (!signageRecognition) {
+    setLog(t("signageNoQuoteToRefresh"), "warning");
+    signageAiNote.textContent = t("signageNoQuoteToRefresh");
+    return;
+  }
+
+  refreshSignageQuoteFromEdits();
+  setLog(t("signageQuoteRefreshed"), "success");
+}
+
+function refreshSignageQuoteFromEdits(renderDetections = true) {
+  if (!signageRecognition) {
+    return;
+  }
+
+  signageQuote = calculateSignageQuote(signageRecognition, signagePricing || sampleSignagePricing());
+  renderSignageCanvas();
+  if (renderDetections) {
+    renderSignageDetections();
+  }
+  renderSignageQuote();
+}
+
+function printSignageQuote() {
+  window.print();
+}
+
+function saveSignageQuotePng() {
+  const quoteLines = signageQuote ? signageQuote.lines : [];
+  const rows = quoteLines.map((line, index) => {
+    const y = 150 + index * 34;
+    return `<text x="52" y="${y}" font-size="18" fill="#172026">${escapeXml(line.item)}</text><text x="570" y="${y}" font-size="18" fill="#172026">${escapeXml(line.qty)}</text><text x="690" y="${y}" font-size="18" fill="#172026">${escapeXml(money(line.total, signageQuote.currency))}</text>`;
+  }).join("");
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="900" height="520"><rect width="900" height="520" fill="#ffffff"/><text x="52" y="58" font-size="30" font-weight="700" fill="#172026">Weeseng Advertising</text><text x="52" y="92" font-size="20" fill="#0f766e">Signage Quotation Draft</text><line x1="52" y1="115" x2="848" y2="115" stroke="#d8e0e5"/><text x="52" y="132" font-size="15" font-weight="700" fill="#65727c">Item</text><text x="570" y="132" font-size="15" font-weight="700" fill="#65727c">Qty</text><text x="690" y="132" font-size="15" font-weight="700" fill="#65727c">Total</text>${rows}<rect x="52" y="420" width="796" height="58" fill="#f0fdfa" stroke="#99f6e4"/><text x="72" y="456" font-size="22" font-weight="700" fill="#115e59">Total quotation</text><text x="650" y="456" font-size="22" font-weight="700" fill="#115e59">${escapeXml(money(signageQuote?.total || 0, signageQuote?.currency || "MYR"))}</text></svg>`;
+  const image = new Image();
+  image.onload = () => {
+    const canvas = document.createElement("canvas");
+    canvas.width = 900;
+    canvas.height = 520;
+    const context = canvas.getContext("2d");
+    context.drawImage(image, 0, 0);
+    canvas.toBlob((blob) => {
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      const fileName = `signage-quotation-${Date.now()}.png`;
+      link.href = url;
+      link.download = fileName;
+      document.body.append(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+      setLog(t("signagePngSaved", { fileName }), "success");
+    }, "image/png");
+  };
+  image.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+}
+
+function escapeXml(value) {
+  return String(value).replace(/[<>&'"]/g, (char) => ({
+    "<": "&lt;",
+    ">": "&gt;",
+    "&": "&amp;",
+    "'": "&apos;",
+    "\"": "&quot;"
+  }[char]));
+}
+
+function signageCanvasPoint(event) {
+  const rect = signageCanvas.getBoundingClientRect();
+  return {
+    x: ((event.clientX - rect.left) / rect.width) * signageCanvas.width,
+    y: ((event.clientY - rect.top) / rect.height) * signageCanvas.height
+  };
+}
+
+function startSignageDrag(event) {
+  if (activeTool !== "signage-quotation") {
+    return;
+  }
+
+  signageDragStart = signageCanvasPoint(event);
+}
+
+function updateSignageDrag(event) {
+  if (!signageDragStart || activeTool !== "signage-quotation") {
+    return;
+  }
+
+  const point = signageCanvasPoint(event);
+
+  if (signageActiveTool === "guideline") {
+    signageCalibration = {
+      x1: signageDragStart.x,
+      y1: signageDragStart.y,
+      x2: point.x,
+      y2: point.y,
+      inches: Number(signageGuidelineSizeInput.value) || signageCalibration.inches
+    };
+    signageRecognition = null;
+    signageQuote = null;
+    renderSignageDetections();
+    renderSignageQuote();
+  } else if (signageActiveTool === "backing" && signageRecognition) {
+    const box = {
+      x: Math.min(signageDragStart.x, point.x),
+      y: Math.min(signageDragStart.y, point.y),
+      width: Math.abs(point.x - signageDragStart.x),
+      height: Math.abs(point.y - signageDragStart.y)
+    };
+    const pixelsPerInch = Math.max(1, Math.hypot(signageCalibration.x2 - signageCalibration.x1, signageCalibration.y2 - signageCalibration.y1) / signageCalibration.inches);
+    signageRecognition.backing = {
+      widthIn: box.width / pixelsPerInch,
+      heightIn: box.height / pixelsPerInch,
+      areaSqft: (box.width / pixelsPerInch) * (box.height / pixelsPerInch) / 144,
+      box
+    };
+    signageQuote = calculateSignageQuote(signageRecognition, signagePricing || sampleSignagePricing());
+    renderSignageDetections();
+    renderSignageQuote();
+  }
+
+  renderSignageCanvas();
+}
+
+function finishSignageDrag() {
+  signageDragStart = null;
+}
+
 function getZValue(line) {
   const match = line.trim().match(/^;Z:\s*([+-]?\d+(?:\.\d+)?)/i);
   return match ? match[1] : "";
@@ -1376,11 +2228,16 @@ function runSimp3dResumePrint() {
 fileInput.addEventListener("click", () => {
   fileInput.value = "";
   fileStatus.textContent = t("waitingForFile");
-  setLog(activeTool === "stl-viewer" ? t("openStl") : t("filePickerReady"), "info");
+  setLog(activeTool === "signage-quotation" ? t("openSignagePhoto") : activeTool === "stl-viewer" ? t("openStl") : t("filePickerReady"), "info");
 });
 
 fileInput.addEventListener("change", async () => {
   const file = fileInput.files[0];
+
+  if (activeTool === "signage-quotation") {
+    await loadSignagePhoto(file);
+    return;
+  }
 
   if (activeTool === "stl-viewer") {
     await loadStlFile(file);
@@ -1391,6 +2248,12 @@ fileInput.addEventListener("change", async () => {
 });
 
 fileInput.addEventListener("cancel", () => {
+  if (activeTool === "signage-quotation") {
+    fileStatus.textContent = signagePhotoDataUrl ? "Signage photo loaded" : t("noFileLoaded");
+    setLog(t("fileCancelled"), "warning");
+    return;
+  }
+
   if (activeTool === "stl-viewer") {
     fileStatus.textContent = stlGeometry ? `${stlSourceName}.stl` : t("noFileLoaded");
     setLog(t("fileCancelled"), "warning");
@@ -1402,6 +2265,11 @@ fileInput.addEventListener("cancel", () => {
 });
 
 sampleButton.addEventListener("click", () => {
+  if (activeTool === "signage-quotation") {
+    loadSampleSignage();
+    return;
+  }
+
   if (activeTool === "stl-viewer") {
     loadSampleStl();
     return;
@@ -1562,6 +2430,61 @@ stlResetButton.addEventListener("click", () => {
 
 stlExportButton.addEventListener("click", exportResizedStl);
 
+signageRerunButton.addEventListener("click", recognizeSignage);
+signageRefreshQuoteButton.addEventListener("click", refreshSignageQuoteFromControls);
+signageLightingSelect.addEventListener("change", refreshSignageQuoteFromControls);
+signageMaterialSelect.addEventListener("change", refreshSignageQuoteFromControls);
+signageGuidelineSizeInput.addEventListener("input", () => {
+  signageCalibration.inches = Number(signageGuidelineSizeInput.value) || signageCalibration.inches;
+  renderSignageCanvas();
+});
+
+signageDetections.addEventListener("input", (event) => {
+  const input = event.target;
+  const index = Number(input.dataset.letterIndex);
+  const field = input.dataset.field;
+
+  if (!signageRecognition || !Number.isInteger(index) || !field) {
+    return;
+  }
+
+  signageRecognition.letters[index][field] = field === "text" ? input.value : Number(input.value);
+  refreshSignageQuoteFromEdits(false);
+  const row = input.closest(".letter-quote-row");
+  if (row) {
+    row.dataset.tooltip = signageLetterQuoteDetails(signageRecognition.letters[index]);
+    if (signageLetterTooltip && !signageLetterTooltip.hidden) {
+      signageLetterTooltip.textContent = row.dataset.tooltip;
+    }
+  }
+});
+signageDetections.addEventListener("mouseover", showSignageLetterTooltip);
+signageDetections.addEventListener("mousemove", moveSignageLetterTooltip);
+signageDetections.addEventListener("mouseout", hideSignageLetterTooltip);
+
+document.querySelectorAll(".signage-tools .tool-button").forEach((button) => {
+  button.addEventListener("click", () => {
+    document.querySelectorAll(".signage-tools .tool-button").forEach((item) => item.classList.remove("active"));
+    button.classList.add("active");
+    signageActiveTool = button.id.replace("signageTool", "").toLowerCase();
+  });
+});
+
+signagePromptButtons.forEach((button) => {
+  button.addEventListener("click", () => {
+    const current = signageCorrectionPrompt.value.trim();
+    signageCorrectionPrompt.value = current ? `${current}\n${button.dataset.prompt}` : button.dataset.prompt;
+    signageCorrectionPrompt.focus();
+  });
+});
+
+signagePrintButton.addEventListener("click", printSignageQuote);
+signagePngButton.addEventListener("click", saveSignageQuotePng);
+signageCanvas.addEventListener("pointerdown", startSignageDrag);
+signageCanvas.addEventListener("pointermove", updateSignageDrag);
+window.addEventListener("pointerup", finishSignageDrag);
+
 applyLanguage();
 updateStats();
 resetStlMeasurements();
+initSignageCanvas();

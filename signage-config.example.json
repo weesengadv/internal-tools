@@ -1,0 +1,18 @@
+{
+  "baseUrl": "https://api.openai.com/v1",
+  "model": "gpt-4.1-mini",
+  "apiKey": "",
+  "googleSheetCsvUrl": "",
+  "googleSheetId": "",
+  "googleSheetTabs": [],
+  "currency": "MYR",
+  "defaultUnit": "inch",
+  "pricingUnit": "sqft",
+  "sheetMapping": {
+    "type": "type",
+    "key": "key",
+    "value": "value"
+  },
+  "alphabetLibrary": "Use signage emboss alphabet recognition. Detect individual A-Z/0-9 characters, grouped words, width, height, confidence, and any unclear shapes.",
+  "recognitionPrompt": "You are estimating signage from a user-provided photo after the user marks a real-world backing or guideline size. Recognize the backing, grouped emboss words, each alphabet box, each alphabet width and height in inches, and confidence. Return JSON only."
+}

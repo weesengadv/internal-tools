@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>SignageFlow AI - Material &amp; Model Selection</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&amp;family=Inter:wght@400;500;600&amp;family=JetBrains+Mono&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "secondary": "#515f74",
+                        "on-tertiary-container": "#fffbff",
+                        "on-tertiary-fixed": "#2f1500",
+                        "on-primary": "#ffffff",
+                        "primary-fixed": "#89f5e7",
+                        "on-secondary-fixed-variant": "#3a485c",
+                        "on-secondary": "#ffffff",
+                        "surface-container-highest": "#dae2fd",
+                        "tertiary-fixed-dim": "#ffb77d",
+                        "surface-bright": "#faf8ff",
+                        "on-secondary-container": "#57657b",
+                        "background": "#faf8ff",
+                        "on-error": "#ffffff",
+                        "inverse-surface": "#283044",
+                        "on-primary-fixed-variant": "#005049",
+                        "tertiary-container": "#b15f00",
+                        "surface-container-lowest": "#ffffff",
+                        "on-tertiary": "#ffffff",
+                        "on-surface": "#131b2e",
+                        "error-container": "#ffdad6",
+                        "secondary-fixed-dim": "#b9c7e0",
+                        "primary-fixed-dim": "#6bd8cb",
+                        "on-primary-container": "#f4fffc",
+                        "on-tertiary-fixed-variant": "#6e3900",
+                        "on-background": "#131b2e",
+                        "inverse-on-surface": "#eef0ff",
+                        "on-primary-fixed": "#00201d",
+                        "error": "#ba1a1a",
+                        "primary": "#00685f",
+                        "on-error-container": "#93000a",
+                        "surface-variant": "#dae2fd",
+                        "tertiary": "#8d4b00",
+                        "secondary-container": "#d5e3fd",
+                        "on-secondary-fixed": "#0d1c2f",
+                        "surface": "#faf8ff",
+                        "tertiary-fixed": "#ffdcc3",
+                        "surface-container": "#eaedff",
+                        "outline": "#6d7a77",
+                        "inverse-primary": "#6bd8cb",
+                        "secondary-fixed": "#d5e3fd",
+                        "outline-variant": "#bcc9c6",
+                        "surface-tint": "#006a61",
+                        "surface-dim": "#d2d9f4",
+                        "on-surface-variant": "#3d4947",
+                        "primary-container": "#008378",
+                        "surface-container-low": "#f2f3ff",
+                        "surface-container-high": "#e2e7ff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "xs": "4px",
+                        "gutter": "16px",
+                        "xl": "32px",
+                        "lg": "24px",
+                        "sm": "8px",
+                        "unit": "4px",
+                        "sidebar-width": "260px",
+                        "toolbar-height": "56px",
+                        "md": "16px"
+                    },
+                    "fontFamily": {
+                        "display-lg": ["Hanken Grotesk"],
+                        "body-md": ["Inter"],
+                        "label-md": ["Inter"],
+                        "label-bold": ["Inter"],
+                        "body-sm": ["Inter"],
+                        "headline-md": ["Hanken Grotesk"],
+                        "body-lg": ["Inter"],
+                        "code": ["JetBrains Mono"],
+                        "headline-sm": ["Hanken Grotesk"]
+                    },
+                    "fontSize": {
+                        "display-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                        "label-md": ["12px", {"lineHeight": "16px", "fontWeight": "500"}],
+                        "label-bold": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                        "body-sm": ["13px", {"lineHeight": "18px", "fontWeight": "400"}],
+                        "headline-md": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                        "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "code": ["12px", {"lineHeight": "16px", "fontWeight": "400"}],
+                        "headline-sm": ["18px", {"lineHeight": "24px", "fontWeight": "600"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .step-line::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 100%;
+            width: 100%;
+            height: 2px;
+            background-color: #E2E8F0;
+            z-index: 0;
+        }
+        .canvas-well {
+            background-image: radial-gradient(#cbd5e1 1px, transparent 1px);
+            background-size: 24px 24px;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-md min-h-screen flex flex-col">
+<!-- TopNavBar -->
+<header class="flex justify-between items-center h-toolbar-height px-md w-full sticky top-0 z-50 bg-surface dark:bg-surface-dim border-b border-outline-variant dark:border-outline">
+<div class="flex items-center gap-md">
+<span class="font-display-lg text-display-lg text-primary dark:text-primary-fixed">SignageFlow AI</span>
+<div class="h-6 w-[1px] bg-outline-variant mx-sm"></div>
+<nav class="hidden md:flex gap-md">
+<a class="text-primary font-bold border-b-2 border-primary pb-1 font-headline-sm text-headline-sm" href="#">G-code Editor</a>
+<a class="text-on-surface-variant font-medium hover:bg-surface-container-high transition-colors font-headline-sm text-headline-sm px-2" href="#">3D Viewer</a>
+<a class="text-on-surface-variant font-medium hover:bg-surface-container-high transition-colors font-headline-sm text-headline-sm px-2" href="#">Quotation</a>
+</nav>
+</div>
+<div class="flex items-center gap-sm">
+<button class="px-md py-xs rounded-lg font-label-bold text-label-bold border border-secondary text-secondary hover:bg-surface-container-low transition-all">Upload</button>
+<button class="px-md py-xs rounded-lg font-label-bold text-label-bold bg-primary text-on-primary hover:opacity-90 transition-all">Run AI</button>
+<div class="flex gap-xs ml-md">
+<span class="material-symbols-outlined p-2 cursor-pointer hover:bg-surface-container-high rounded-full">notifications</span>
+<span class="material-symbols-outlined p-2 cursor-pointer hover:bg-surface-container-high rounded-full">settings</span>
+<img alt="User profile" class="w-8 h-8 rounded-full ml-sm" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBwXLMQ2MvSLScinXiwwNRqCpcCmaTNF9ffYcmeCuJYAh-ysOhIRTZQS3bPC3GRG6ZPx-MhiHFm10eAOFsbQZr2Ej0eivtwVWeCM4JjKnjXxl5V1gsouUqxjKuKCZ1tNXrg1_Th3z-BgjMc6w_1SVzc59HO8VRzUiyeUhaCFUgpHsEKojD_fTpmXDhOE95TqbE6YM9diVbSUlOf0oavoZqgQDEt2BTX_hao6IxP2pq_dUcljkkAJV6DNn9g0bTIM7schx2zYHEl_xI"/>
+</div>
+</div>
+</header>
+<div class="flex flex-1 overflow-hidden">
+<!-- SideNavBar -->
+<aside class="fixed left-0 top-0 h-full flex flex-col pt-toolbar-height bg-surface dark:bg-surface-dim border-r border-outline-variant dark:border-outline w-sidebar-width z-40">
+<div class="p-md border-b border-outline-variant">
+<div class="flex items-center gap-sm">
+<div class="w-10 h-10 bg-primary-container rounded flex items-center justify-center">
+<span class="material-symbols-outlined text-on-primary-container">factory</span>
+</div>
+<div>
+<div class="font-headline-md text-headline-md font-bold text-on-surface">FabStudio</div>
+<div class="font-label-md text-label-md text-on-surface-variant">V2.4.0</div>
+</div>
+</div>
+</div>
+<div class="flex-1 overflow-y-auto p-sm space-y-1">
+<div class="bg-secondary-container text-on-secondary-container rounded-lg p-3 flex items-center gap-md transition-all duration-200 cursor-pointer">
+<span class="material-symbols-outlined">code</span>
+<span class="font-label-md text-label-md">G-code Editor</span>
+</div>
+<div class="text-on-surface-variant hover:bg-surface-container-low rounded-lg p-3 flex items-center gap-md transition-all duration-200 cursor-pointer">
+<span class="material-symbols-outlined">3d_rotation</span>
+<span class="font-label-md text-label-md">3D Viewer</span>
+</div>
+<div class="text-on-surface-variant hover:bg-surface-container-low rounded-lg p-3 flex items-center gap-md transition-all duration-200 cursor-pointer">
+<span class="material-symbols-outlined">request_quote</span>
+<span class="font-label-md text-label-md">Quotation</span>
+</div>
+</div>
+<div class="p-sm border-t border-outline-variant space-y-1">
+<div class="text-on-surface-variant hover:bg-surface-container-low rounded-lg p-3 flex items-center gap-md cursor-pointer">
+<span class="material-symbols-outlined">help</span>
+<span class="font-label-md text-label-md">Support</span>
+</div>
+<div class="text-on-surface-variant hover:bg-surface-container-low rounded-lg p-3 flex items-center gap-md cursor-pointer">
+<span class="material-symbols-outlined">history</span>
+<span class="font-label-md text-label-md">History</span>
+</div>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="flex-1 ml-sidebar-width flex flex-col overflow-hidden">
+<!-- Stepper Header -->
+<div class="bg-surface p-md border-b border-outline-variant flex justify-center items-center gap-xl overflow-x-auto">
+<div class="flex items-center gap-sm relative">
+<div class="w-8 h-8 rounded-full bg-emerald-500 text-white flex items-center justify-center font-label-bold">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">check</span>
+</div>
+<span class="font-label-bold text-on-surface-variant">Input Design</span>
+</div>
+<div class="flex items-center gap-sm relative">
+<div class="w-8 h-8 rounded-full bg-primary text-on-primary flex items-center justify-center font-label-bold ring-4 ring-primary-fixed">2</div>
+<span class="font-label-bold text-primary">Select material</span>
+</div>
+<div class="flex items-center gap-sm relative opacity-40">
+<div class="w-8 h-8 rounded-full bg-outline-variant text-on-surface-variant flex items-center justify-center font-label-bold">3</div>
+<span class="font-label-bold text-on-surface-variant">Dimensions</span>
+</div>
+<div class="flex items-center gap-sm relative opacity-40">
+<div class="w-8 h-8 rounded-full bg-outline-variant text-on-surface-variant flex items-center justify-center font-label-bold">4</div>
+<span class="font-label-bold text-on-surface-variant">Review</span>
+</div>
+</div>
+<!-- Workspace -->
+<div class="flex-1 flex overflow-hidden">
+<!-- Canvas Area -->
+<div class="flex-1 p-lg flex flex-col bg-slate-100">
+<div class="flex-1 relative rounded-xl border border-outline-variant bg-white shadow-sm overflow-hidden canvas-well flex items-center justify-center">
+<div class="absolute top-md left-md flex gap-sm z-10">
+<div class="bg-white/80 backdrop-blur px-sm py-1 rounded-md border border-outline-variant flex items-center gap-xs">
+<span class="material-symbols-outlined text-sm">view_in_ar</span>
+<span class="font-label-md text-label-md">3D Preview Active</span>
+</div>
+</div>
+<div class="relative w-full h-full flex items-center justify-center perspective-1000">
+<!-- Visual Placeholder for the 3D Signage -->
+<div class="transform -rotate-y-12 rotate-x-6 flex items-baseline">
+<div class="text-[120px] font-extrabold text-slate-800 drop-shadow-2xl flex items-baseline leading-none">
+<span class="relative">
+                                        F
+                                        <!-- Material Overlay for F -->
+<div class="absolute inset-0 opacity-80 mix-blend-overlay rounded-sm overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="A macro photograph of a brushed stainless steel texture with fine linear patterns and subtle metallic glints. The lighting is cold and professional, highlighting the industrial high-end finish of a premium signage material. The overall tone is sleek, modern, and minimalist in a light-mode workspace aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCoRUgHnWJh-WLgyMOBYsbYrQwgQr9DTsQLnTHb_EysBl77lj5rAcGTCUFx8kpLRjTKM6bI9dmUsg2CCiEdDgXVkbEcExDm9N4cgrdHU2MERhjPnSrT5QxP0akZM1SZeAa5DgpH8hICb51g5EpwO-TrKBSUYJUrK09SSwp0MmZfHWR1sD2efLYU9DSC98962jXjgQY9NGfPt_iKzKXDxqcV9gp2KZgWs6j6SYZ2AoIPN4FJVaPL_GHpdZKPcJnxiDg-ucTCCA5t6qQ"/>
+</div>
+</span>
+<span>L</span>
+<span>O</span>
+<span>W</span>
+</div>
+<div class="w-4 h-32 bg-slate-400/20 ml-2 blur-sm transform rotate-12"></div>
+</div>
+<!-- Lighting Simulation Effect -->
+<div class="absolute inset-0 pointer-events-none bg-gradient-to-tr from-transparent via-primary/5 to-white/20"></div>
+</div>
+<!-- Canvas Controls -->
+<div class="absolute bottom-md left-1/2 -translate-x-1/2 flex gap-sm bg-white border border-outline-variant p-1 rounded-lg shadow-lg">
+<button class="p-2 hover:bg-surface-container-low rounded text-on-surface-variant"><span class="material-symbols-outlined">zoom_in</span></button>
+<button class="p-2 hover:bg-surface-container-low rounded text-on-surface-variant"><span class="material-symbols-outlined">zoom_out</span></button>
+<div class="w-[1px] bg-outline-variant mx-1"></div>
+<button class="p-2 hover:bg-surface-container-low rounded text-on-surface-variant"><span class="material-symbols-outlined">refresh</span></button>
+<button class="p-2 hover:bg-surface-container-low rounded text-on-surface-variant"><span class="material-symbols-outlined">grid_on</span></button>
+</div>
+</div>
+</div>
+<!-- Inspector Panel (Right) -->
+<aside class="w-[340px] bg-surface border-l border-outline-variant overflow-y-auto">
+<div class="p-md space-y-lg">
+<div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface mb-xs">Material Settings</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Define the physical properties of your signage.</p>
+</div>
+<!-- Material Selector -->
+<div class="space-y-sm">
+<label class="font-label-bold text-label-bold text-on-surface-variant block">Material Type</label>
+<div class="relative">
+<button class="w-full flex justify-between items-center px-md py-sm border border-primary rounded-lg bg-white text-on-surface text-body-md ring-2 ring-primary/10" id="signageMaterial">
+<span>Stainless Steel</span>
+<span class="material-symbols-outlined text-primary">keyboard_arrow_up</span>
+</button>
+<!-- Dropdown Open State Simulation -->
+<div class="absolute top-full left-0 right-0 mt-xs bg-white border border-outline-variant rounded-lg shadow-xl z-20 py-sm">
+<div class="px-md py-sm hover:bg-surface-container-low cursor-pointer flex items-center justify-between border-l-4 border-transparent">
+<div class="flex items-center gap-sm">
+<div class="w-4 h-4 rounded-full bg-slate-400"></div>
+<span class="font-body-md">Acrylic 3mm</span>
+</div>
+</div>
+<div class="px-md py-sm bg-secondary-container/30 cursor-pointer flex items-center justify-between border-l-4 border-primary">
+<div class="flex items-center gap-sm">
+<div class="w-4 h-4 rounded-full bg-zinc-300"></div>
+<span class="font-body-md text-primary font-bold">Stainless Steel</span>
+</div>
+<span class="material-symbols-outlined text-primary text-sm" style="font-variation-settings: 'FILL' 1;">check</span>
+</div>
+<div class="px-md py-sm hover:bg-surface-container-low cursor-pointer flex items-center justify-between border-l-4 border-transparent">
+<div class="flex items-center gap-sm">
+<div class="w-4 h-4 rounded-full bg-stone-300"></div>
+<span class="font-body-md">Aluminium Composite</span>
+</div>
+</div>
+<div class="px-md py-sm hover:bg-surface-container-low cursor-pointer flex items-center justify-between border-l-4 border-transparent">
+<div class="flex items-center gap-sm">
+<div class="w-4 h-4 rounded-full bg-amber-100"></div>
+<span class="font-body-md">Brass Finish</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Lighting Selector -->
+<div class="space-y-sm">
+<label class="font-label-bold text-label-bold text-on-surface-variant block">Lighting Method</label>
+<div class="relative">
+<select class="w-full appearance-none px-md py-sm border border-outline rounded-lg bg-white text-on-surface text-body-md focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all" id="signageLighting">
+<option value="none">No Illumination</option>
+<option selected="" value="front">Front-lit</option>
+<option value="back">Back-lit (Halo)</option>
+<option value="edge">Edge-lit</option>
+</select>
+<span class="material-symbols-outlined absolute right-md top-1/2 -translate-y-1/2 pointer-events-none text-on-surface-variant">unfold_more</span>
+</div>
+</div>
+<!-- Texture Preview Card -->
+<div class="bg-surface-container-low border border-outline-variant rounded-xl p-md">
+<div class="flex justify-between items-center mb-sm">
+<span class="font-label-bold text-label-bold">Texture Detail</span>
+<span class="px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded text-[10px] font-bold uppercase tracking-wider">Premium</span>
+</div>
+<div class="aspect-video rounded-lg overflow-hidden border border-outline-variant mb-md">
+<img class="w-full h-full object-cover" data-alt="A hyper-realistic 3D close-up of a brushed metal surface, featuring intricate micro-textures and subtle reflections. The lighting is cool-toned, casting soft shadows across the grain of the material. The scene is presented in a professional studio setting with a clean, high-end commercial aesthetic, using a palette of greys, teals, and soft whites." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAAofWVs3yY0sCDDFJBShXt3_bKCbMFtgWwrKjTD-38pH-Ox6IGUdbe_nU-uo9PGxmFKfjGWtwlfOdO-mLBVT3KKFdH99uOBFS9rlBhTNRgbM9jIxk7bc3qfC3oZdNJ7THVzeaV0Bqv0zH23L98tsoJPT9l_oX9g_BV6CQJ6cF4bBZY-4NWvf5lIO2jeANQq3ySB8pGHJHQhAyWfEhcgDwYKUHY0KNuu1lddGXlHj3c-TNqjPABvyv5W5KKK2wEfgY6q5tf3W-boGs"/>
+</div>
+<div class="space-y-xs">
+<div class="flex justify-between text-body-sm">
+<span class="text-on-surface-variant">Reflection Rate</span>
+<span class="font-medium">12%</span>
+</div>
+<div class="w-full bg-outline-variant h-1 rounded-full overflow-hidden">
+<div class="bg-primary h-full w-[12%]"></div>
+</div>
+</div>
+</div>
+<div class="pt-lg border-t border-outline-variant flex gap-sm">
+<button class="flex-1 py-sm font-label-bold border border-outline rounded-lg hover:bg-surface-container-low transition-all">Back</button>
+<button class="flex-[2] py-sm font-label-bold bg-primary text-on-primary rounded-lg hover:opacity-90 shadow-sm transition-all">Confirm Material</button>
+</div>
+</div>
+</aside>
+</div>
+</main>
+</div>
+<!-- Status Bar (Global) -->
+<footer class="h-10 bg-surface border-t border-outline-variant px-md flex items-center justify-between text-label-md text-on-surface-variant z-50">
+<div class="flex items-center gap-md">
+<span class="flex items-center gap-xs">
+<span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                AI Core Online
+            </span>
+<span class="text-outline">|</span>
+<span>Project: "Flow_Signage_V4"</span>
+</div>
+<div class="flex items-center gap-md">
+<span class="material-symbols-outlined text-sm">cloud_done</span>
+<span>Autosaved at 14:20</span>
+</div>
+</footer>
+<script>
+        // Simple micro-interaction for dropdown (simulated toggle)
+        const materialBtn = document.getElementById('signageMaterial');
+        materialBtn.addEventListener('click', () => {
+            console.log('Toggle dropdown logic');
+            // Real implementation would toggle visibility of the dropdown div
+        });
+
+        // Simple interactive effect for the "F" material preview
+        const canvas = document.querySelector('.canvas-well');
+        canvas.addEventListener('mousemove', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const x = (e.clientX - rect.left) / rect.width;
+            const y = (e.clientY - rect.top) / rect.height;
+            
+            // Subtle shift of illumination based on mouse position
+            const overlay = document.querySelector('.mix-blend-overlay');
+            if (overlay) {
+                overlay.style.opacity = 0.5 + (x * 0.4);
+            }
+        });
+    </script>
+</body></html>

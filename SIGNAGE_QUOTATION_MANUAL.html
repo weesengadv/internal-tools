@@ -1,0 +1,533 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Signage Quotation Manual - Weeseng Advertising</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #f4f7f8;
+        --panel: #ffffff;
+        --ink: #172026;
+        --muted: #65727c;
+        --line: #d8e0e5;
+        --accent: #0f766e;
+        --accent-strong: #115e59;
+        --surface: #f9fbfc;
+        --warn: #9a3412;
+        --code-bg: #101820;
+        --code-ink: #d7e7ed;
+        --shadow: 0 18px 45px rgba(22, 32, 38, 0.12);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background: var(--bg);
+        color: var(--ink);
+        font-family: Inter, "Segoe UI", Arial, sans-serif;
+        line-height: 1.55;
+      }
+
+      .layout {
+        display: grid;
+        grid-template-columns: 270px minmax(0, 1fr);
+        min-height: 100vh;
+      }
+
+      aside {
+        position: sticky;
+        top: 0;
+        height: 100vh;
+        overflow: auto;
+        padding: 24px 18px;
+        background: #162126;
+        color: #eff7f6;
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 28px;
+      }
+
+      .brand-mark {
+        display: grid;
+        place-items: center;
+        width: 42px;
+        height: 42px;
+        border-radius: 8px;
+        background: #2dd4bf;
+        color: #10201f;
+        font-weight: 900;
+      }
+
+      .brand strong,
+      .brand small {
+        display: block;
+      }
+
+      .brand small {
+        margin-top: 2px;
+        color: #a7bbb9;
+        font-size: 12px;
+      }
+
+      nav {
+        display: grid;
+        gap: 6px;
+      }
+
+      nav a {
+        border-radius: 8px;
+        padding: 8px 10px;
+        color: #d8e7e5;
+        text-decoration: none;
+        font-size: 13px;
+        font-weight: 800;
+      }
+
+      nav a:hover {
+        background: rgba(45, 212, 191, 0.14);
+      }
+
+      main {
+        padding: 28px;
+      }
+
+      .hero {
+        margin-bottom: 18px;
+        padding: 22px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--panel);
+        box-shadow: var(--shadow);
+      }
+
+      .eyebrow {
+        margin: 0 0 4px;
+        color: var(--accent-strong);
+        font-size: 12px;
+        font-weight: 900;
+        text-transform: uppercase;
+      }
+
+      h1,
+      h2,
+      h3,
+      p {
+        margin-top: 0;
+      }
+
+      h1 {
+        margin-bottom: 8px;
+        font-size: 30px;
+        line-height: 1.16;
+      }
+
+      h2 {
+        margin-bottom: 12px;
+        font-size: 22px;
+      }
+
+      h3 {
+        margin-bottom: 8px;
+        font-size: 16px;
+      }
+
+      section {
+        margin-bottom: 16px;
+        padding: 18px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--panel);
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+      }
+
+      .card {
+        padding: 13px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--surface);
+      }
+
+      .card p:last-child,
+      section p:last-child {
+        margin-bottom: 0;
+      }
+
+      ol,
+      ul {
+        padding-left: 22px;
+      }
+
+      li + li {
+        margin-top: 6px;
+      }
+
+      code {
+        border-radius: 6px;
+        padding: 2px 5px;
+        background: #edf2f4;
+        color: #111827;
+        font-family: "Cascadia Mono", Consolas, monospace;
+        font-size: 0.94em;
+      }
+
+      pre {
+        overflow: auto;
+        margin: 10px 0 0;
+        padding: 14px;
+        border-radius: 8px;
+        background: var(--code-bg);
+        color: var(--code-ink);
+        font-family: "Cascadia Mono", Consolas, monospace;
+        font-size: 13px;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        overflow: hidden;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: #fff;
+      }
+
+      th,
+      td {
+        padding: 10px;
+        border-bottom: 1px solid var(--line);
+        text-align: left;
+        vertical-align: top;
+      }
+
+      th {
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 900;
+        text-transform: uppercase;
+      }
+
+      tr:last-child td {
+        border-bottom: 0;
+      }
+
+      .callout {
+        border-color: #99f6e4;
+        background: #f0fdfa;
+        color: var(--accent-strong);
+      }
+
+      .warning {
+        border-color: #fed7aa;
+        background: #fff7ed;
+        color: var(--warn);
+      }
+
+      .tag {
+        display: inline-block;
+        margin: 0 6px 6px 0;
+        padding: 4px 8px;
+        border-radius: 999px;
+        background: #e6fffb;
+        color: var(--accent-strong);
+        font-size: 12px;
+        font-weight: 900;
+      }
+
+      @media (max-width: 920px) {
+        .layout,
+        .grid {
+          grid-template-columns: 1fr;
+        }
+
+        aside {
+          position: static;
+          height: auto;
+        }
+
+        main {
+          padding: 18px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="layout">
+      <aside>
+        <div class="brand">
+          <span class="brand-mark">W</span>
+          <span>
+            <strong>Weeseng Advertising</strong>
+            <small>AI Signage Quotation Manual</small>
+          </span>
+        </div>
+        <nav aria-label="Manual sections">
+          <a href="#overview">Overview</a>
+          <a href="#config">First-time configuration</a>
+          <a href="#sheet">Google Sheet pricing</a>
+          <a href="#ai">AI model/API setup</a>
+          <a href="#workflow">Daily workflow</a>
+          <a href="#corrections">Correct AI mistakes</a>
+          <a href="#led-psu">LED and PSU</a>
+          <a href="#export">Print and PNG</a>
+          <a href="#troubleshooting">Troubleshooting</a>
+        </nav>
+      </aside>
+
+      <main>
+        <header class="hero">
+          <p class="eyebrow">Manual</p>
+          <h1>AI Signage Quotation User Guide</h1>
+          <p>This guide explains how to configure the AI Signage Quotation tool and how staff should use it for daily quotation work.</p>
+          <span class="tag">Owner/admin setup</span>
+          <span class="tag">Staff workflow</span>
+          <span class="tag">Google Sheet pricing</span>
+          <span class="tag">AI recognition</span>
+        </header>
+
+        <section id="overview">
+          <h2>What This Tool Does</h2>
+          <p>The Signage Quotation tool helps quote signage with two main parts: <strong>backing</strong> and <strong>emboss words</strong>. The user provides one real-world reference size, AI recognizes the words and alphabet dimensions, and the system calculates pricing from Google Sheet data.</p>
+          <div class="grid">
+            <div class="card">
+              <h3>AI Recognition</h3>
+              <p>Detects grouped words, individual alphabet boxes, width, height, and confidence after a backing/guideline size is provided.</p>
+            </div>
+            <div class="card">
+              <h3>Deterministic Pricing</h3>
+              <p>The app calculates prices from Google Sheet rates. AI helps recognize and draft notes, but pricing is not guessed by AI.</p>
+            </div>
+          </div>
+        </section>
+
+        <section id="config">
+          <h2>First-Time Configuration</h2>
+          <ol>
+            <li>Copy <code>signage-config.example.json</code> and rename the copy to <code>signage-config.json</code>.</li>
+            <li>Fill in <code>baseUrl</code>, <code>model</code>, and either <code>apiKey</code> or the Windows environment variable <code>SIGNAGE_AI_API_KEY</code>.</li>
+            <li>For a simple one-tab setup, fill <code>googleSheetCsvUrl</code> with the published Google Sheet CSV URL.</li>
+            <li>For a full quotation workbook, fill <code>googleSheetId</code> and <code>googleSheetTabs</code> with each tab name and gid.</li>
+            <li>Keep <code>signage-config.json</code> private. It is ignored by git and should not be committed.</li>
+            <li>Restart the server after changing config: <code>node server.js</code>.</li>
+          </ol>
+          <div class="card warning">
+            <strong>Important:</strong> Do not paste your real API key into screenshots, GitHub, or shared manuals. Use <code>SIGNAGE_AI_API_KEY</code> if possible.
+          </div>
+          <pre>{
+  "baseUrl": "https://api.openai.com/v1",
+  "model": "gpt-4.1-mini",
+  "apiKey": "",
+  "googleSheetCsvUrl": "https://docs.google.com/.../export?format=csv&amp;gid=673654653",
+  "googleSheetId": "12bNPlGdtCb-hWTjzDIqkp2-b-fPZ06bsIlEQI5hOS_Y",
+  "googleSheetTabs": [
+    { "name": "Emboss word", "gid": "1734170762" },
+    { "name": "Backing with metal frame", "gid": "407514240" },
+    { "name": "Cut material", "gid": "673654653" },
+    { "name": "LED", "gid": "183017455" }
+  ],
+  "currency": "MYR",
+  "defaultUnit": "inch",
+  "pricingUnit": "sqft"
+}</pre>
+        </section>
+
+        <section id="sheet">
+          <h2>Google Sheet Pricing Setup</h2>
+          <p>The app supports two pricing setups. For the full quotation workbook, it reads these tabs by gid:</p>
+          <table>
+            <thead>
+              <tr>
+                <th>Tab</th>
+                <th>Used for</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td><code>Emboss word</code></td><td>Front-lit, back-lit, no-lit, material add-on, base, and Chinese word multiplier.</td></tr>
+              <tr><td><code>Backing with metal frame</code></td><td>Backing rate per square foot.</td></tr>
+              <tr><td><code>Cut material</code></td><td>Material cutting rate per square inch.</td></tr>
+              <tr><td><code>LED</code></td><td>LED meter rate and PSU unit cost.</td></tr>
+              <tr><td><code>Boxup</code>, <code>skylift</code>, <code>Etching</code>, <code>Paibian</code>, <code>Notice sign</code></td><td>Loaded into the pricing response for later quotation functions.</td></tr>
+            </tbody>
+          </table>
+          <p>For a simple one-tab setup, the fallback CSV format is:</p>
+          <table>
+            <thead>
+              <tr>
+                <th>Column</th>
+                <th>Purpose</th>
+                <th>Example</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>type</code></td>
+                <td>Price category or grouping.</td>
+                <td><code>backing</code></td>
+              </tr>
+              <tr>
+                <td><code>key</code></td>
+                <td>Pricing rule key used by the app.</td>
+                <td><code>front-lit</code></td>
+              </tr>
+              <tr>
+                <td><code>value</code></td>
+                <td>Numeric rate or setting.</td>
+                <td><code>20</code></td>
+              </tr>
+            </tbody>
+          </table>
+          <h3>Supported Pricing Keys</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>Key</th>
+                <th>Meaning</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td><code>backingRateSqft</code></td><td>Backing price per square foot.</td></tr>
+              <tr><td><code>front-lit</code></td><td>Emboss price rule for front lit letters.</td></tr>
+              <tr><td><code>back-lit</code></td><td>Emboss price rule for back lit letters.</td></tr>
+              <tr><td><code>no-lit</code></td><td>Emboss price rule for non-lit letters.</td></tr>
+              <tr><td><code>ledWattPerLetter</code></td><td>Estimated LED watts per letter.</td></tr>
+              <tr><td><code>ledCostPerWatt</code></td><td>LED cost per watt.</td></tr>
+              <tr><td><code>psuWatt</code></td><td>Power supply watt rating.</td></tr>
+              <tr><td><code>psuUsableFactor</code></td><td>Safety factor, such as <code>0.8</code> for 80% usable load.</td></tr>
+              <tr><td><code>psuCost</code></td><td>Cost per PSU.</td></tr>
+            </tbody>
+          </table>
+          <pre>type,key,value
+backing,backingRateSqft,30
+emboss,front-lit,20
+emboss,back-lit,18
+emboss,no-lit,13
+led,ledWattPerLetter,12
+led,ledCostPerWatt,4.5
+psu,psuWatt,200
+psu,psuUsableFactor,0.8
+psu,psuCost,130</pre>
+        </section>
+
+        <section id="ai">
+          <h2>AI Model/API Setup</h2>
+          <p>The local server uses <code>GET /api/signage/pricing</code> for Google Sheet rates, then calls an OpenAI-compatible chat completions API through <code>POST /api/signage/recognize</code> and <code>POST /api/signage/draft</code>.</p>
+          <ul>
+            <li><code>baseUrl</code>: API base URL, for example <code>https://api.openai.com/v1</code>.</li>
+            <li><code>model</code>: model name used for photo recognition and quote draft.</li>
+            <li><code>apiKey</code>: optional local key. Prefer <code>SIGNAGE_AI_API_KEY</code> for safer setup.</li>
+            <li><code>alphabetLibrary</code>: extra notes for the AI about alphabet detection rules.</li>
+            <li><code>recognitionPrompt</code>: instruction text used when recognizing signage photo dimensions.</li>
+          </ul>
+          <div class="card callout">
+            If AI config is missing, the app uses sample recognition so staff can still learn the workflow.
+          </div>
+        </section>
+
+        <section id="workflow">
+          <h2>Daily Quotation Workflow</h2>
+          <ol>
+            <li>Open <strong>Quotation &gt; Signage Quotation</strong>.</li>
+            <li>Upload signage/building photo, or click <strong>Sample</strong> for training.</li>
+            <li>Enter the guideline or backing size in inches.</li>
+            <li>Use the <strong>Guideline</strong> or <strong>Backing box</strong> tool to mark the known size on the photo.</li>
+            <li>Click <strong>Re-run AI with correction</strong> to run recognition.</li>
+            <li>Review detected alphabet dimensions in the table.</li>
+            <li>Select emboss material/model and lighting: front lit, back lit, or no lit.</li>
+            <li>Correct wrong detections by editing table dimensions or typing a correction prompt.</li>
+            <li>Repeat AI correction until the quote is correct.</li>
+            <li>Use <strong>Print / PDF</strong> or <strong>Save quote as PNG</strong>.</li>
+          </ol>
+        </section>
+
+        <section id="corrections">
+          <h2>How To Correct AI Mistakes</h2>
+          <div class="grid">
+            <div class="card">
+              <h3>Edit Table Values</h3>
+              <p>Change a letter, width, or height directly in the AI Detection Review table. The quote recalculates after edits.</p>
+            </div>
+            <div class="card">
+              <h3>Type A Correction Prompt</h3>
+              <p>Example: <code>Letter S height is 18 inch. Use backing width as 144 inch and recalculate.</code></p>
+            </div>
+            <div class="card">
+              <h3>Redraw Backing Box</h3>
+              <p>Use the Backing box tool when the AI backing area is wrong or the photo perspective is confusing.</p>
+            </div>
+            <div class="card">
+              <h3>Manual Shape Fallback</h3>
+              <p>Use rectangle/pen fallback when AI cannot recognize a special shape or unclear alphabet.</p>
+            </div>
+          </div>
+        </section>
+
+        <section id="led-psu">
+          <h2>How LED And PSU Are Calculated</h2>
+          <p>If lighting is <strong>front lit</strong> or <strong>back lit</strong>, the app adds LED and PSU line items. If lighting is <strong>no lit</strong>, LED and PSU are not added.</p>
+          <ul>
+            <li>LED watts = number of detected letters x <code>ledWattPerLetter</code>.</li>
+            <li>LED cost = LED watts x <code>ledCostPerWatt</code>.</li>
+            <li>Usable PSU watts = <code>psuWatt</code> x <code>psuUsableFactor</code>.</li>
+            <li>PSU quantity = LED watts / usable PSU watts, rounded up.</li>
+          </ul>
+        </section>
+
+        <section id="export">
+          <h2>Print/PDF And Save As PNG</h2>
+          <ul>
+            <li><strong>Print / PDF</strong> opens the browser print dialog. Choose a printer or save as PDF.</li>
+            <li><strong>Save quote as PNG</strong> downloads a customer-ready quotation image.</li>
+            <li>Review dimensions, material, lighting, LED, PSU, and total before sending to customer.</li>
+          </ul>
+        </section>
+
+        <section id="troubleshooting">
+          <h2>Troubleshooting</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>Problem</th>
+                <th>What To Check</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>AI always returns sample result</td>
+                <td>Check <code>signage-config.json</code>, API key, <code>baseUrl</code>, <code>model</code>, then restart <code>node server.js</code>.</td>
+              </tr>
+              <tr>
+                <td>Google Sheet prices not used</td>
+                <td>Make sure the sheet is published as CSV and <code>googleSheetCsvUrl</code> is filled correctly.</td>
+              </tr>
+              <tr>
+                <td>Prices look wrong</td>
+                <td>Check the CSV keys, numeric values, lighting selection, and whether the area is in sqft.</td>
+              </tr>
+              <tr>
+                <td>AI dimensions are wrong</td>
+                <td>Confirm the guideline size, redraw the reference line/backing box, then rerun AI with a correction prompt.</td>
+              </tr>
+              <tr>
+                <td>PSU not added</td>
+                <td>Check lighting mode. PSU is only added for front lit or back lit.</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+      </main>
+    </div>
+  </body>
+</html>

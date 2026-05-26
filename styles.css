@@ -465,6 +465,290 @@ textarea[readonly] {
   margin-top: 12px;
 }
 
+.signage-workspace[hidden] {
+  display: none;
+}
+
+.signage-workspace {
+  display: grid;
+  grid-template-columns: minmax(0, 1.08fr) minmax(360px, 0.92fr);
+  gap: 14px;
+}
+
+.signage-steps {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+  overflow-x: auto;
+}
+
+.signage-step {
+  min-width: 130px;
+  padding: 9px 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.signage-step.active {
+  border-color: #99f6e4;
+  background: #f0fdfa;
+}
+
+.signage-step span {
+  display: block;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.signage-step strong {
+  display: block;
+  margin-top: 3px;
+  font-size: 13px;
+}
+
+.signage-tools,
+.signage-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.tool-button.active {
+  border-color: var(--accent);
+  color: var(--accent-strong);
+}
+
+.setting-action button {
+  width: 100%;
+  min-height: 44px;
+}
+
+.tool-button.numbered {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 42px;
+  padding-inline: 10px 13px;
+  border-width: 2px;
+}
+
+.tool-number {
+  display: inline-grid;
+  width: 24px;
+  height: 24px;
+  place-items: center;
+  border-radius: 50%;
+  background: #e5e7eb;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 950;
+}
+
+.tool-button.numbered.active {
+  background: #ecfeff;
+  box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.18);
+}
+
+.tool-button.numbered.active .tool-number {
+  background: var(--accent);
+  color: #fff;
+}
+
+.signage-canvas-wrap {
+  position: relative;
+  margin-top: 12px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #e8eef1;
+}
+
+#signageCanvas {
+  display: block;
+  width: 100%;
+  aspect-ratio: 5 / 3;
+  border: 0;
+}
+
+.signage-empty {
+  position: absolute;
+  inset: 50% auto auto 50%;
+  width: min(360px, calc(100% - 32px));
+  transform: translate(-50%, -50%);
+  padding: 13px 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.94);
+  color: var(--muted);
+  font-weight: 800;
+  text-align: center;
+}
+
+.signage-empty[hidden] {
+  display: none;
+}
+
+.signage-correction {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.signage-correction textarea {
+  min-height: 78px;
+}
+
+.signage-ai-controls {
+  display: grid;
+  gap: 8px;
+  min-width: 210px;
+}
+
+.prompt-shortcuts {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.prompt-shortcuts button {
+  min-height: 32px;
+  padding: 6px 9px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: #fff;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.prompt-shortcuts button:hover {
+  border-color: var(--accent);
+  color: var(--accent-strong);
+}
+
+#signageRerunButton:disabled {
+  cursor: wait;
+  opacity: 0.72;
+}
+
+.signage-panel {
+  display: grid;
+  align-content: start;
+  gap: 14px;
+}
+
+.signage-table-wrap {
+  overflow-x: auto;
+  margin-top: 12px;
+}
+
+.signage-table {
+  width: 100%;
+  border-collapse: collapse;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.signage-table th,
+.signage-table td {
+  padding: 9px;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+  vertical-align: middle;
+}
+
+.signage-table th {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.signage-table tr:last-child td {
+  border-bottom: 0;
+}
+
+.signage-table input {
+  min-height: 34px;
+  padding: 0 8px;
+}
+
+.confidence-pill {
+  display: inline-block;
+  padding: 3px 7px;
+  border-radius: 999px;
+  background: #dcfce7;
+  color: #166534;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.confidence-pill.warning {
+  background: #fff7ed;
+  color: var(--warn);
+}
+
+.letter-quote-row {
+  cursor: help;
+}
+
+.letter-quote-row:hover td {
+  background: #f0fdfa;
+}
+
+.floating-letter-tooltip {
+  position: fixed;
+  z-index: 1000;
+  width: min(360px, calc(100vw - 24px));
+  padding: 12px 13px;
+  border: 1px solid #99f6e4;
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: 0 18px 42px rgba(15, 23, 42, 0.18);
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 750;
+  line-height: 1.55;
+  white-space: pre-line;
+  pointer-events: none;
+}
+
+.floating-letter-tooltip[hidden] {
+  display: none;
+}
+
+.signage-ai-note {
+  padding: 10px;
+  border: 1px solid #bfdbfe;
+  border-radius: 8px;
+  background: #eff6ff;
+  color: #1d4ed8;
+  font-weight: 800;
+}
+
+.quote-total {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 12px;
+  padding: 14px;
+  border: 1px solid #99f6e4;
+  border-radius: 8px;
+  background: #f0fdfa;
+  color: var(--accent-strong);
+}
+
+.quote-total strong {
+  font-size: 22px;
+}
+
 textarea:focus,
 input:focus,
 select:focus {
@@ -494,6 +778,7 @@ select:focus {
   padding: 0 14px;
   cursor: pointer;
   font-weight: 800;
+  text-decoration: none;
 }
 
 .icon-button,
@@ -582,7 +867,9 @@ select:focus {
 
   .settings-grid,
   .editor-grid,
-  .stl-workspace {
+  .stl-workspace,
+  .signage-workspace,
+  .signage-correction {
     grid-template-columns: 1fr;
   }
 

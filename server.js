@@ -5,15 +5,533 @@ const path = require("path");
 const host = "127.0.0.1";
 const port = Number(process.env.PORT || 4173);
 const root = __dirname;
+const configPath = path.join(root, "signage-config.json");
+const configExamplePath = path.join(root, "signage-config.example.json");
 const types = {
   ".html": "text/html; charset=utf-8",
   ".css": "text/css; charset=utf-8",
-  ".js": "application/javascript; charset=utf-8"
+  ".js": "application/javascript; charset=utf-8",
+  ".json": "application/json; charset=utf-8",
+  ".md": "text/markdown; charset=utf-8",
+  ".csv": "text/csv; charset=utf-8"
 };
 
-const server = http.createServer((request, response) => {
-  const cleanPath = decodeURIComponent(request.url.split("?")[0]);
-  const requestedPath = cleanPath === "/" ? "index.html" : cleanPath;
+function send(response, status, body, contentType = "application/json; charset=utf-8") {
+  response.writeHead(status, { "Content-Type": contentType });
+  response.end(typeof body === "string" ? body : JSON.stringify(body));
+}
+
+function readJsonIfExists(filePath) {
+  if (!fs.existsSync(filePath)) {
+    return null;
+  }
+
+  return JSON.parse(fs.readFileSync(filePath, "utf8"));
+}
+
+function loadSignageConfig() {
+  return {
+    ...(readJsonIfExists(configExamplePath) || {}),
+    ...(readJsonIfExists(configPath) || {})
+  };
+}
+
+function collectBody(request) {
+  return new Promise((resolve, reject) => {
+    const chunks = [];
+    request.on("data", (chunk) => chunks.push(chunk));
+    request.on("end", () => {
+      try {
+        const text = Buffer.concat(chunks).toString("utf8");
+        resolve(text ? JSON.parse(text) : {});
+      } catch (error) {
+        reject(error);
+      }
+    });
+    request.on("error", reject);
+  });
+}
+
+function parseCsvMatrix(text) {
+  const rows = [];
+  let row = [];
+  let value = "";
+  let quoted = false;
+
+  for (let index = 0; index < text.length; index += 1) {
+    const char = text[index];
+    const next = text[index + 1];
+
+    if (char === "\"" && quoted && next === "\"") {
+      value += "\"";
+      index += 1;
+    } else if (char === "\"") {
+      quoted = !quoted;
+    } else if (char === "," && !quoted) {
+      row.push(value);
+      value = "";
+    } else if ((char === "\n" || char === "\r") && !quoted) {
+      if (char === "\r" && next === "\n") {
+        index += 1;
+      }
+      row.push(value);
+      rows.push(row);
+      row = [];
+      value = "";
+    } else {
+      value += char;
+    }
+  }
+
+  if (value || row.length) {
+    row.push(value);
+    rows.push(row);
+  }
+
+  return rows.map((line) => line.map((cell) => String(cell || "").trim()));
+}
+
+function parseCsv(text) {
+  const rows = parseCsvMatrix(text);
+  const headers = rows.shift() || [];
+  return rows
+    .filter((line) => line.some(Boolean))
+    .map((line) => Object.fromEntries(headers.map((header, index) => [header.trim(), (line[index] || "").trim()])));
+}
+
+function asNumber(value) {
+  const match = String(value || "").replace(/,/g, "").match(/-?\d+(\.\d+)?/);
+  return match ? Number(match[0]) : 0;
+}
+
+function normalizeKey(value) {
+  return String(value || "").toLowerCase().replace(/[^a-z0-9]+/g, "");
+}
+
+function csvUrlForTab(config, gid) {
+  const spreadsheetId = config.googleSheetId || String(config.googleSheetCsvUrl || "").match(/\/d\/([^/]+)/)?.[1];
+  if (!spreadsheetId) {
+    return config.googleSheetCsvUrl;
+  }
+  return `https://docs.google.com/spreadsheets/d/${spreadsheetId}/export?format=csv&gid=${gid}`;
+}
+
+function samplePricing() {
+  return {
+    currency: "MYR",
+    backingRateSqft: 30,
+    embossRateByLighting: {
+      "front-lit": 20,
+      "back-lit": 18,
+      "no-lit": 13
+    },
+    ledWattPerLetter: 12,
+    ledCostPerWatt: 4.5,
+    psuWatt: 200,
+    psuUsableFactor: 0.8,
+    psuCost: 130,
+    source: "sample"
+  };
+}
+
+function pricingFromRows(rows, config) {
+  const mapping = config.sheetMapping || {};
+  const typeColumn = mapping.type || "type";
+  const keyColumn = mapping.key || "key";
+  const valueColumn = mapping.value || "value";
+  const pricing = samplePricing();
+
+  rows.forEach((row) => {
+    const type = String(row[typeColumn] || "").toLowerCase();
+    const key = String(row[keyColumn] || "").toLowerCase();
+    const value = Number(row[valueColumn]);
+
+    if (!Number.isFinite(value)) {
+      return;
+    }
+
+    if (type === "backing" || key === "backingratesqft") pricing.backingRateSqft = value;
+    if (key === "front-lit") pricing.embossRateByLighting["front-lit"] = value;
+    if (key === "back-lit") pricing.embossRateByLighting["back-lit"] = value;
+    if (key === "no-lit") pricing.embossRateByLighting["no-lit"] = value;
+    if (key === "ledwattperletter") pricing.ledWattPerLetter = value;
+    if (key === "ledcostperwatt") pricing.ledCostPerWatt = value;
+    if (key === "psuwatt") pricing.psuWatt = value;
+    if (key === "psuusablefactor") pricing.psuUsableFactor = value;
+    if (key === "psucost") pricing.psuCost = value;
+  });
+
+  pricing.source = "google-sheet";
+  pricing.currency = config.currency || pricing.currency;
+  return pricing;
+}
+
+function parseEmbossTab(matrix) {
+  const lightingMap = {
+    frontlitledface: "front-lit",
+    backlithaloglow: "back-lit",
+    nolitstandard: "no-lit"
+  };
+  const emboss = {
+    lighting: {},
+    materials: [],
+    baseOptions: [],
+    chineseMultiplier: { no: 1, yes: 1.5 }
+  };
+  let section = "";
+
+  matrix.forEach((row) => {
+    const first = String(row[0] || "").trim();
+    const second = String(row[1] || "").trim();
+    if (first) {
+      section = normalizeKey(first);
+    }
+
+    if (section === "casing" && second) {
+      const key = lightingMap[normalizeKey(second)];
+      if (key) {
+        emboss.lighting[key] = {
+          label: second,
+          lessThan12PerHeightIn: asNumber(row[2]),
+          atLeast12PerSqIn: asNumber(row[3])
+        };
+      }
+    }
+
+    if (section === "material" && second) {
+      emboss.materials.push({
+        label: second,
+        lessThan12AddPerHeightIn: asNumber(row[2]),
+        atLeast12AddPerSqIn: asNumber(row[3])
+      });
+    }
+
+    if (section === "base" && second) {
+      emboss.baseOptions.push({
+        label: second,
+        lessThan12Multiplier: asNumber(row[2]) || 1,
+        atLeast12Multiplier: asNumber(row[3]) || 1
+      });
+    }
+
+    if (section === "ischineseword" && normalizeKey(second) === "yes") {
+      emboss.chineseMultiplier.yes = asNumber(row[2]) || asNumber(row[3]) || 1.5;
+    }
+  });
+
+  return emboss;
+}
+
+function parseBackingTab(matrix) {
+  return matrix.slice(1)
+    .filter((row) => row[0] && row[2])
+    .map((row) => ({
+      type: row[0],
+      color: row[1],
+      rateSqft: asNumber(row[2])
+    }));
+}
+
+function parseCutMaterialTab(matrix) {
+  return matrix.slice(1)
+    .filter((row) => row[0] && row[1] && row[2] && !/^material$/i.test(row[0]))
+    .map((row) => ({
+      material: row[0],
+      thicknessMm: row[1],
+      rateSqIn: asNumber(row[2]),
+      includeMaterial: /^yes$/i.test(row[3] || "")
+    }));
+}
+
+function parseLedTab(matrix) {
+  const led = { options: [], psuOptions: [] };
+  let section = "";
+
+  matrix.forEach((row) => {
+    const first = String(row[0] || "").trim();
+    const second = String(row[1] || "").trim();
+
+    if (normalizeKey(first) === "type" && normalizeKey(second).includes("meter")) {
+      section = "led";
+      return;
+    }
+
+    if (normalizeKey(first) === "type" && normalizeKey(second).includes("unit")) {
+      section = "psu";
+      return;
+    }
+
+    if (section === "led" && first && second) {
+      led.options.push({
+        type: first,
+        ratePerMeter: asNumber(second),
+        acrylic6mm: /^yes$/i.test(row[2] || ""),
+        rateSqIn: asNumber(row[3])
+      });
+    }
+
+    if (section === "psu" && first && second) {
+      led.psuOptions.push({
+        type: first,
+        unitCost: asNumber(second),
+        watt: asNumber(first)
+      });
+    }
+  });
+
+  return led;
+}
+
+function pricingFromWorkbook(tabs, config) {
+  const pricing = samplePricing();
+  const workbook = {};
+
+  tabs.forEach((tab) => {
+    workbook[tab.name] = tab.rows;
+  });
+
+  const emboss = tabs.find((tab) => normalizeKey(tab.name) === "embossword");
+  if (emboss) {
+    pricing.embossPricing = parseEmbossTab(emboss.matrix);
+    pricing.embossMaterialOptions = pricing.embossPricing.materials.map((material) => material.label);
+    Object.entries(pricing.embossPricing.lighting).forEach(([key, value]) => {
+      pricing.embossRateByLighting[key] = value.atLeast12PerSqIn;
+    });
+  }
+
+  const backing = tabs.find((tab) => normalizeKey(tab.name) === "backingwithmetalframe");
+  if (backing) {
+    pricing.backingOptions = parseBackingTab(backing.matrix);
+    pricing.backingRateSqft = pricing.backingOptions[0]?.rateSqft || pricing.backingRateSqft;
+  }
+
+  const cut = tabs.find((tab) => normalizeKey(tab.name) === "cutmaterial");
+  if (cut) {
+    pricing.cutMaterialOptions = parseCutMaterialTab(cut.matrix);
+  }
+
+  const led = tabs.find((tab) => normalizeKey(tab.name) === "led");
+  if (led) {
+    pricing.ledPricing = parseLedTab(led.matrix);
+    const defaultPsu = pricing.ledPricing.psuOptions[0];
+    pricing.psuCost = defaultPsu?.unitCost || pricing.psuCost;
+    pricing.psuWatt = defaultPsu?.watt || pricing.psuWatt;
+  }
+
+  pricing.otherTabs = tabs
+    .filter((tab) => !["embossword", "backingwithmetalframe", "cutmaterial", "led"].includes(normalizeKey(tab.name)))
+    .map((tab) => ({ name: tab.name, rows: tab.matrix }));
+  pricing.source = "google-workbook";
+  pricing.currency = config.currency || pricing.currency;
+  pricing.workbookTabs = tabs.map((tab) => ({ name: tab.name, gid: tab.gid, rowCount: tab.rows.length }));
+  return pricing;
+}
+
+async function fetchWorkbookPricing(config) {
+  const tabs = config.googleSheetTabs || [];
+  if (!tabs.length) {
+    return null;
+  }
+
+  const loadedTabs = [];
+  for (const tab of tabs) {
+    const url = tab.csvUrl || csvUrlForTab(config, tab.gid);
+    const sheetResponse = await fetch(url);
+    if (!sheetResponse.ok) {
+      throw new Error(`${tab.name} failed: ${sheetResponse.status}`);
+    }
+    const text = await sheetResponse.text();
+    loadedTabs.push({
+      name: tab.name,
+      gid: tab.gid,
+      matrix: parseCsvMatrix(text).filter((row) => row.some(Boolean)),
+      rows: parseCsv(text)
+    });
+  }
+
+  return pricingFromWorkbook(loadedTabs, config);
+}
+
+async function handlePricing(_request, response) {
+  const config = loadSignageConfig();
+
+  try {
+    const workbookPricing = await fetchWorkbookPricing(config);
+    if (workbookPricing) {
+      send(response, 200, workbookPricing);
+      return;
+    }
+  } catch (error) {
+    const pricing = samplePricing();
+    pricing.source = "sample-fallback";
+    pricing.warning = `Google workbook request failed: ${error.message}`;
+    send(response, 200, pricing);
+    return;
+  }
+
+  if (!config.googleSheetCsvUrl) {
+    send(response, 200, samplePricing());
+    return;
+  }
+
+  const sheetResponse = await fetch(config.googleSheetCsvUrl);
+  if (!sheetResponse.ok) {
+    const pricing = samplePricing();
+    pricing.source = "sample-fallback";
+    pricing.warning = `Google Sheet request failed: ${sheetResponse.status}`;
+    send(response, 200, pricing);
+    return;
+  }
+
+  send(response, 200, pricingFromRows(parseCsv(await sheetResponse.text()), config));
+}
+
+function sampleRecognition() {
+  const letters = ["W", "E", "E", "S", "E", "N", "G"];
+  const widths = [18.5, 12, 12.1, 11.8, 12, 13.4, 13];
+  const confidences = [0.92, 0.94, 0.93, 0.78, 0.94, 0.9, 0.89];
+  return {
+    source: "sample",
+    aiNote: "Sample/local fallback recognition. Letter S needs review before final quotation.",
+    backing: { widthIn: 144, heightIn: 36, areaSqft: 36, box: { x: 216, y: 150, width: 768, height: 158 } },
+    wordGroups: [{ text: "WEESENG", widthIn: 112, heightIn: 18, confidence: 0.92, box: { x: 312, y: 190, width: 576, height: 72 } }],
+    letters: letters.map((text, index) => ({
+      text,
+      widthIn: widths[index],
+      heightIn: index === 3 ? 17.6 : 18,
+      confidence: confidences[index],
+      box: { x: 338 + index * 70, y: 202, width: index === 0 ? 64 : 52, height: 58 }
+    })),
+    reviewItems: ["Letter S confidence is low. Confirm its height before final quote."]
+  };
+}
+
+function extractJson(text) {
+  const fenced = text.match(/```json\s*([\s\S]*?)```/i);
+  const raw = fenced ? fenced[1] : text.slice(text.indexOf("{"), text.lastIndexOf("}") + 1);
+  return JSON.parse(raw);
+}
+
+async function handleRecognize(request, response) {
+  const config = loadSignageConfig();
+  const body = await collectBody(request);
+  const apiKey = process.env.SIGNAGE_AI_API_KEY || config.apiKey;
+
+  if (!body.image) {
+    send(response, 400, { error: "No uploaded signage photo was sent to AI. Please upload a photo first." });
+    return;
+  }
+
+  if (!apiKey || !config.baseUrl || !config.model) {
+    send(response, 200, sampleRecognition());
+    return;
+  }
+
+  const prompt = [
+    config.recognitionPrompt || "Recognize signage emboss alphabet dimensions from the marked backing/guideline.",
+    config.alphabetLibrary ? `Alphabet/library notes: ${config.alphabetLibrary}` : "",
+    "Do not use sample words. Read only the uploaded photo. Never return WEESENG unless that exact word is visible in the uploaded photo.",
+    "Use the guideline as the true real-world scale. If recognition is uncertain, still return best-effort boxes and mark low confidence.",
+    "Return only JSON with: backing {widthIn,heightIn,areaSqft,box}, wordGroups [{text,widthIn,heightIn,confidence,box}], letters [{text,widthIn,heightIn,confidence,box}], reviewItems, aiNote.",
+    "Each box must use canvas coordinates for a 1200 x 720 image: {x,y,width,height}.",
+    `Guideline inches: ${body.guideline?.inches || 144}.`,
+    `Guideline canvas line: x1=${body.guideline?.x1}, y1=${body.guideline?.y1}, x2=${body.guideline?.x2}, y2=${body.guideline?.y2}.`,
+    `Material: ${body.material || "not selected"}. Lighting: ${body.lighting || "front-lit"}.`,
+    body.correctionPrompt ? `User correction: ${body.correctionPrompt}` : ""
+  ].filter(Boolean).join("\n");
+
+  const aiResponse = await fetch(`${String(config.baseUrl).replace(/\/$/, "")}/chat/completions`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${apiKey}`
+    },
+    body: JSON.stringify({
+      model: config.model,
+      messages: [
+        {
+          role: "user",
+          content: [
+            { type: "text", text: prompt },
+            { type: "image_url", image_url: { url: body.image } }
+          ]
+        }
+      ],
+      temperature: 0.1,
+      response_format: { type: "json_object" }
+    })
+  });
+
+  if (!aiResponse.ok) {
+    throw new Error(`AI request failed: ${aiResponse.status} ${await aiResponse.text()}`);
+  }
+
+  const data = await aiResponse.json();
+  send(response, 200, extractJson(data.choices?.[0]?.message?.content || "{}"));
+}
+
+async function handleDraft(request, response) {
+  const config = loadSignageConfig();
+  const body = await collectBody(request);
+  const apiKey = process.env.SIGNAGE_AI_API_KEY || config.apiKey;
+
+  if (!apiKey || !config.baseUrl || !config.model) {
+    send(response, 200, {
+      draft: "Quotation draft generated from calculated line items. Please review dimensions, material, lighting, LED, and PSU before sending to customer."
+    });
+    return;
+  }
+
+  const aiResponse = await fetch(`${String(config.baseUrl).replace(/\/$/, "")}/chat/completions`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${apiKey}`
+    },
+    body: JSON.stringify({
+      model: config.model,
+      messages: [
+        { role: "system", content: "Write a concise customer-facing signage quotation note. Do not change calculated prices." },
+        { role: "user", content: JSON.stringify(body) }
+      ],
+      temperature: 0.2
+    })
+  });
+
+  if (!aiResponse.ok) {
+    throw new Error(`AI draft failed: ${aiResponse.status}`);
+  }
+
+  const data = await aiResponse.json();
+  send(response, 200, { draft: data.choices?.[0]?.message?.content || "" });
+}
+
+async function handleApi(request, response, pathname) {
+  try {
+    if (request.method === "GET" && pathname === "/api/signage/pricing") {
+      await handlePricing(request, response);
+      return true;
+    }
+
+    if (request.method === "POST" && pathname === "/api/signage/recognize") {
+      await handleRecognize(request, response);
+      return true;
+    }
+
+    if (request.method === "POST" && pathname === "/api/signage/draft") {
+      await handleDraft(request, response);
+      return true;
+    }
+  } catch (error) {
+    send(response, 500, { error: error.message });
+    return true;
+  }
+
+  return false;
+}
+
+function serveStatic(request, response, pathname) {
+  const requestedPath = pathname === "/" ? "index.html" : pathname;
   const filePath = path.join(root, requestedPath);
 
   if (!filePath.startsWith(root)) {
@@ -34,8 +552,19 @@ const server = http.createServer((request, response) => {
     });
     response.end(data);
   });
+}
+
+const server = http.createServer(async (request, response) => {
+  const url = new URL(request.url, `http://${host}:${port}`);
+  const pathname = decodeURIComponent(url.pathname);
+
+  if (await handleApi(request, response, pathname)) {
+    return;
+  }
+
+  serveStatic(request, response, pathname);
 });
 
 server.listen(port, host, () => {
-  console.log(`Gcode Editor running at http://${host}:${port}/`);
+  console.log(`Weeseng Advertising running at http://${host}:${port}/`);
 });

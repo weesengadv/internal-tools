@@ -32,6 +32,11 @@
             <span class="shortcut-icon">3D</span>
             <span data-i18n="stlViewer">3D Viewer - Area Checker</span>
           </button>
+          <div class="shortcut-group" data-i18n="quotationGroup">Quotation</div>
+          <button class="shortcut" type="button" data-tool="signage-quotation" title="Signage Quotation">
+            <span class="shortcut-icon">AI</span>
+            <span data-i18n="signageQuotation">Signage Quotation</span>
+          </button>
           <button class="shortcut" type="button" disabled title="Coming later">
             <span class="shortcut-icon">+</span>
             <span data-i18n="addTool">Add Tool</span>
@@ -205,6 +210,136 @@
                 <div class="stl-actions">
                   <button class="secondary-button" id="stlResetButton" type="button" data-i18n="resetScale">Reset scale</button>
                   <button class="primary-button" id="stlExportButton" type="button" data-i18n="exportResizedStl">Export resized STL</button>
+                </div>
+              </section>
+            </div>
+          </div>
+
+          <div class="settings-grid tool-settings" id="signageSettings" hidden>
+            <label>
+              <span data-i18n="signageConfig">Config file</span>
+              <input id="signageConfigStatus" type="text" value="signage-config.json" readonly>
+            </label>
+            <label>
+              <span data-i18n="signageGuideline">Guideline size (inch)</span>
+              <input id="signageGuidelineSize" type="number" min="0.01" step="0.01" value="144">
+            </label>
+            <label>
+              <span data-i18n="signageLighting">Lighting</span>
+              <select id="signageLighting">
+                <option value="front-lit" data-i18n="frontLit">Front lit</option>
+                <option value="back-lit" data-i18n="backLit">Back lit</option>
+                <option value="no-lit" data-i18n="noLit">No lit</option>
+              </select>
+            </label>
+            <label>
+              <span data-i18n="signageMaterial">Emboss material/model</span>
+              <select id="signageMaterial">
+                <option value="Acrylic emboss">Acrylic emboss</option>
+                <option value="Stainless steel emboss">Stainless steel emboss</option>
+                <option value="Aluminium emboss">Aluminium emboss</option>
+              </select>
+            </label>
+            <label class="setting-action">
+              <span data-i18n="quoteAction">Quote action</span>
+              <button class="secondary-button" id="signageRefreshQuoteButton" type="button" data-i18n="refreshQuote">Refresh quote</button>
+            </label>
+          </div>
+
+          <div class="signage-workspace" id="signageWorkspace" hidden>
+            <div class="signage-stage">
+              <div class="signage-steps">
+                <div class="signage-step active"><span>1</span><strong data-i18n="stepGuideline">Mark guideline</strong></div>
+                <div class="signage-step active"><span>2</span><strong data-i18n="stepRecognize">AI recognize</strong></div>
+                <div class="signage-step"><span>3</span><strong data-i18n="stepMaterial">Material</strong></div>
+                <div class="signage-step"><span>4</span><strong data-i18n="stepPricing">Sheet pricing</strong></div>
+                <div class="signage-step"><span>5</span><strong data-i18n="stepReview">Review draft</strong></div>
+                <div class="signage-step"><span>6</span><strong data-i18n="stepExport">Print / image</strong></div>
+              </div>
+
+              <div class="signage-tools">
+                <button class="tool-button numbered active" id="signageToolGuideline" type="button"><span class="tool-number">1</span><span data-i18n="guidelineTool">Guideline</span></button>
+                <button class="tool-button numbered" id="signageToolBacking" type="button"><span class="tool-number">2</span><span data-i18n="backingBoxTool">Backing box</span></button>
+                <button class="tool-button numbered" id="signageToolLetter" type="button"><span class="tool-number">3</span><span data-i18n="letterBoxTool">Letter box</span></button>
+                <button class="tool-button numbered" id="signageToolManual" type="button"><span class="tool-number">4</span><span data-i18n="manualFallbackTool">Manual shape</span></button>
+                <a class="secondary-button manual-link" href="SIGNAGE_QUOTATION_MANUAL.html" target="_blank" rel="noopener" data-i18n="openManual">Open manual</a>
+              </div>
+
+              <div class="signage-canvas-wrap">
+                <canvas id="signageCanvas" width="1200" height="720"></canvas>
+                <div class="signage-empty" id="signageEmpty" data-i18n="signageEmpty">Upload or sample a signage photo, then mark the backing or guideline size.</div>
+              </div>
+
+              <div class="signage-correction">
+                <label>
+                  <span data-i18n="correctionPrompt">AI correction prompt</span>
+                  <textarea id="signageCorrectionPrompt" data-i18n-placeholder="correctionPlaceholder" placeholder="Example: Letter S height is 18 inch. Recalculate the quote."></textarea>
+                </label>
+                <div class="signage-ai-controls">
+                  <div class="prompt-shortcuts" aria-label="Prompt shortcuts">
+                    <button type="button" data-prompt="Read all visible alphabet words. If any letter is unclear, mark it as low confidence and explain what user should correct." data-i18n="promptReadAll">Read all words</button>
+                    <button type="button" data-prompt="Use my guideline size as the true scale. Recalculate every letter width and height from the photo." data-i18n="promptUseScale">Use scale</button>
+                    <button type="button" data-prompt="Only correct the selected/unclear letters. Keep the other detected letters unchanged." data-i18n="promptCorrectOnly">Correct unclear</button>
+                  </div>
+                  <button class="secondary-button" id="signageRerunButton" type="button" data-i18n="rerunAi">Re-run AI with correction</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="signage-panel">
+              <section class="stl-card">
+                <h3 data-i18n="aiDetectionReview">AI Detection Review</h3>
+                <div class="metric-grid signage-metrics">
+                  <div>
+                    <dt data-i18n="backingSize">Backing size</dt>
+                    <dd id="signageBackingSize">-</dd>
+                  </div>
+                  <div>
+                    <dt data-i18n="wordGroup">Word group</dt>
+                    <dd id="signageWordGroup">-</dd>
+                  </div>
+                  <div>
+                    <dt data-i18n="aiConfidence">AI confidence</dt>
+                    <dd id="signageConfidence">-</dd>
+                  </div>
+                </div>
+                <div class="signage-table-wrap">
+                  <table class="signage-table">
+                    <thead>
+                      <tr>
+                        <th data-i18n="letter">Letter</th>
+                        <th data-i18n="widthIn">Width</th>
+                        <th data-i18n="heightIn">Height</th>
+                        <th data-i18n="confidence">Confidence</th>
+                      </tr>
+                    </thead>
+                    <tbody id="signageDetections"></tbody>
+                  </table>
+                </div>
+              </section>
+
+              <section class="stl-card">
+                <h3 data-i18n="quoteDraft">Quote Draft</h3>
+                <div class="signage-ai-note" id="signageAiNote" data-i18n="aiNoteEmpty">Run AI recognition to draft the quote.</div>
+                <div class="signage-table-wrap">
+                  <table class="signage-table">
+                    <thead>
+                      <tr>
+                        <th data-i18n="quoteItem">Item</th>
+                        <th data-i18n="quantity">Qty</th>
+                        <th data-i18n="quoteTotal">Total</th>
+                      </tr>
+                    </thead>
+                    <tbody id="signageQuoteLines"></tbody>
+                  </table>
+                </div>
+                <div class="quote-total">
+                  <span data-i18n="totalQuotation">Total quotation</span>
+                  <strong id="signageQuoteTotal">RM 0.00</strong>
+                </div>
+                <div class="signage-actions">
+                  <button class="secondary-button" id="signagePrintButton" type="button" data-i18n="printQuote">Print / PDF</button>
+                  <button class="primary-button" id="signagePngButton" type="button" data-i18n="saveQuotePng">Save quote as PNG</button>
                 </div>
               </section>
             </div>
