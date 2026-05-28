@@ -432,6 +432,12 @@ async function handleRecognize(request, response) {
     config.alphabetLibrary ? `Alphabet/library notes: ${config.alphabetLibrary}` : "",
     "Do not use sample words. Read only the uploaded photo. Never return WEESENG unless that exact word is visible in the uploaded photo.",
     "Use the guideline as the true real-world scale. If recognition is uncertain, still return best-effort boxes and mark low confidence.",
+    "Detect each visible character individually. A Chinese character counts as one letter item. Do not merge multiple characters into one letter box.",
+    "Letter boxes must be tight around the visible white/colored character strokes only. Do not box the red backing panel, truck graphic, arrow, whole word, logo background, or empty sign area.",
+    "If a character is partly connected, still return the smallest rectangle around that character only. Large boxes covering more than one character are invalid; split them into separate characters or omit them with a reviewItems note.",
+    "Do not force every character to the same height. Lowercase letters, uppercase letters, numbers, and stylized symbols can have different real widths/heights.",
+    "Ignore tiny printed secondary text such as address, SINCE year, phone, footer labels, or shop-info captions unless the user correction explicitly asks for them.",
+    "Coordinates must align to the actual character position in the working image. Do not estimate columns; place x/y exactly around the visible glyph.",
     "Return only JSON with: backing {widthIn,heightIn,areaSqft,box}, wordGroups [{text,widthIn,heightIn,confidence,box}], letters [{text,widthIn,heightIn,confidence,box}], reviewItems, aiNote.",
     "The uploaded image is a 1200 x 720 working canvas. The real photo is fitted inside it without stretching, so blank margins may appear.",
     "Each box must use canvas coordinates for the 1200 x 720 working canvas: {x,y,width,height}. Keep boxes on the fitted photo area, not the blank margins.",
@@ -456,7 +462,7 @@ async function handleRecognize(request, response) {
           role: "user",
           content: [
             { type: "text", text: prompt },
-            { type: "image_url", image_url: { url: body.image } }
+            { type: "image_url", image_url: { url: body.image, detail: "high" } }
           ]
         }
       ],

@@ -221,13 +221,13 @@
                 <span data-i18n="signageConfig">Config file</span>
                 <strong>signage-config.json</strong>
               </div>
-              <div>
+              <div id="signageGuidelineControlCard">
                 <span data-i18n="signageGuideline">Guideline size (inch)</span>
                 <label class="signage-command-input">
                   <input id="signageGuidelineSize" type="number" min="0.01" step="0.01" value="144" aria-label="Guideline size in inches">
                 </label>
               </div>
-              <div>
+              <div id="signageBackingControlCard" hidden>
                 <span data-i18n="backingRealSize">Backing size (inch)</span>
                 <label class="signage-command-input split">
                   <input id="signageBackingWidth" type="number" min="0.01" step="0.01" value="144" aria-label="Backing width in inches">
@@ -366,6 +366,7 @@
                         <button type="button" data-prompt="Only correct the selected/unclear letters. Keep the other detected letters unchanged." data-i18n="promptCorrectOnly">Correct unclear</button>
                       </div>
                       <button class="secondary-button" id="signageRerunButton" type="button" data-i18n="rerunAi">Re-run AI with correction</button>
+                      <button class="secondary-button" id="signageExportTraceButton" type="button" data-i18n="exportAiTrace">Export AI trace</button>
                     </div>
                   </div>
                 </section>
@@ -402,6 +403,10 @@
                       </thead>
                       <tbody id="signageDetections"></tbody>
                     </table>
+                  </div>
+                  <div class="signage-actions">
+                    <button class="secondary-button" id="signageTraceBrightButton" type="button" data-i18n="traceBrightLetters">Auto trace bright letters</button>
+                    <button class="secondary-button" id="signageExportTraceButtonReview" type="button" data-i18n="exportAiTrace">Export AI trace</button>
                   </div>
                 </section>
 
