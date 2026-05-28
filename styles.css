@@ -862,6 +862,22 @@ body[data-active-tool="signage-quotation"] .signage-workspace {
   color: var(--accent-strong);
 }
 
+.review-fallback {
+  margin-bottom: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--line);
+}
+
+.review-primary-actions {
+  margin: 10px 0 12px;
+}
+
+.review-primary-actions #signageTraceBrightButton {
+  border-color: var(--accent);
+  background: #ecfeff;
+  color: var(--accent-strong);
+}
+
 #signageRerunButton:disabled {
   cursor: wait;
   opacity: 0.72;
@@ -887,6 +903,38 @@ body[data-active-tool="signage-quotation"] .signage-workspace {
   border-radius: 8px;
   background: #fff;
   box-shadow: 0 6px 18px rgba(15, 23, 42, 0.05);
+}
+
+.signage-section-title.compact {
+  margin-bottom: 8px;
+}
+
+.selected-letter-editor {
+  margin-top: 12px;
+  padding: 12px;
+  border: 1px solid #c7d2fe;
+  border-radius: 8px;
+  background: #f8fafc;
+}
+
+.selected-letter-editor[hidden] {
+  display: none;
+}
+
+.box-edit-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.box-edit-grid label {
+  display: grid;
+  gap: 4px;
+}
+
+.box-edit-grid input[type="color"] {
+  min-height: 38px;
+  padding: 4px;
 }
 
 .signage-project-grid {
@@ -1030,6 +1078,11 @@ body[data-active-tool="signage-quotation"] .signage-workspace {
 
 .letter-quote-row:hover td {
   background: #f0fdfa;
+}
+
+.letter-quote-row.selected td {
+  background: #eef2ff;
+  box-shadow: inset 0 1px 0 #c7d2fe, inset 0 -1px 0 #c7d2fe;
 }
 
 .letter-delete-button {

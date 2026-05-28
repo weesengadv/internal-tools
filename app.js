@@ -73,10 +73,16 @@ const signageAiNote = document.getElementById("signageAiNote");
 const signageCorrectionPrompt = document.getElementById("signageCorrectionPrompt");
 const signageRerunButton = document.getElementById("signageRerunButton");
 const signageExportTraceButton = document.getElementById("signageExportTraceButton");
-const signageExportTraceButtonReview = document.getElementById("signageExportTraceButtonReview");
 const signageTraceBrightButton = document.getElementById("signageTraceBrightButton");
 const signagePrintButton = document.getElementById("signagePrintButton");
 const signagePngButton = document.getElementById("signagePngButton");
+const signageSelectedLetterEditor = document.getElementById("signageSelectedLetterEditor");
+const signageSelectedBoxXInput = document.getElementById("signageSelectedBoxX");
+const signageSelectedBoxYInput = document.getElementById("signageSelectedBoxY");
+const signageSelectedBoxWInput = document.getElementById("signageSelectedBoxW");
+const signageSelectedBoxHInput = document.getElementById("signageSelectedBoxH");
+const signageSelectedBoxColorInput = document.getElementById("signageSelectedBoxColor");
+const signageSelectedBoxSource = document.getElementById("signageSelectedBoxSource");
 const signagePromptButtons = document.querySelectorAll("[data-prompt]");
 const signageRefreshQuoteButton = document.getElementById("signageRefreshQuoteButton");
 const signageStepButtons = document.querySelectorAll("[data-signage-step]");
@@ -152,15 +158,20 @@ let signageQuote = null;
 let signageCurrency = "MYR";
 let signageDragStart = null;
 let signageDragPreview = null;
+let signageBoxDrag = null;
+let selectedSignageLetterIndex = null;
 let signageLetterTooltip = null;
 let activeSignageStep = Number(localStorage.getItem("weesengSignageActiveStep") || 0);
 let signageCanvasZoom = Number(localStorage.getItem("weesengSignageCanvasZoom") || 1);
 let signageAutosaveTimer = null;
 let isRestoringSignageProject = false;
+let signageTesseractLoadPromise = null;
 
 const previewLimit = 1500000;
 const signageAutosaveKey = "weesengSignageQuoteDraft";
 const signageProjectSchemaVersion = 1;
+const signageTesseractCdnUrl = "https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js";
+const hiddenSignageStepIndexes = new Set([2]);
 const messages = {
   en: {
     addTool: "Add Tool",
@@ -261,7 +272,7 @@ const messages = {
     loadProject: "Load project",
     saveProject: "Save project",
     exportCsv: "Export CSV",
-    exportAiTrace: "Export AI trace",
+    exportAiTrace: "AI Trace Debug",
     traceBrightLetters: "Auto trace bright letters",
     backStep: "Back",
     nextStep: "Next",
@@ -292,13 +303,15 @@ const messages = {
     promptUseScale: "Use scale",
     promptCorrectOnly: "Correct unclear",
     rerunAi: "Re-run AI with correction",
-    aiDetectionReview: "AI Detection Review",
+    aiDetectionReview: "Detection Review",
     backingSize: "Backing size",
     wordGroup: "Word group",
     aiConfidence: "AI confidence",
     letter: "Letter",
     widthIn: "Width",
     heightIn: "Height",
+    selectedBox: "Selected box",
+    boxColor: "Color",
     confidence: "Confidence",
     actions: "Actions",
     deleteLetter: "Delete",
@@ -325,9 +338,14 @@ const messages = {
     signageProjectLoaded: "Loaded project file {fileName}.",
     signageProjectLoadFailed: "Project load failed: {message}",
     signageCsvExported: "Exported quote CSV {fileName}.",
-    signageTraceExported: "Exported AI trace {fileName}.",
+    signageTraceExported: "Exported AI trace debug {fileName}.",
     signagePixelTraceDone: "Pixel trace replaced AI boxes with {count} bright letter candidate(s). Rename any '?' letter and delete wrong boxes.",
     signagePixelTraceMissing: "Could not find bright letter shapes. Try a clearer photo or draw letter boxes manually.",
+    signagePixelTracing: "Tracing bright and dark letters...",
+    signageOcrLoading: "Loading OCR library...",
+    signageOcrReadingRow: "Reading row {current} of {total}...",
+    signagePixelTraceOcrDone: "Pixel trace found {count} box(es). OCR filled {filled} label(s). Please check '?' items.",
+    signagePixelTraceOcrFallback: "Pixel trace found {count} box(es), but OCR could not read labels. Please rename '?' items.",
     signagePngSaved: "Saved {fileName}.",
     targetX: "Target X",
     targetY: "Target Y",
@@ -465,7 +483,7 @@ const messages = {
     loadProject: "载入项目",
     saveProject: "保存项目",
     exportCsv: "导出 CSV",
-    exportAiTrace: "导出 AI 追踪",
+    exportAiTrace: "AI 追踪调试",
     backStep: "上一步",
     nextStep: "下一步",
     finishStep: "完成",
@@ -572,6 +590,16 @@ const messages = {
 messages.cn.traceBrightLetters = "\u81ea\u52a8\u8ffd\u8e2a\u4eae\u8272\u5b57";
 messages.cn.signagePixelTraceDone = "\u50cf\u7d20\u8ffd\u8e2a\u5df2\u7528 {count} \u4e2a\u4eae\u8272\u5b57\u5019\u9009\u6846\u66ff\u6362 AI \u6846\u3002\u8bf7\u628a '?' \u6539\u540d\uff0c\u5e76\u5220\u9664\u9519\u8bef\u6846\u3002";
 messages.cn.signagePixelTraceMissing = "\u627e\u4e0d\u5230\u4eae\u8272\u5b57\u5f62\u3002\u8bf7\u5c1d\u8bd5\u66f4\u6e05\u6670\u7167\u7247\uff0c\u6216\u624b\u52a8\u7ed8\u5236\u5b57\u6bcd\u6846\u3002";
+messages.cn.signagePixelTracing = "\u6b63\u5728\u8ffd\u8e2a\u4eae\u8272\u548c\u6df1\u8272\u5b57...";
+messages.cn.signageOcrLoading = "\u6b63\u5728\u8f7d\u5165 OCR \u5e93...";
+messages.cn.signageOcrReadingRow = "\u6b63\u5728\u8bfb\u53d6\u7b2c {current} / {total} \u884c...";
+messages.cn.signagePixelTraceOcrDone = "\u50cf\u7d20\u8ffd\u8e2a\u627e\u5230 {count} \u4e2a\u6846\u3002OCR \u5df2\u586b\u5165 {filled} \u4e2a\u6807\u7b7e\u3002\u8bf7\u68c0\u67e5 '?' \u9879\u76ee\u3002";
+messages.cn.signagePixelTraceOcrFallback = "\u50cf\u7d20\u8ffd\u8e2a\u627e\u5230 {count} \u4e2a\u6846\uff0c\u4f46 OCR \u65e0\u6cd5\u8bfb\u53d6\u6807\u7b7e\u3002\u8bf7\u624b\u52a8\u66f4\u6539 '?' \u9879\u76ee\u3002";
+messages.cn.aiDetectionReview = "\u8bc6\u522b\u68c0\u67e5";
+messages.cn.selectedBox = "\u5df2\u9009\u6846";
+messages.cn.boxColor = "\u989c\u8272";
+messages.cn.exportAiTrace = "AI \u8ffd\u8e2a\u8c03\u8bd5";
+messages.cn.signageTraceExported = "\u5df2\u5bfc\u51fa AI \u8ffd\u8e2a\u8c03\u8bd5 {fileName}\u3002";
 
 if (!messages[activeLanguage]) {
   activeLanguage = "en";
@@ -1442,10 +1470,13 @@ function renderSignageCanvas() {
   }
 
   if (signageRecognition) {
-    (signageRecognition.letters || []).forEach((letter) => {
-      const color = letter.confidence >= 0.85 ? "#dc2626" : "#9a3412";
+    (signageRecognition.letters || []).forEach((letter, index) => {
+      const color = signageLetterColor(letter);
       const displayBox = normalizeSignageBox(letter.box) || letter.box;
       drawBox(context, displayBox, color, letter.text || "?");
+      if (index === selectedSignageLetterIndex) {
+        drawSelectedSignageBox(context, displayBox, color);
+      }
     });
   }
 
@@ -1483,6 +1514,48 @@ function signageBoxDimensionsIn(box) {
   };
 }
 
+function defaultSignageLetterColor(letter = {}) {
+  const source = String(letter.source || "");
+  if (source.includes("ai")) {
+    return "#2563eb";
+  }
+  if (source.includes("dark")) {
+    return "#4f46e5";
+  }
+  if (source.includes("manual")) {
+    return "#7c3aed";
+  }
+  return "#dc2626";
+}
+
+function signageLetterColor(letter = {}) {
+  return letter.color || defaultSignageLetterColor(letter);
+}
+
+function ensureSignageRecognitionDraft() {
+  if (signageRecognition) {
+    return signageRecognition;
+  }
+
+  const backingSize = signageBackingSizeInputs();
+  signageRecognition = {
+    source: "manual",
+    aiNote: t("signageQuoteReady"),
+    backing: {
+      widthIn: backingSize.widthIn,
+      heightIn: backingSize.heightIn,
+      areaSqft: (backingSize.widthIn * backingSize.heightIn) / 144,
+      box: signageBackingBox || signageCalibrationBox()
+    },
+    wordGroups: [],
+    letters: [],
+    reviewItems: []
+  };
+  signageRawRecognition = signageRawRecognition || signageRecognition;
+  signageQuote = calculateSignageQuote(signageRecognition, signagePricing || sampleSignagePricing());
+  return signageRecognition;
+}
+
 function isLikelyBadLetterBox(box, backingBox) {
   if (!box || !backingBox) {
     return false;
@@ -1514,6 +1587,16 @@ function isBrightGlyphPixel(r, g, b, a) {
   const luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b;
   const colorRange = Math.max(r, g, b) - Math.min(r, g, b);
   return luminance >= 155 && colorRange <= 95;
+}
+
+function isDarkGlyphPixel(r, g, b, a) {
+  if (a < 160) {
+    return false;
+  }
+
+  const luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+  const colorRange = Math.max(r, g, b) - Math.min(r, g, b);
+  return luminance <= 92 && colorRange <= 85;
 }
 
 function refineBoxToBrightGlyph(box, imageData, bounds) {
@@ -1601,6 +1684,38 @@ function isValidBrightLetterComponent(component, bounds) {
   return !touchesPhotoEdge;
 }
 
+function isValidDarkLetterComponent(component, bounds) {
+  if (!isValidBrightLetterComponent(component, bounds)) {
+    return false;
+  }
+
+  const boundsArea = Math.max(1, bounds.width * bounds.height);
+  const componentArea = component.width * component.height;
+  const density = component.count / Math.max(1, componentArea);
+
+  return componentArea < boundsArea * 0.035 && density >= 0.18;
+}
+
+function boxIntersectionArea(a, b) {
+  const left = Math.max(a.x, b.x);
+  const top = Math.max(a.y, b.y);
+  const right = Math.min(a.x + a.width, b.x + b.width);
+  const bottom = Math.min(a.y + a.height, b.y + b.height);
+  return Math.max(0, right - left) * Math.max(0, bottom - top);
+}
+
+function boxesConflict(a, b) {
+  const intersection = boxIntersectionArea(a, b);
+  if (!intersection) {
+    return false;
+  }
+
+  const areaA = Math.max(1, a.width * a.height);
+  const areaB = Math.max(1, b.width * b.height);
+  const union = areaA + areaB - intersection;
+  return intersection / union > 0.35 || intersection / Math.min(areaA, areaB) > 0.35;
+}
+
 function sortSignageBoxesReadingOrder(boxes) {
   const rowTolerance = Math.max(18, signagePhotoFrame().height * 0.045);
   return [...boxes].sort((a, b) => {
@@ -1613,30 +1728,196 @@ function sortSignageBoxesReadingOrder(boxes) {
   });
 }
 
-function tracedLetterLabels(count) {
-  const aiText = (signageRecognition?.wordGroups || signageRawRecognition?.wordGroups || [])
-    .map((group) => String(group.text || ""))
-    .filter((text) => /[A-Za-z]/.test(text) && !/^\d+$/.test(text.trim()))
-    .join("")
-    .replace(/[^A-Za-z]/g, "");
-
-  if (aiText.length === count) {
-    return aiText.split("");
+function loadSignageTesseract() {
+  if (window.Tesseract?.recognize) {
+    return Promise.resolve(window.Tesseract);
   }
 
-  const existingText = (signageRecognition?.letters || [])
-    .map((letter) => String(letter.text || ""))
-    .filter((text) => /^[A-Za-z]$/.test(text))
-    .join("");
+  if (!signageTesseractLoadPromise) {
+    signageTesseractLoadPromise = new Promise((resolve, reject) => {
+      const existingScript = document.querySelector(`script[src="${signageTesseractCdnUrl}"]`);
+      if (existingScript) {
+        existingScript.addEventListener("load", () => resolve(window.Tesseract));
+        existingScript.addEventListener("error", () => reject(new Error("Tesseract.js failed to load.")));
+        return;
+      }
 
-  if (existingText.length === count) {
-    return existingText.split("");
+      const script = document.createElement("script");
+      script.src = signageTesseractCdnUrl;
+      script.async = true;
+      script.onload = () => {
+        if (window.Tesseract?.recognize) {
+          resolve(window.Tesseract);
+        } else {
+          reject(new Error("Tesseract.js loaded without OCR support."));
+        }
+      };
+      script.onerror = () => reject(new Error("Tesseract.js failed to load."));
+      document.head.append(script);
+    });
   }
 
-  return Array.from({ length: count }, () => "?");
+  return signageTesseractLoadPromise;
 }
 
-function traceBrightLetterComponents() {
+function groupSignageBoxesByRow(boxes) {
+  const sorted = sortSignageBoxesReadingOrder(boxes);
+  const rows = [];
+  const averageHeight = sorted.reduce((sum, box) => sum + box.height, 0) / Math.max(1, sorted.length);
+  const rowTolerance = Math.max(18, averageHeight * 0.72);
+
+  sorted.forEach((box, index) => {
+    const centerY = box.y + box.height / 2;
+    let row = rows.find((item) => Math.abs(item.centerY - centerY) <= rowTolerance);
+
+    if (!row) {
+      row = { centerY, items: [] };
+      rows.push(row);
+    }
+
+    row.items.push({ box, index });
+    row.centerY = row.items.reduce((sum, item) => sum + item.box.y + item.box.height / 2, 0) / row.items.length;
+  });
+
+  return rows
+    .sort((a, b) => a.centerY - b.centerY)
+    .map((row) => ({
+      ...row,
+      items: row.items.sort((a, b) => a.box.x - b.box.x)
+    }));
+}
+
+function signageWorkingCanvas() {
+  if (!signagePhotoImage) {
+    return null;
+  }
+
+  const canvas = document.createElement("canvas");
+  canvas.width = signageCanvas.width;
+  canvas.height = signageCanvas.height;
+  const context = canvas.getContext("2d", { willReadFrequently: true });
+  context.fillStyle = "#f8fafc";
+  context.fillRect(0, 0, canvas.width, canvas.height);
+  const frame = signagePhotoFrame();
+  context.drawImage(signagePhotoImage, frame.x, frame.y, frame.width, frame.height);
+  return canvas;
+}
+
+function rowCropBounds(row) {
+  const bounds = signagePhotoFrame();
+  const left = Math.min(...row.items.map((item) => item.box.x));
+  const top = Math.min(...row.items.map((item) => item.box.y));
+  const right = Math.max(...row.items.map((item) => item.box.x + item.box.width));
+  const bottom = Math.max(...row.items.map((item) => item.box.y + item.box.height));
+  const padX = Math.max(10, (right - left) * 0.12);
+  const padY = Math.max(10, (bottom - top) * 0.22);
+  const cropLeft = Math.max(bounds.x, left - padX);
+  const cropTop = Math.max(bounds.y, top - padY);
+  const cropRight = Math.min(bounds.x + bounds.width, right + padX);
+  const cropBottom = Math.min(bounds.y + bounds.height, bottom + padY);
+
+  return {
+    x: cropLeft,
+    y: cropTop,
+    width: Math.max(1, cropRight - cropLeft),
+    height: Math.max(1, cropBottom - cropTop)
+  };
+}
+
+function rowGlyphPixel(sourceX, sourceY, row, r, g, b, a) {
+  const item = row.items.find(({ box }) => (
+    sourceX >= box.x - 3 &&
+    sourceX <= box.x + box.width + 3 &&
+    sourceY >= box.y - 3 &&
+    sourceY <= box.y + box.height + 3
+  ));
+
+  if (!item) {
+    return false;
+  }
+
+  return String(item.box.source || "").includes("dark")
+    ? isDarkGlyphPixel(r, g, b, a)
+    : isBrightGlyphPixel(r, g, b, a);
+}
+
+function createSignageOcrCropDataUrl(sourceCanvas, row) {
+  const crop = rowCropBounds(row);
+  const scale = 3;
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.max(1, Math.round(crop.width * scale));
+  canvas.height = Math.max(1, Math.round(crop.height * scale));
+  const context = canvas.getContext("2d", { willReadFrequently: true });
+  context.imageSmoothingEnabled = true;
+  context.drawImage(sourceCanvas, crop.x, crop.y, crop.width, crop.height, 0, 0, canvas.width, canvas.height);
+
+  const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+  for (let y = 0; y < canvas.height; y += 1) {
+    for (let x = 0; x < canvas.width; x += 1) {
+      const index = (y * canvas.width + x) * 4;
+      const r = imageData.data[index];
+      const g = imageData.data[index + 1];
+      const b = imageData.data[index + 2];
+      const a = imageData.data[index + 3];
+      const sourceX = crop.x + x / scale;
+      const sourceY = crop.y + y / scale;
+      const isGlyph = rowGlyphPixel(sourceX, sourceY, row, r, g, b, a);
+      const value = isGlyph ? 0 : 255;
+      imageData.data[index] = value;
+      imageData.data[index + 1] = value;
+      imageData.data[index + 2] = value;
+      imageData.data[index + 3] = 255;
+    }
+  }
+  context.putImageData(imageData, 0, 0);
+  return canvas.toDataURL("image/png");
+}
+
+function cleanSignageOcrText(text) {
+  return String(text || "").replace(/[^0-9A-Za-z]/g, "");
+}
+
+async function ocrLabelsForTracedBoxes(tracedBoxes, onProgress = () => {}) {
+  const sourceCanvas = signageWorkingCanvas();
+  if (!sourceCanvas) {
+    throw new Error("No signage photo canvas available.");
+  }
+
+  const Tesseract = await loadSignageTesseract();
+  const rows = groupSignageBoxesByRow(tracedBoxes);
+  const labels = Array.from({ length: tracedBoxes.length }, () => "?");
+  const ocrRows = [];
+  let filled = 0;
+
+  for (let rowIndex = 0; rowIndex < rows.length; rowIndex += 1) {
+    const row = rows[rowIndex];
+    onProgress(rowIndex + 1, rows.length);
+    const image = createSignageOcrCropDataUrl(sourceCanvas, row);
+    const result = await Tesseract.recognize(image, "eng");
+    const rawText = result?.data?.text || "";
+    const cleanText = cleanSignageOcrText(rawText);
+    const matched = cleanText.length === row.items.length;
+
+    if (matched) {
+      row.items.forEach((item, index) => {
+        labels[item.index] = cleanText[index] || "?";
+      });
+      filled += row.items.length;
+    }
+
+    ocrRows.push({
+      row: rowIndex + 1,
+      expected: row.items.length,
+      rawText,
+      cleanText,
+      matched
+    });
+  }
+
+  return { labels, filled, rows: ocrRows };
+}
+
+function traceLetterComponents(pixelPredicate, source, color, validator = isValidBrightLetterComponent) {
   const imageData = signageWorkingImageData();
   if (!imageData) {
     return [];
@@ -1645,7 +1926,7 @@ function traceBrightLetterComponents() {
   const bounds = signagePhotoFrame();
   const width = imageData.width;
   const height = imageData.height;
-  const bright = new Uint8Array(width * height);
+  const mask = new Uint8Array(width * height);
   const visited = new Uint8Array(width * height);
   const minX = Math.max(0, Math.floor(bounds.x));
   const minY = Math.max(0, Math.floor(bounds.y));
@@ -1656,8 +1937,8 @@ function traceBrightLetterComponents() {
     for (let x = minX; x <= maxX; x += 1) {
       const index = y * width + x;
       const dataIndex = index * 4;
-      if (isBrightGlyphPixel(imageData.data[dataIndex], imageData.data[dataIndex + 1], imageData.data[dataIndex + 2], imageData.data[dataIndex + 3])) {
-        bright[index] = 1;
+      if (pixelPredicate(imageData.data[dataIndex], imageData.data[dataIndex + 1], imageData.data[dataIndex + 2], imageData.data[dataIndex + 3])) {
+        mask[index] = 1;
       }
     }
   }
@@ -1668,7 +1949,7 @@ function traceBrightLetterComponents() {
   for (let y = minY; y <= maxY; y += 1) {
     for (let x = minX; x <= maxX; x += 1) {
       const startIndex = y * width + x;
-      if (!bright[startIndex] || visited[startIndex]) {
+      if (!mask[startIndex] || visited[startIndex]) {
         continue;
       }
 
@@ -1704,7 +1985,7 @@ function traceBrightLetterComponents() {
               continue;
             }
             const nextIndex = nextY * width + nextX;
-            if (bright[nextIndex] && !visited[nextIndex]) {
+            if (mask[nextIndex] && !visited[nextIndex]) {
               visited[nextIndex] = 1;
               stack.push(nextIndex);
             }
@@ -1720,8 +2001,11 @@ function traceBrightLetterComponents() {
         count
       };
 
-      if (isValidBrightLetterComponent(component, bounds)) {
-        components.push(normalizeSignageBox(component, bounds));
+      if (validator(component, bounds)) {
+        const box = normalizeSignageBox(component, bounds);
+        if (box) {
+          components.push({ ...box, source, color });
+        }
       }
     }
   }
@@ -1729,52 +2013,117 @@ function traceBrightLetterComponents() {
   return sortSignageBoxesReadingOrder(components.filter(Boolean));
 }
 
-function replaceSignageWithPixelTrace() {
-  const tracedBoxes = traceBrightLetterComponents();
-  if (!tracedBoxes.length) {
-    setLog(t("signagePixelTraceMissing"), "warning");
-    return;
-  }
+function traceBrightLetterComponents() {
+  return traceLetterComponents(isBrightGlyphPixel, "pixel-trace", "#dc2626", isValidBrightLetterComponent);
+}
 
-  const labels = tracedLetterLabels(tracedBoxes.length);
-  const backingSize = signageBackingSizeInputs();
-  const backing = signageRecognition?.backing || {
-    widthIn: backingSize.widthIn,
-    heightIn: backingSize.heightIn,
-    areaSqft: (backingSize.widthIn * backingSize.heightIn) / 144,
-    box: signageBackingBox || signageCalibrationBox()
-  };
+function traceDarkLetterComponents() {
+  return traceLetterComponents(isDarkGlyphPixel, "pixel-trace-dark", "#4f46e5", isValidDarkLetterComponent);
+}
 
-  signageRecognition = {
-    ...(signageRecognition || {}),
-    source: "pixel-trace",
-    aiNote: t("signagePixelTraceDone", { count: tracedBoxes.length }),
-    backing,
-    wordGroups: signageRecognition?.wordGroups || signageRawRecognition?.wordGroups || [],
-    reviewItems: [
-      ...(signageRecognition?.reviewItems || []),
-      "Pixel trace replaced AI boxes. Confirm the letter names before quoting."
-    ],
+function traceVisibleLetterComponents() {
+  const brightBoxes = traceBrightLetterComponents();
+  const darkBoxes = traceDarkLetterComponents().filter((darkBox) => (
+    !brightBoxes.some((brightBox) => boxesConflict(brightBox, darkBox))
+  ));
+
+  return sortSignageBoxesReadingOrder([...brightBoxes, ...darkBoxes]);
+}
+
+async function replaceSignageWithPixelTrace() {
+  signageTraceBrightButton.disabled = true;
+  signageTraceBrightButton.textContent = t("signagePixelTracing");
+  signageAiNote.textContent = t("signagePixelTracing");
+  setLog(t("signagePixelTracing"), "info");
+
+  try {
+    const tracedBoxes = traceVisibleLetterComponents();
+    if (!tracedBoxes.length) {
+      setLog(t("signagePixelTraceMissing"), "warning");
+      return;
+    }
+
+    let ocrResult = {
+      labels: Array.from({ length: tracedBoxes.length }, () => "?"),
+      filled: 0,
+      rows: [],
+      available: false
+    };
+
+    try {
+      signageTraceBrightButton.textContent = t("signageOcrLoading");
+      signageAiNote.textContent = t("signageOcrLoading");
+      setLog(t("signageOcrLoading"), "info");
+      ocrResult = {
+        ...(await ocrLabelsForTracedBoxes(tracedBoxes, (current, total) => {
+          const message = t("signageOcrReadingRow", { current, total });
+          signageTraceBrightButton.textContent = message;
+          signageAiNote.textContent = message;
+          setLog(message, "info");
+        })),
+        available: true
+      };
+    } catch (error) {
+      ocrResult.rows = [{
+        row: 0,
+        expected: tracedBoxes.length,
+        rawText: "",
+        cleanText: "",
+        matched: false,
+        error: error.message
+      }];
+    }
+
+    const labels = ocrResult.labels;
+    const backingSize = signageBackingSizeInputs();
+    const backing = signageRecognition?.backing || {
+      widthIn: backingSize.widthIn,
+      heightIn: backingSize.heightIn,
+      areaSqft: (backingSize.widthIn * backingSize.heightIn) / 144,
+      box: signageBackingBox || signageCalibrationBox()
+    };
+    const note = ocrResult.available
+      ? t("signagePixelTraceOcrDone", { count: tracedBoxes.length, filled: ocrResult.filled })
+      : t("signagePixelTraceOcrFallback", { count: tracedBoxes.length });
+
+    signageRecognition = {
+      ...(signageRecognition || {}),
+      source: ocrResult.filled ? "pixel-trace-ocr" : "pixel-trace",
+      aiNote: note,
+      backing,
+      wordGroups: signageRecognition?.wordGroups || signageRawRecognition?.wordGroups || [],
+      ocrRows: ocrResult.rows,
+      reviewItems: [
+        ...(signageRecognition?.reviewItems || []),
+        "Pixel trace replaced AI boxes. OCR labels are used only when the row character count matches."
+      ],
     letters: tracedBoxes.map((box, index) => {
       const dimensions = signageBoxDimensionsIn(box);
+      const label = labels[index] || "?";
       return {
-        text: labels[index] || "?",
+        text: label,
         widthIn: dimensions.widthIn,
         heightIn: dimensions.heightIn,
-        confidence: 0.65,
+        confidence: label === "?" ? 0.55 : 0.88,
         box,
-        source: "pixel-trace"
+        source: label === "?" ? box.source || "pixel-trace" : `${box.source || "pixel-trace"}-ocr`,
+        color: box.color || defaultSignageLetterColor({ source: box.source })
       };
     })
   };
 
-  signageQuote = calculateSignageQuote(signageRecognition, signagePricing || sampleSignagePricing());
-  signageAiNote.textContent = signageRecognition.aiNote;
-  renderSignageCanvas();
-  renderSignageDetections();
-  renderSignageQuote();
-  scheduleSignageAutosave();
-  setLog(signageRecognition.aiNote, "success");
+    selectedSignageLetterIndex = signageRecognition.letters.length ? 0 : null;
+    signageQuote = calculateSignageQuote(signageRecognition, signagePricing || sampleSignagePricing());
+    signageAiNote.textContent = signageRecognition.aiNote;
+    renderSignageCanvas();
+    renderSignageDetections();
+    renderSignageQuote();
+    scheduleSignageAutosave();
+    setLog(signageRecognition.aiNote, "success");
+  } finally {
+    signageTraceBrightButton.disabled = false;
+    signageTraceBrightButton.textContent = t("traceBrightLetters");
+  }
 }
 
 function normalizeSignageBox(box, bounds = signagePhotoFrame()) {
@@ -1932,6 +2281,39 @@ function drawBox(context, box, color, label) {
   context.restore();
 }
 
+function signageResizeHandles(box) {
+  const centerX = box.x + box.width / 2;
+  const centerY = box.y + box.height / 2;
+  return [
+    { key: "nw", x: box.x, y: box.y },
+    { key: "n", x: centerX, y: box.y },
+    { key: "ne", x: box.x + box.width, y: box.y },
+    { key: "e", x: box.x + box.width, y: centerY },
+    { key: "se", x: box.x + box.width, y: box.y + box.height },
+    { key: "s", x: centerX, y: box.y + box.height },
+    { key: "sw", x: box.x, y: box.y + box.height },
+    { key: "w", x: box.x, y: centerY }
+  ];
+}
+
+function drawSelectedSignageBox(context, box, color) {
+  const handleSize = 14;
+  context.save();
+  context.strokeStyle = color;
+  context.lineWidth = 7;
+  context.setLineDash([14, 7]);
+  context.strokeRect(box.x, box.y, box.width, box.height);
+  context.setLineDash([]);
+  signageResizeHandles(box).forEach((handle) => {
+    context.fillStyle = "#fff";
+    context.strokeStyle = color;
+    context.lineWidth = 3;
+    context.fillRect(handle.x - handleSize / 2, handle.y - handleSize / 2, handleSize, handleSize);
+    context.strokeRect(handle.x - handleSize / 2, handle.y - handleSize / 2, handleSize, handleSize);
+  });
+  context.restore();
+}
+
 function fitCanvasLabel(context, text, maxWidth) {
   let label = String(text || "");
   if (context.measureText(label).width <= maxWidth) {
@@ -2028,6 +2410,8 @@ function resetSignageProjectForNewPhoto() {
   signageBackingBox = null;
   signageDragStart = null;
   signageDragPreview = null;
+  signageBoxDrag = null;
+  selectedSignageLetterIndex = null;
   signageActiveTool = "guideline";
   signageCalibrationMode = "guideline";
   activeSignageStep = 0;
@@ -2043,6 +2427,7 @@ function resetSignageProjectForNewPhoto() {
   updateSignageToolAvailability();
   renderSignageCanvas();
   renderSignageDetections();
+  renderSignageSelectedLetterEditor();
   renderSignageQuote();
   scheduleSignageAutosave();
 }
@@ -2058,6 +2443,7 @@ function loadSampleSignage() {
   signageBackingBox = signageCalibrationBox();
   signageRecognition = sampleSignageRecognition();
   signageRawRecognition = signageRecognition;
+  selectedSignageLetterIndex = signageRecognition.letters.length ? 0 : null;
   signagePricing = signagePricing || sampleSignagePricing();
   signageQuote = calculateSignageQuote(signageRecognition, signagePricing);
   updateSignageToolAvailability();
@@ -2085,7 +2471,9 @@ function sampleSignageRecognition() {
       widthIn: widths[index],
       heightIn: index === 3 ? 17.6 : 18,
       confidence: confidences[index],
-      box: { x: startX + index * 70, y: 202, width: index === 0 ? 64 : 52, height: 58 }
+      box: { x: startX + index * 70, y: 202, width: index === 0 ? 64 : 52, height: 58 },
+      source: "sample",
+      color: "#dc2626"
     })),
     reviewItems: ["Letter S confidence is low. Confirm its height before final quote."]
   };
@@ -2157,21 +2545,63 @@ function signageStepDefinitions() {
   ];
 }
 
+function visibleSignageStepIndexes() {
+  return signageStepDefinitions()
+    .map((_, index) => index)
+    .filter((index) => !hiddenSignageStepIndexes.has(index));
+}
+
+function normalizeSignageStep(step, direction = 1) {
+  const steps = signageStepDefinitions();
+  const visibleSteps = visibleSignageStepIndexes();
+  let index = Math.max(0, Math.min(steps.length - 1, Number(step) || 0));
+
+  if (!hiddenSignageStepIndexes.has(index)) {
+    return index;
+  }
+
+  const move = direction >= 0 ? 1 : -1;
+  while (index >= 0 && index < steps.length && hiddenSignageStepIndexes.has(index)) {
+    index += move;
+  }
+
+  if (index >= 0 && index < steps.length) {
+    return index;
+  }
+
+  return move > 0 ? visibleSteps[visibleSteps.length - 1] : visibleSteps[0];
+}
+
+function moveSignageStep(direction) {
+  setSignageStep(activeSignageStep + direction, direction);
+}
+
 function updateSignageWizard() {
   const steps = signageStepDefinitions();
-  activeSignageStep = Math.max(0, Math.min(steps.length - 1, activeSignageStep || 0));
+  activeSignageStep = normalizeSignageStep(activeSignageStep || 0);
   const current = steps[activeSignageStep];
+  const visibleSteps = visibleSignageStepIndexes();
+  const firstVisibleStep = visibleSteps[0];
+  const lastVisibleStep = visibleSteps[visibleSteps.length - 1];
   updateSignageGuidelineMirror();
   updateSignageToolAvailability();
 
   signageStepButtons.forEach((button) => {
     const index = Number(button.dataset.signageStep);
+    const isHidden = hiddenSignageStepIndexes.has(index);
+    button.hidden = isHidden;
+    button.style.display = isHidden ? "none" : "";
+    const stepNumber = button.querySelector("span");
+    if (stepNumber && !isHidden) {
+      stepNumber.textContent = String(visibleSteps.indexOf(index) + 1);
+    }
     button.classList.toggle("active", index === activeSignageStep);
-    button.classList.toggle("complete", index < activeSignageStep);
+    button.classList.toggle("complete", !isHidden && index < activeSignageStep);
   });
 
   signageStepPanels.forEach((panel) => {
-    const isActive = Number(panel.dataset.signageStepPanel) === activeSignageStep;
+    const panelStep = Number(panel.dataset.signageStepPanel);
+    const isActive = panelStep === activeSignageStep && !hiddenSignageStepIndexes.has(panelStep);
     panel.hidden = !isActive;
     panel.style.display = isActive ? "" : "none";
   });
@@ -2179,8 +2609,8 @@ function updateSignageWizard() {
   signageStepEyebrow.textContent = t(current.key);
   signageStepTitle.textContent = t("signageQuotation");
   signageStageStatus.textContent = t(current.statusKey);
-  signageBackStepButton.disabled = activeSignageStep === 0;
-  signageNextStepButton.textContent = activeSignageStep === steps.length - 1 ? t("finishStep") : t("nextStep");
+  signageBackStepButton.disabled = activeSignageStep === firstVisibleStep;
+  signageNextStepButton.textContent = activeSignageStep === lastVisibleStep ? t("finishStep") : t("nextStep");
   localStorage.setItem("weesengSignageActiveStep", String(activeSignageStep));
 }
 
@@ -2211,15 +2641,15 @@ function updateSignageToolAvailability() {
   signageToolGuidelineButton.disabled = !isCalibrationStep;
   signageToolBackingButton.hidden = !isCalibrationStep;
   signageToolBackingButton.disabled = !isCalibrationStep;
-  signageToolLetterButton.hidden = !(isReviewStep && hasRecognition);
-  signageToolLetterButton.disabled = !(isReviewStep && hasRecognition);
-  signageTools.hidden = !isCalibrationStep && !(isReviewStep && hasRecognition);
+  signageToolLetterButton.hidden = !isReviewStep;
+  signageToolLetterButton.disabled = !isReviewStep;
+  signageTools.hidden = !isCalibrationStep && !isReviewStep;
   signageTools.style.display = signageTools.hidden ? "none" : "";
 
   if (isCalibrationStep && signageActiveTool === "letter") {
     signageActiveTool = "guideline";
-  } else if (!isCalibrationStep && signageActiveTool !== "letter") {
-    signageActiveTool = isReviewStep && hasRecognition ? "letter" : signageActiveTool;
+  } else if (isReviewStep) {
+    signageActiveTool = "letter";
   } else if (!hasRecognition && signageActiveTool === "letter") {
     signageActiveTool = "guideline";
   }
@@ -2249,8 +2679,8 @@ function updateSignageCanvasZoom() {
   localStorage.setItem("weesengSignageCanvasZoom", String(signageCanvasZoom));
 }
 
-function setSignageStep(step) {
-  activeSignageStep = Math.max(0, Math.min(signageStepDefinitions().length - 1, Number(step) || 0));
+function setSignageStep(step, direction = 1) {
+  activeSignageStep = normalizeSignageStep(step, direction);
   updateSignageWizard();
   renderSignageCanvas();
   scheduleSignageAutosave();
@@ -2554,6 +2984,7 @@ async function recognizeSignage() {
 
     signageRawRecognition = await response.json();
     signageRecognition = normalizeSignageRecognition(signageRawRecognition);
+    selectedSignageLetterIndex = signageRecognition.letters.length ? 0 : null;
     signageQuote = calculateSignageQuote(signageRecognition, pricing);
     signageAiNote.textContent = signageRecognition.aiNote;
     await updateSignageDraft();
@@ -2643,7 +3074,9 @@ function normalizeSignageRecognition(result) {
       widthIn: boxDimensions.widthIn,
       heightIn: boxDimensions.heightIn,
       confidence: Number(letter.confidence ?? 0.5),
-      box: refinedBox
+      box: refinedBox,
+      source: letter.source || "ai",
+      color: letter.color || "#2563eb"
     };
   }).filter((letter) => {
     if (!isLikelyBadLetterBox(letter.box, normalizedBackingBox)) {
@@ -2842,6 +3275,30 @@ function hideSignageLetterTooltip(event) {
   }
 }
 
+function renderSignageSelectedLetterEditor() {
+  const letter = Number.isInteger(selectedSignageLetterIndex)
+    ? signageRecognition?.letters?.[selectedSignageLetterIndex]
+    : null;
+
+  if (!letter) {
+    if (signageSelectedLetterEditor) {
+      signageSelectedLetterEditor.hidden = true;
+      signageSelectedLetterEditor.style.display = "none";
+    }
+    return;
+  }
+
+  const box = normalizeSignageBox(letter.box) || letter.box;
+  signageSelectedLetterEditor.hidden = false;
+  signageSelectedLetterEditor.style.display = "";
+  signageSelectedBoxXInput.value = formatControlNumber(box.x);
+  signageSelectedBoxYInput.value = formatControlNumber(box.y);
+  signageSelectedBoxWInput.value = formatControlNumber(box.width);
+  signageSelectedBoxHInput.value = formatControlNumber(box.height);
+  signageSelectedBoxColorInput.value = signageLetterColor(letter);
+  signageSelectedBoxSource.textContent = letter.source || signageRecognition?.source || "-";
+}
+
 function renderSignageDetections() {
   const recognition = signageRecognition;
   signageDetections.innerHTML = "";
@@ -2850,7 +3307,13 @@ function renderSignageDetections() {
     signageBackingSize.textContent = "-";
     signageWordGroup.textContent = "-";
     signageConfidence.textContent = "-";
+    selectedSignageLetterIndex = null;
+    renderSignageSelectedLetterEditor();
     return;
+  }
+
+  if (!recognition.letters[selectedSignageLetterIndex]) {
+    selectedSignageLetterIndex = recognition.letters.length ? 0 : null;
   }
 
   signageBackingSize.textContent = `${formatControlNumber(recognition.backing.widthIn)} in x ${formatControlNumber(recognition.backing.heightIn)} in`;
@@ -2858,6 +3321,7 @@ function renderSignageDetections() {
   if (!recognition.letters.length) {
     signageConfidence.textContent = "0%";
     signageDetections.innerHTML = `<tr><td colspan="5">${escapeXml(recognition.reviewItems?.join(" ") || recognition.aiNote || t("aiNoteEmpty"))}</td></tr>`;
+    renderSignageSelectedLetterEditor();
     return;
   }
 
@@ -2866,7 +3330,8 @@ function renderSignageDetections() {
 
   recognition.letters.forEach((letter, index) => {
     const row = document.createElement("tr");
-    row.className = "letter-quote-row";
+    row.className = `letter-quote-row${index === selectedSignageLetterIndex ? " selected" : ""}`;
+    row.dataset.letterRowIndex = String(index);
     row.dataset.tooltip = signageLetterQuoteDetails(letter);
     row.innerHTML = [
       `<td><input data-letter-index="${index}" data-field="text" value="${escapeXml(letter.text)}"></td>`,
@@ -2877,6 +3342,8 @@ function renderSignageDetections() {
     ].join("");
     signageDetections.append(row);
   });
+
+  renderSignageSelectedLetterEditor();
 }
 
 function renderSignageQuote() {
@@ -2918,6 +3385,7 @@ function refreshSignageQuoteFromEdits(renderDetections = true) {
   if (renderDetections) {
     renderSignageDetections();
   }
+  renderSignageSelectedLetterEditor();
   renderSignageQuote();
   scheduleSignageAutosave();
 }
@@ -3020,6 +3488,132 @@ function signageCanvasPoint(event) {
   return clampSignagePointToPhoto(point);
 }
 
+function pointInBox(point, box) {
+  return point.x >= box.x && point.x <= box.x + box.width && point.y >= box.y && point.y <= box.y + box.height;
+}
+
+function hitSignageResizeHandle(point, box) {
+  const size = 18;
+  return signageResizeHandles(box).find((handle) => (
+    Math.abs(point.x - handle.x) <= size / 2 &&
+    Math.abs(point.y - handle.y) <= size / 2
+  ))?.key || null;
+}
+
+function hitSignageLetterBox(point) {
+  if (!signageRecognition?.letters?.length) {
+    return null;
+  }
+
+  for (let index = signageRecognition.letters.length - 1; index >= 0; index -= 1) {
+    const letter = signageRecognition.letters[index];
+    const box = normalizeSignageBox(letter.box) || letter.box;
+    const handle = index === selectedSignageLetterIndex ? hitSignageResizeHandle(point, box) : null;
+    if (handle) {
+      return { index, mode: "resize", handle, box };
+    }
+    if (pointInBox(point, box)) {
+      return { index, mode: "move", handle: null, box };
+    }
+  }
+
+  return null;
+}
+
+function clampSignageBoxToPhoto(box) {
+  const bounds = signagePhotoFrame();
+  const width = Math.max(1, Math.min(box.width, bounds.width));
+  const height = Math.max(1, Math.min(box.height, bounds.height));
+  return {
+    x: Math.max(bounds.x, Math.min(bounds.x + bounds.width - width, box.x)),
+    y: Math.max(bounds.y, Math.min(bounds.y + bounds.height - height, box.y)),
+    width,
+    height
+  };
+}
+
+function resizeSignageBoxFromHandle(originalBox, deltaX, deltaY, handle) {
+  let left = originalBox.x;
+  let top = originalBox.y;
+  let right = originalBox.x + originalBox.width;
+  let bottom = originalBox.y + originalBox.height;
+
+  if (handle.includes("w")) {
+    left += deltaX;
+  }
+  if (handle.includes("e")) {
+    right += deltaX;
+  }
+  if (handle.includes("n")) {
+    top += deltaY;
+  }
+  if (handle.includes("s")) {
+    bottom += deltaY;
+  }
+
+  if (right - left < 8) {
+    if (handle.includes("w")) left = right - 8;
+    else right = left + 8;
+  }
+  if (bottom - top < 8) {
+    if (handle.includes("n")) top = bottom - 8;
+    else bottom = top + 8;
+  }
+
+  return clampSignageBoxToPhoto({
+    x: left,
+    y: top,
+    width: right - left,
+    height: bottom - top
+  });
+}
+
+function updateSignageLetterBox(index, box) {
+  const letter = signageRecognition?.letters?.[index];
+  if (!letter) {
+    return;
+  }
+
+  const normalizedBox = clampSignageBoxToPhoto(box);
+  const dimensions = signageBoxDimensionsIn(normalizedBox);
+  letter.box = normalizedBox;
+  letter.widthIn = dimensions.widthIn;
+  letter.heightIn = dimensions.heightIn;
+}
+
+function updateSelectedSignageBoxFromInputs() {
+  const letter = Number.isInteger(selectedSignageLetterIndex)
+    ? signageRecognition?.letters?.[selectedSignageLetterIndex]
+    : null;
+
+  if (!letter) {
+    return;
+  }
+
+  updateSignageLetterBox(selectedSignageLetterIndex, {
+    x: Number(signageSelectedBoxXInput.value) || 0,
+    y: Number(signageSelectedBoxYInput.value) || 0,
+    width: Math.max(1, Number(signageSelectedBoxWInput.value) || 1),
+    height: Math.max(1, Number(signageSelectedBoxHInput.value) || 1)
+  });
+  refreshSignageQuoteFromEdits();
+}
+
+function updateSelectedSignageBoxColor() {
+  const letter = Number.isInteger(selectedSignageLetterIndex)
+    ? signageRecognition?.letters?.[selectedSignageLetterIndex]
+    : null;
+
+  if (!letter) {
+    return;
+  }
+
+  letter.color = signageSelectedBoxColorInput.value || defaultSignageLetterColor(letter);
+  renderSignageCanvas();
+  renderSignageDetections();
+  scheduleSignageAutosave();
+}
+
 function clampSignagePointToPhoto(point) {
   if (!signagePhotoImage) {
     return point;
@@ -3037,23 +3631,64 @@ function startSignageDrag(event) {
     return;
   }
 
-  if (signageActiveTool === "letter" && !signageRecognition) {
-    return;
+  const point = signageCanvasPoint(event);
+  if (activeSignageStep === 3) {
+    const hit = hitSignageLetterBox(point);
+    if (hit) {
+      selectedSignageLetterIndex = hit.index;
+      signageBoxDrag = {
+        mode: hit.mode,
+        handle: hit.handle,
+        startPoint: point,
+        originalBox: { ...hit.box },
+        index: hit.index
+      };
+      renderSignageCanvas();
+      renderSignageDetections();
+      renderSignageSelectedLetterEditor();
+      if (event.pointerId !== undefined && signageCanvas.setPointerCapture) {
+        signageCanvas.setPointerCapture(event.pointerId);
+      }
+      return;
+    }
   }
 
-  signageDragStart = signageCanvasPoint(event);
+  signageDragStart = point;
   signageDragPreview = null;
+  signageBoxDrag = null;
   if (event.pointerId !== undefined && signageCanvas.setPointerCapture) {
     signageCanvas.setPointerCapture(event.pointerId);
   }
 }
 
 function updateSignageDrag(event) {
-  if (!signageDragStart || activeTool !== "signage-quotation") {
+  if (activeTool !== "signage-quotation") {
     return;
   }
 
   const point = signageCanvasPoint(event);
+  if (signageBoxDrag) {
+    const deltaX = point.x - signageBoxDrag.startPoint.x;
+    const deltaY = point.y - signageBoxDrag.startPoint.y;
+    const nextBox = signageBoxDrag.mode === "move"
+      ? clampSignageBoxToPhoto({
+        ...signageBoxDrag.originalBox,
+        x: signageBoxDrag.originalBox.x + deltaX,
+        y: signageBoxDrag.originalBox.y + deltaY
+      })
+      : resizeSignageBoxFromHandle(signageBoxDrag.originalBox, deltaX, deltaY, signageBoxDrag.handle);
+
+    updateSignageLetterBox(signageBoxDrag.index, nextBox);
+    signageQuote = calculateSignageQuote(signageRecognition, signagePricing || sampleSignagePricing());
+    renderSignageCanvas();
+    renderSignageDetections();
+    renderSignageQuote();
+    return;
+  }
+
+  if (!signageDragStart) {
+    return;
+  }
 
   if (signageActiveTool === "guideline") {
     signageCalibrationMode = "guideline";
@@ -3095,7 +3730,7 @@ function updateSignageDrag(event) {
       renderSignageDetections();
       renderSignageQuote();
     }
-  } else if (signageActiveTool === "letter" && signageRecognition) {
+  } else if (signageActiveTool === "letter" && activeSignageStep === 3) {
     const box = {
       x: Math.min(signageDragStart.x, point.x),
       y: Math.min(signageDragStart.y, point.y),
@@ -3110,16 +3745,24 @@ function updateSignageDrag(event) {
 }
 
 function finishSignageDrag(event) {
-  if (signageDragPreview?.tool === "letter" && signageRecognition) {
+  if (signageBoxDrag) {
+    refreshSignageQuoteFromEdits();
+  }
+
+  if (signageDragPreview?.tool === "letter") {
+    ensureSignageRecognitionDraft();
     const box = signageDragPreview.box;
     if (box.width >= 8 && box.height >= 8) {
       const dimensions = signageBoxDimensionsIn(box);
+      selectedSignageLetterIndex = signageRecognition.letters.length;
       signageRecognition.letters.push({
         text: "?",
         widthIn: dimensions.widthIn,
         heightIn: dimensions.heightIn,
         confidence: 1,
-        box
+        box: clampSignageBoxToPhoto(box),
+        source: "manual",
+        color: "#7c3aed"
       });
       refreshSignageQuoteFromEdits();
       setSignageStep(3);
@@ -3128,6 +3771,7 @@ function finishSignageDrag(event) {
 
   signageDragStart = null;
   signageDragPreview = null;
+  signageBoxDrag = null;
   if (event?.pointerId !== undefined && signageCanvas.releasePointerCapture) {
     try {
       signageCanvas.releasePointerCapture(event.pointerId);
@@ -3622,7 +4266,6 @@ stlExportButton.addEventListener("click", exportResizedStl);
 
 signageRerunButton.addEventListener("click", recognizeSignage);
 signageExportTraceButton.addEventListener("click", exportSignageTrace);
-signageExportTraceButtonReview.addEventListener("click", exportSignageTrace);
 signageTraceBrightButton.addEventListener("click", replaceSignageWithPixelTrace);
 signageRefreshQuoteButton.addEventListener("click", refreshSignageQuoteFromControls);
 signageLightingSelect.addEventListener("change", refreshSignageQuoteFromControls);
@@ -3689,8 +4332,8 @@ signageStepButtons.forEach((button) => {
   button.addEventListener("click", () => setSignageStep(Number(button.dataset.signageStep)));
 });
 
-signageBackStepButton.addEventListener("click", () => setSignageStep(activeSignageStep - 1));
-signageNextStepButton.addEventListener("click", () => setSignageStep(activeSignageStep + 1));
+signageBackStepButton.addEventListener("click", () => moveSignageStep(-1));
+signageNextStepButton.addEventListener("click", () => moveSignageStep(1));
 signageLoadProjectButton.addEventListener("click", () => {
   signageProjectFileInput.value = "";
   signageProjectFileInput.click();
@@ -3723,6 +4366,16 @@ signageDetections.addEventListener("input", (event) => {
 });
 signageDetections.addEventListener("click", (event) => {
   const button = event.target.closest("[data-delete-letter-index]");
+  const row = event.target.closest("[data-letter-row-index]");
+  if (row && signageRecognition) {
+    selectedSignageLetterIndex = Number(row.dataset.letterRowIndex);
+    signageDetections.querySelectorAll(".letter-quote-row").forEach((item) => {
+      item.classList.toggle("selected", Number(item.dataset.letterRowIndex) === selectedSignageLetterIndex);
+    });
+    renderSignageCanvas();
+    renderSignageSelectedLetterEditor();
+  }
+
   if (!button || !signageRecognition) {
     return;
   }
@@ -3733,11 +4386,21 @@ signageDetections.addEventListener("click", (event) => {
   }
 
   signageRecognition.letters.splice(index, 1);
+  if (selectedSignageLetterIndex === index) {
+    selectedSignageLetterIndex = signageRecognition.letters.length ? Math.min(index, signageRecognition.letters.length - 1) : null;
+  } else if (selectedSignageLetterIndex > index) {
+    selectedSignageLetterIndex -= 1;
+  }
   refreshSignageQuoteFromEdits();
 });
 signageDetections.addEventListener("mouseover", showSignageLetterTooltip);
 signageDetections.addEventListener("mousemove", moveSignageLetterTooltip);
 signageDetections.addEventListener("mouseout", hideSignageLetterTooltip);
+
+[signageSelectedBoxXInput, signageSelectedBoxYInput, signageSelectedBoxWInput, signageSelectedBoxHInput].forEach((input) => {
+  input.addEventListener("input", updateSelectedSignageBoxFromInputs);
+});
+signageSelectedBoxColorInput.addEventListener("input", updateSelectedSignageBoxColor);
 
 document.querySelectorAll(".signage-tools .tool-button").forEach((button) => {
   button.addEventListener("click", () => {

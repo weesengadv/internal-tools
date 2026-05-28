@@ -247,7 +247,7 @@
             <div class="signage-steps">
               <button class="signage-step active" type="button" data-signage-step="0"><span>1</span><strong data-i18n="stepProjectSetup">Project setup</strong></button>
               <button class="signage-step" type="button" data-signage-step="1"><span>2</span><strong data-i18n="stepGuideline">Mark guideline</strong></button>
-              <button class="signage-step" type="button" data-signage-step="2"><span>3</span><strong data-i18n="stepRecognize">AI recognize</strong></button>
+              <button class="signage-step" type="button" data-signage-step="2" hidden><span>3</span><strong data-i18n="stepRecognize">AI recognize</strong></button>
               <button class="signage-step" type="button" data-signage-step="3"><span>4</span><strong data-i18n="stepReview">Review draft</strong></button>
               <button class="signage-step" type="button" data-signage-step="4"><span>5</span><strong data-i18n="stepMaterialPricing">Material & pricing</strong></button>
               <button class="signage-step" type="button" data-signage-step="5"><span>6</span><strong data-i18n="stepExport">Print / image</strong></button>
@@ -349,12 +349,17 @@
                   <p class="signage-hint" data-i18n="calibrationHint">Use tool 1 to draw one reference line across a known real size. Drawing again replaces the previous guideline.</p>
                 </section>
 
-                <section class="signage-inspector-section" data-signage-step-panel="2">
+                <section class="signage-inspector-section" data-signage-step-panel="2" hidden></section>
+
+                <section class="signage-inspector-section" data-signage-step-panel="3">
                   <div class="signage-section-title">
-                    <h3 data-i18n="stepRecognize">AI recognize</h3>
-                    <span data-i18n="rerunAi">Re-run AI with correction</span>
+                    <h3 data-i18n="aiDetectionReview">AI Detection Review</h3>
+                    <span data-i18n="stepReview">Review draft</span>
                   </div>
-                  <div class="signage-correction">
+                  <div class="signage-actions review-primary-actions">
+                    <button class="secondary-button" id="signageTraceBrightButton" type="button" data-i18n="traceBrightLetters">Auto trace bright letters</button>
+                  </div>
+                  <div class="signage-correction review-fallback">
                     <label>
                       <span data-i18n="correctionPrompt">AI correction prompt</span>
                       <textarea id="signageCorrectionPrompt" data-i18n-placeholder="correctionPlaceholder" placeholder="Example: Letter S height is 18 inch. Recalculate the quote."></textarea>
@@ -366,15 +371,8 @@
                         <button type="button" data-prompt="Only correct the selected/unclear letters. Keep the other detected letters unchanged." data-i18n="promptCorrectOnly">Correct unclear</button>
                       </div>
                       <button class="secondary-button" id="signageRerunButton" type="button" data-i18n="rerunAi">Re-run AI with correction</button>
-                      <button class="secondary-button" id="signageExportTraceButton" type="button" data-i18n="exportAiTrace">Export AI trace</button>
+                      <button class="secondary-button" id="signageExportTraceButton" type="button" data-i18n="exportAiTrace">AI Trace Debug</button>
                     </div>
-                  </div>
-                </section>
-
-                <section class="signage-inspector-section" data-signage-step-panel="3">
-                  <div class="signage-section-title">
-                    <h3 data-i18n="aiDetectionReview">AI Detection Review</h3>
-                    <span data-i18n="stepReview">Review draft</span>
                   </div>
                   <div class="metric-grid signage-metrics">
                     <div>
@@ -404,9 +402,18 @@
                       <tbody id="signageDetections"></tbody>
                     </table>
                   </div>
-                  <div class="signage-actions">
-                    <button class="secondary-button" id="signageTraceBrightButton" type="button" data-i18n="traceBrightLetters">Auto trace bright letters</button>
-                    <button class="secondary-button" id="signageExportTraceButtonReview" type="button" data-i18n="exportAiTrace">Export AI trace</button>
+                  <div class="selected-letter-editor" id="signageSelectedLetterEditor" hidden>
+                    <div class="signage-section-title compact">
+                      <h3 data-i18n="selectedBox">Selected box</h3>
+                      <span id="signageSelectedBoxSource">-</span>
+                    </div>
+                    <div class="box-edit-grid">
+                      <label><span>X</span><input id="signageSelectedBoxX" type="number" step="0.1"></label>
+                      <label><span>Y</span><input id="signageSelectedBoxY" type="number" step="0.1"></label>
+                      <label><span>W</span><input id="signageSelectedBoxW" type="number" min="1" step="0.1"></label>
+                      <label><span>H</span><input id="signageSelectedBoxH" type="number" min="1" step="0.1"></label>
+                      <label><span data-i18n="boxColor">Color</span><input id="signageSelectedBoxColor" type="color" value="#dc2626"></label>
+                    </div>
                   </div>
                 </section>
 
