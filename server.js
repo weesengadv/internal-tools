@@ -433,9 +433,12 @@ async function handleRecognize(request, response) {
     "Do not use sample words. Read only the uploaded photo. Never return WEESENG unless that exact word is visible in the uploaded photo.",
     "Use the guideline as the true real-world scale. If recognition is uncertain, still return best-effort boxes and mark low confidence.",
     "Return only JSON with: backing {widthIn,heightIn,areaSqft,box}, wordGroups [{text,widthIn,heightIn,confidence,box}], letters [{text,widthIn,heightIn,confidence,box}], reviewItems, aiNote.",
-    "Each box must use canvas coordinates for a 1200 x 720 image: {x,y,width,height}.",
+    "The uploaded image is a 1200 x 720 working canvas. The real photo is fitted inside it without stretching, so blank margins may appear.",
+    "Each box must use canvas coordinates for the 1200 x 720 working canvas: {x,y,width,height}. Keep boxes on the fitted photo area, not the blank margins.",
+    body.imageFrame ? `Fitted photo area on canvas: x=${body.imageFrame.x}, y=${body.imageFrame.y}, width=${body.imageFrame.width}, height=${body.imageFrame.height}.` : "",
     `Guideline inches: ${body.guideline?.inches || 144}.`,
     `Guideline canvas line: x1=${body.guideline?.x1}, y1=${body.guideline?.y1}, x2=${body.guideline?.x2}, y2=${body.guideline?.y2}.`,
+    body.backingReference?.box ? `Backing reference box: x=${body.backingReference.box.x}, y=${body.backingReference.box.y}, width=${body.backingReference.box.width}, height=${body.backingReference.box.height}. Real backing size: ${body.backingReference.widthIn} in x ${body.backingReference.heightIn} in.` : "",
     `Material: ${body.material || "not selected"}. Lighting: ${body.lighting || "front-lit"}.`,
     body.correctionPrompt ? `User correction: ${body.correctionPrompt}` : ""
   ].filter(Boolean).join("\n");
