@@ -855,6 +855,11 @@ body[data-active-tool="signage-quotation"] .signage-workspace {
   display: none !important;
 }
 
+.signage-workspace.canvas-fullscreen .signage-panel .signage-inspector-section[data-signage-step-panel="3"] > .manual-letter-popover:not([hidden]) {
+  display: grid !important;
+  z-index: 1200;
+}
+
 .signage-workspace.canvas-fullscreen .review-primary-actions {
   margin: 0;
 }
@@ -1058,6 +1063,36 @@ body[data-active-tool="signage-quotation"] .signage-workspace {
 
 .selected-letter-editor[hidden] {
   display: none;
+}
+
+.manual-letter-popover[hidden] {
+  display: none;
+}
+
+.manual-letter-popover {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  background: rgba(15, 23, 42, 0.38);
+}
+
+.manual-letter-popover-card {
+  width: min(560px, calc(100vw - 36px));
+  padding: 16px;
+  border: 1px solid #99f6e4;
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: 0 22px 60px rgba(15, 23, 42, 0.28);
+}
+
+.manual-letter-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 12px;
 }
 
 .letter-summary-block[hidden] {

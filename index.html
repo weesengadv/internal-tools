@@ -428,7 +428,7 @@
                     <span data-i18n="stepReview">Review draft</span>
                   </div>
                   <div class="signage-actions review-primary-actions">
-                    <button class="secondary-button" id="signageTraceBrightButton" type="button" data-i18n="traceBrightLetters">Auto trace bright letters</button>
+                    <button class="secondary-button" id="signageTraceBrightButton" type="button" data-i18n="traceBrightLetters">Trace letter offline</button>
                     <button class="secondary-button" id="signageClearLettersButton" type="button" data-i18n="clearAllLetters">Clear all</button>
                     <button class="secondary-button" id="signageToggleSummaryButton" type="button" data-i18n="hideSummary">Hide summary</button>
                     <button class="secondary-button" id="signageFullscreenButton" type="button" data-i18n="fullscreenCanvas">Fullscreen canvas</button>
@@ -496,6 +496,25 @@
                       <label><span>H</span><input id="signageSelectedBoxH" type="number" min="1" step="0.1"></label>
                       <label><span data-i18n="boxColor">Color</span><input id="signageSelectedBoxColor" type="color" value="#dc2626"></label>
                       <label><span data-i18n="activeBacking">Backing</span><select id="signageSelectedLetterBacking"></select></label>
+                    </div>
+                  </div>
+                  <div class="manual-letter-popover" id="signageManualLetterPopover" hidden>
+                    <div class="manual-letter-popover-card">
+                      <div class="signage-section-title compact">
+                        <h3 data-i18n="manualLetterTitle">New letter box</h3>
+                        <span data-i18n="manualLetterMultiplyHint">Confirm or multiply inside boundary</span>
+                      </div>
+                      <div class="box-edit-grid">
+                        <label><span data-i18n="letterText">Text</span><input id="signageManualLetterText" type="text" autocomplete="off"></label>
+                        <label><span data-i18n="horizontalCount">Horizontal count</span><input id="signageManualLetterCountX" type="number" min="1" step="1" value="1"></label>
+                        <label><span data-i18n="verticalCount">Vertical count</span><input id="signageManualLetterCountY" type="number" min="1" step="1" value="1"></label>
+                        <label><span data-i18n="horizontalSpacing">Horizontal spacing</span><input id="signageManualLetterSpacingX" type="number" min="0" step="1" value="0"></label>
+                        <label><span data-i18n="verticalSpacing">Vertical spacing</span><input id="signageManualLetterSpacingY" type="number" min="0" step="1" value="0"></label>
+                      </div>
+                      <div class="manual-letter-actions">
+                        <button class="secondary-button" id="signageManualLetterCancel" type="button" data-i18n="cancel">Cancel</button>
+                        <button class="primary-button" id="signageManualLetterConfirm" type="button" data-i18n="confirm">Confirm</button>
+                      </div>
                     </div>
                   </div>
                 </section>
@@ -607,7 +626,10 @@
                       <thead>
                         <tr>
                           <th data-i18n="quoteItem">Item</th>
+                          <th data-i18n="measurements">Dimension</th>
                           <th data-i18n="quantity">Qty</th>
+                          <th data-i18n="quoteRate">Rate</th>
+                          <th>Formula</th>
                           <th data-i18n="quoteTotal">Total</th>
                         </tr>
                       </thead>

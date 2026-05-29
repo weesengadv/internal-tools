@@ -151,6 +151,14 @@ const signagePanRightButton = document.getElementById("signagePanRightButton");
 const signagePanCenterButton = document.getElementById("signagePanCenterButton");
 const signageToggleSummaryButton = document.getElementById("signageToggleSummaryButton");
 const signageLetterSummaryBlock = document.getElementById("signageLetterSummaryBlock");
+const signageManualLetterPopover = document.getElementById("signageManualLetterPopover");
+const signageManualLetterTextInput = document.getElementById("signageManualLetterText");
+const signageManualLetterCountXInput = document.getElementById("signageManualLetterCountX");
+const signageManualLetterCountYInput = document.getElementById("signageManualLetterCountY");
+const signageManualLetterSpacingXInput = document.getElementById("signageManualLetterSpacingX");
+const signageManualLetterSpacingYInput = document.getElementById("signageManualLetterSpacingY");
+const signageManualLetterConfirmButton = document.getElementById("signageManualLetterConfirm");
+const signageManualLetterCancelButton = document.getElementById("signageManualLetterCancel");
 const signageCustomerNameInput = document.getElementById("signageCustomerName");
 const signageProjectNameInput = document.getElementById("signageProjectName");
 const signageCustomerContactInput = document.getElementById("signageCustomerContact");
@@ -217,6 +225,7 @@ let signageDragStart = null;
 let signageDragPreview = null;
 let signageBoxDrag = null;
 let signageCanvasPan = null;
+let pendingManualLetterBox = null;
 let selectedSignageLetterIndex = null;
 let signageLetterTooltip = null;
 let activeSignageStep = Number(localStorage.getItem("weesengSignageActiveStep") || 0);
@@ -344,7 +353,7 @@ const messages = {
     saveProject: "Save project",
     exportCsv: "Export CSV",
     exportAiTrace: "AI Trace Debug",
-    traceBrightLetters: "Auto trace bright letters",
+    traceBrightLetters: "Trace letter offline",
     clearAllLetters: "Clear all",
     deleteSelected: "Delete selected",
     selectedLetterDeleted: "Selected letter deleted.",
@@ -388,7 +397,7 @@ const messages = {
     ledRateEdit: "LED rate",
     psuRateEdit: "PSU cost",
     signageAiResponseReceived: "AI response received. Normalizing boxes...",
-    signageAiNoLetters: "AI did not return usable letter boxes. Existing boxes were kept. Use Auto Trace or draw Letter box manually.",
+    signageAiNoLetters: "AI did not return usable letter boxes. Existing boxes were kept. Use Trace letter offline or draw Letter box manually.",
     signageLettersCleared: "Cleared all review draft letter boxes.",
     frontLit: "Front lit",
     backLit: "Back lit",
@@ -452,13 +461,25 @@ const messages = {
     signageProjectLoadFailed: "Project load failed: {message}",
     signageCsvExported: "Exported quote CSV {fileName}.",
     signageTraceExported: "Exported AI trace debug {fileName}.",
-    signagePixelTraceDone: "Pixel trace replaced AI boxes with {count} bright letter candidate(s). Rename any '?' letter and delete wrong boxes.",
-    signagePixelTraceMissing: "Could not find bright letter shapes. Try a clearer photo or draw letter boxes manually.",
-    signagePixelTracing: "Tracing bright and dark letters...",
+    signagePixelTraceDone: "Offline trace kept {count} OCR-confirmed text box(es).",
+    signagePixelTraceMissing: "Could not confirm any alphabet or Chinese text. Existing boxes were kept. Draw letter boxes manually or add a backing boundary.",
+    signagePixelTracing: "Tracing letters offline...",
     signageOcrLoading: "Loading OCR library...",
     signageOcrReadingRow: "Reading row {current} of {total}...",
-    signagePixelTraceOcrDone: "Pixel trace found {count} box(es). OCR filled {filled} label(s). Please check '?' items.",
-    signagePixelTraceOcrFallback: "Pixel trace found {count} box(es), but OCR could not read labels. Please rename '?' items.",
+    signagePixelTraceOcrDone: "Trace letter offline kept {filled} confirmed text box(es) from {count} candidate(s).",
+    signagePixelTraceOcrFallback: "OCR could not confirm text, so existing boxes were kept. Draw letter boxes manually.",
+    signageTracePhotoBoundaryWarning: "No active backing boundary. Trace is limited to the photo area; add/select a backing box for safer results.",
+    manualLetterTitle: "New letter box",
+    manualLetterMultiplyHint: "Confirm or multiply inside boundary",
+    letterText: "Text",
+    horizontalCount: "Horizontal count",
+    verticalCount: "Vertical count",
+    horizontalSpacing: "Horizontal spacing",
+    verticalSpacing: "Vertical spacing",
+    confirm: "Confirm",
+    cancel: "Cancel",
+    manualLettersCreated: "Created {created} letter box(es).",
+    manualLettersSkipped: "Created {created} letter box(es). Skipped {skipped} outside boundary.",
     signagePngSaved: "Saved {fileName}.",
     targetX: "Target X",
     targetY: "Target Y",
@@ -712,14 +733,26 @@ const messages = {
   }
 };
 
-messages.cn.traceBrightLetters = "\u81ea\u52a8\u8ffd\u8e2a\u4eae\u8272\u5b57";
-messages.cn.signagePixelTraceDone = "\u50cf\u7d20\u8ffd\u8e2a\u5df2\u7528 {count} \u4e2a\u4eae\u8272\u5b57\u5019\u9009\u6846\u66ff\u6362 AI \u6846\u3002\u8bf7\u628a '?' \u6539\u540d\uff0c\u5e76\u5220\u9664\u9519\u8bef\u6846\u3002";
-messages.cn.signagePixelTraceMissing = "\u627e\u4e0d\u5230\u4eae\u8272\u5b57\u5f62\u3002\u8bf7\u5c1d\u8bd5\u66f4\u6e05\u6670\u7167\u7247\uff0c\u6216\u624b\u52a8\u7ed8\u5236\u5b57\u6bcd\u6846\u3002";
-messages.cn.signagePixelTracing = "\u6b63\u5728\u8ffd\u8e2a\u4eae\u8272\u548c\u6df1\u8272\u5b57...";
+messages.cn.traceBrightLetters = "\u79bb\u7ebf\u8ffd\u8e2a\u6587\u5b57";
+messages.cn.signagePixelTraceDone = "\u79bb\u7ebf\u8ffd\u8e2a\u4fdd\u7559 {count} \u4e2a OCR \u786e\u8ba4\u7684\u6587\u5b57\u6846\u3002";
+messages.cn.signagePixelTraceMissing = "\u65e0\u6cd5\u786e\u8ba4\u5b57\u6bcd\u6216\u4e2d\u6587\u6587\u5b57\u3002\u5df2\u4fdd\u7559\u73b0\u6709\u6846\u3002\u8bf7\u624b\u52a8\u753b\u5b57\u6846\uff0c\u6216\u589e\u52a0\u5e95\u677f\u8fb9\u754c\u3002";
+messages.cn.signagePixelTracing = "\u6b63\u5728\u79bb\u7ebf\u8ffd\u8e2a\u6587\u5b57...";
 messages.cn.signageOcrLoading = "\u6b63\u5728\u8f7d\u5165 OCR \u5e93...";
 messages.cn.signageOcrReadingRow = "\u6b63\u5728\u8bfb\u53d6\u7b2c {current} / {total} \u884c...";
-messages.cn.signagePixelTraceOcrDone = "\u50cf\u7d20\u8ffd\u8e2a\u627e\u5230 {count} \u4e2a\u6846\u3002OCR \u5df2\u586b\u5165 {filled} \u4e2a\u6807\u7b7e\u3002\u8bf7\u68c0\u67e5 '?' \u9879\u76ee\u3002";
-messages.cn.signagePixelTraceOcrFallback = "\u50cf\u7d20\u8ffd\u8e2a\u627e\u5230 {count} \u4e2a\u6846\uff0c\u4f46 OCR \u65e0\u6cd5\u8bfb\u53d6\u6807\u7b7e\u3002\u8bf7\u624b\u52a8\u66f4\u6539 '?' \u9879\u76ee\u3002";
+messages.cn.signagePixelTraceOcrDone = "\u79bb\u7ebf\u8ffd\u8e2a\u4ece {count} \u4e2a\u5019\u9009\u6846\u4e2d\u4fdd\u7559 {filled} \u4e2a\u786e\u8ba4\u6587\u5b57\u6846\u3002";
+messages.cn.signagePixelTraceOcrFallback = "OCR \u65e0\u6cd5\u786e\u8ba4\u6587\u5b57\uff0c\u5df2\u4fdd\u7559\u73b0\u6709\u6846\u3002\u8bf7\u624b\u52a8\u753b\u5b57\u6846\u3002";
+messages.cn.signageTracePhotoBoundaryWarning = "\u6ca1\u6709\u542f\u7528\u7684\u5e95\u677f\u8fb9\u754c\u3002\u8ffd\u8e2a\u9650\u5236\u5728\u7167\u7247\u8303\u56f4\uff1b\u589e\u52a0/\u9009\u62e9\u5e95\u677f\u6846\u4f1a\u66f4\u51c6\u3002";
+messages.cn.manualLetterTitle = "\u65b0\u5b57\u6846";
+messages.cn.manualLetterMultiplyHint = "\u786e\u8ba4\u6216\u5728\u8fb9\u754c\u5185\u6279\u91cf\u590d\u5236";
+messages.cn.letterText = "\u6587\u5b57";
+messages.cn.horizontalCount = "\u6a2a\u5411\u6570\u91cf";
+messages.cn.verticalCount = "\u7ad6\u5411\u6570\u91cf";
+messages.cn.horizontalSpacing = "\u6a2a\u5411\u95f4\u8ddd";
+messages.cn.verticalSpacing = "\u7ad6\u5411\u95f4\u8ddd";
+messages.cn.confirm = "\u786e\u8ba4";
+messages.cn.cancel = "\u53d6\u6d88";
+messages.cn.manualLettersCreated = "\u5df2\u5efa\u7acb {created} \u4e2a\u5b57\u6846\u3002";
+messages.cn.manualLettersSkipped = "\u5df2\u5efa\u7acb {created} \u4e2a\u5b57\u6846\uff0c\u8df3\u8fc7 {skipped} \u4e2a\u8d85\u51fa\u8fb9\u754c\u7684\u6846\u3002";
 messages.cn.aiDetectionReview = "\u8bc6\u522b\u68c0\u67e5";
 messages.cn.selectedBox = "\u5df2\u9009\u6846";
 messages.cn.boxColor = "\u989c\u8272";
@@ -2224,7 +2257,17 @@ function createSignageOcrCropDataUrl(sourceCanvas, row) {
 }
 
 function cleanSignageOcrText(text) {
-  return String(text || "").replace(/[^0-9A-Za-z]/g, "");
+  return String(text || "").replace(/[^\p{Script=Han}0-9A-Za-z]/gu, "");
+}
+
+async function recognizeSignageOcrImage(Tesseract, image) {
+  try {
+    const result = await Tesseract.recognize(image, "eng+chi_sim+chi_tra");
+    return { result, language: "eng+chi_sim+chi_tra" };
+  } catch (error) {
+    const result = await Tesseract.recognize(image, "eng");
+    return { result, language: "eng", fallbackError: error.message };
+  }
 }
 
 async function ocrLabelsForTracedBoxes(tracedBoxes, onProgress = () => {}) {
@@ -2236,6 +2279,7 @@ async function ocrLabelsForTracedBoxes(tracedBoxes, onProgress = () => {}) {
   const Tesseract = await loadSignageTesseract();
   const rows = groupSignageBoxesByRow(tracedBoxes);
   const labels = Array.from({ length: tracedBoxes.length }, () => "?");
+  const confirmed = Array.from({ length: tracedBoxes.length }, () => false);
   const ocrRows = [];
   let filled = 0;
 
@@ -2243,7 +2287,7 @@ async function ocrLabelsForTracedBoxes(tracedBoxes, onProgress = () => {}) {
     const row = rows[rowIndex];
     onProgress(rowIndex + 1, rows.length);
     const image = createSignageOcrCropDataUrl(sourceCanvas, row);
-    const result = await Tesseract.recognize(image, "eng");
+    const { result, language, fallbackError } = await recognizeSignageOcrImage(Tesseract, image);
     const rawText = result?.data?.text || "";
     const cleanText = cleanSignageOcrText(rawText);
     const matched = cleanText.length === row.items.length;
@@ -2251,6 +2295,7 @@ async function ocrLabelsForTracedBoxes(tracedBoxes, onProgress = () => {}) {
     if (matched) {
       row.items.forEach((item, index) => {
         labels[item.index] = cleanText[index] || "?";
+        confirmed[item.index] = Boolean(cleanText[index]);
       });
       filled += row.items.length;
     }
@@ -2260,20 +2305,35 @@ async function ocrLabelsForTracedBoxes(tracedBoxes, onProgress = () => {}) {
       expected: row.items.length,
       rawText,
       cleanText,
-      matched
+      matched,
+      language,
+      fallbackError
     });
   }
 
-  return { labels, filled, rows: ocrRows };
+  return { labels, confirmed, filled, rows: ocrRows };
 }
 
-function traceLetterComponents(pixelPredicate, source, color, validator = isValidBrightLetterComponent) {
+function signageTextBoundary() {
+  const activeBacking = activeSignageBacking();
+  const backingBox = activeBacking?.box ? normalizeSignageBox(activeBacking.box) : null;
+  if (backingBox) {
+    return { box: backingBox, type: "backing", warning: "" };
+  }
+
+  return {
+    box: signagePhotoFrame(),
+    type: "photo",
+    warning: t("signageTracePhotoBoundaryWarning")
+  };
+}
+
+function traceLetterComponents(pixelPredicate, source, color, validator = isValidBrightLetterComponent, bounds = signageTextBoundary().box) {
   const imageData = signageWorkingImageData();
   if (!imageData) {
     return [];
   }
 
-  const bounds = signagePhotoFrame();
   const width = imageData.width;
   const height = imageData.height;
   const mask = new Uint8Array(width * height);
@@ -2363,17 +2423,18 @@ function traceLetterComponents(pixelPredicate, source, color, validator = isVali
   return sortSignageBoxesReadingOrder(components.filter(Boolean));
 }
 
-function traceBrightLetterComponents() {
-  return traceLetterComponents(isBrightGlyphPixel, "pixel-trace", "#dc2626", isValidBrightLetterComponent);
+function traceBrightLetterComponents(bounds = signageTextBoundary().box) {
+  return traceLetterComponents(isBrightGlyphPixel, "pixel-trace", "#dc2626", isValidBrightLetterComponent, bounds);
 }
 
-function traceDarkLetterComponents() {
-  return traceLetterComponents(isDarkGlyphPixel, "pixel-trace-dark", "#4f46e5", isValidDarkLetterComponent);
+function traceDarkLetterComponents(bounds = signageTextBoundary().box) {
+  return traceLetterComponents(isDarkGlyphPixel, "pixel-trace-dark", "#4f46e5", isValidDarkLetterComponent, bounds);
 }
 
 function traceVisibleLetterComponents() {
-  const brightBoxes = traceBrightLetterComponents();
-  const darkBoxes = traceDarkLetterComponents().filter((darkBox) => (
+  const boundary = signageTextBoundary();
+  const brightBoxes = traceBrightLetterComponents(boundary.box);
+  const darkBoxes = traceDarkLetterComponents(boundary.box).filter((darkBox) => (
     !brightBoxes.some((brightBox) => boxesConflict(brightBox, darkBox))
   ));
 
@@ -2391,6 +2452,10 @@ async function replaceSignageWithPixelTrace() {
   setLog(t("signagePixelTracing"), "info");
 
   try {
+    const boundary = signageTextBoundary();
+    if (boundary.warning) {
+      setLog(boundary.warning, "warning");
+    }
     const tracedBoxes = traceVisibleLetterComponents();
     if (!tracedBoxes.length) {
       setLog(t("signagePixelTraceMissing"), "warning");
@@ -2428,6 +2493,16 @@ async function replaceSignageWithPixelTrace() {
       }];
     }
 
+    const confirmedBoxes = tracedBoxes.filter((_, index) => ocrResult.confirmed?.[index]);
+    if (!confirmedBoxes.length) {
+      const message = ocrResult.available
+        ? t("signagePixelTraceOcrFallback", { count: tracedBoxes.length })
+        : t("signagePixelTraceMissing");
+      signageAiNote.textContent = message;
+      setLog(boundary.warning ? `${message} ${boundary.warning}` : message, "warning");
+      return;
+    }
+
     const labels = ocrResult.labels;
     const backingSize = signageBackingSizeInputs();
     const backing = signageRecognition?.backing || {
@@ -2439,29 +2514,30 @@ async function replaceSignageWithPixelTrace() {
     const note = ocrResult.available
       ? t("signagePixelTraceOcrDone", { count: tracedBoxes.length, filled: ocrResult.filled })
       : t("signagePixelTraceOcrFallback", { count: tracedBoxes.length });
+    const noteWithBoundary = boundary.warning ? `${note} ${boundary.warning}` : note;
 
     signageRecognition = {
       ...(signageRecognition || {}),
       source: ocrResult.filled ? "pixel-trace-ocr" : "pixel-trace",
-      aiNote: note,
+      aiNote: noteWithBoundary,
       backing,
       wordGroups: signageRecognition?.wordGroups || signageRawRecognition?.wordGroups || [],
       ocrRows: ocrResult.rows,
       reviewItems: [
         ...(signageRecognition?.reviewItems || []),
-        "Pixel trace replaced AI boxes. OCR labels are used only when the row character count matches."
+        "Trace letter offline replaced boxes with OCR-confirmed text only."
       ],
-    letters: tracedBoxes.map((box, index) => {
+    letters: tracedBoxes.map((box, index) => ({ box, index })).filter((item) => ocrResult.confirmed?.[item.index]).map(({ box, index }) => {
       const dimensions = signageBoxDimensionsIn(box);
       const label = labels[index] || "?";
       return {
         text: label,
         widthIn: dimensions.widthIn,
         heightIn: dimensions.heightIn,
-        confidence: label === "?" ? 0.55 : 0.88,
+        confidence: 0.88,
         box,
         backingId: activeSignageBackingId || activeSignageBacking()?.id || "",
-        source: label === "?" ? box.source || "pixel-trace" : `${box.source || "pixel-trace"}-ocr`,
+        source: `${box.source || "pixel-trace"}-ocr`,
         color: box.color || defaultSignageLetterColor({ source: box.source })
       };
     })
@@ -3539,6 +3615,16 @@ function csvCell(value) {
   return /[",\n]/.test(text) ? `"${text.replace(/"/g, "\"\"")}"` : text;
 }
 
+function quoteRateText(rate, unit, currency = signageCurrency) {
+  if (typeof rate === "string") {
+    return rate;
+  }
+  if (!Number.isFinite(Number(rate))) {
+    return "";
+  }
+  return `${money(rate, currency)}${unit ? `/${unit}` : ""}`;
+}
+
 function exportSignageQuoteCsv() {
   const fields = getSignageProjectFields();
   const lines = signageQuote?.lines || [];
@@ -3550,10 +3636,10 @@ function exportSignageQuoteCsv() {
     ["Validity", fields.validity],
     ["Prepared by", fields.preparedBy],
     [],
-    ["Item", "Qty", "Rate", "Unit", "Formula", "Total", "Currency"],
-    ...lines.map((line) => [line.item, line.qty, line.rate ?? "", line.unit || "", line.formula || "", Number(line.total || 0).toFixed(2), signageQuote?.currency || signageCurrency]),
+    ["Item", "Dimension", "Qty", "Rate", "Unit", "Formula", "Total", "Currency"],
+    ...lines.map((line) => [line.item, line.dimension || "", line.qty, line.rateText || line.rate || "", line.unit || "", line.formula || "", Number(line.total || 0).toFixed(2), signageQuote?.currency || signageCurrency]),
     [],
-    ["Total", "", "", "", "", Number(signageQuote?.total || 0).toFixed(2), signageQuote?.currency || signageCurrency],
+    ["Total", "", "", "", "", "", Number(signageQuote?.total || 0).toFixed(2), signageQuote?.currency || signageCurrency],
     ["Notes", fields.notes]
   ];
   const csv = rows.map((row) => row.map(csvCell).join(",")).join("\n");
@@ -3802,6 +3888,84 @@ function normalizeSignageRecognition(result) {
   return normalized;
 }
 
+function buildSignageLetterQuoteLine(letter, index, pricing) {
+  const rates = pricing || sampleSignagePricing();
+  const lighting = signageLightingSelect.value;
+  const productCategory = signageProductCategorySelect?.value || "emboss";
+  const productOption = selectedProductOption();
+  const selectedMaterial = signageMaterialSelect.value;
+  const width = Number(letter.widthIn) || 0;
+  const height = Number(letter.heightIn) || 0;
+  const areaSqin = width * height;
+  const dimension = `${formatControlNumber(width)} in x ${formatControlNumber(height)} in`;
+  const label = letter.text || "?";
+
+  if (productCategory !== "emboss" && productOption) {
+    const rate = rateOverride("productRate", productOption.rate);
+    const qtyValue = productOption.unit === "sqin" ? areaSqin : areaSqin / 144;
+    const qty = `${formatControlNumber(qtyValue)} ${productOption.unit === "sqin" ? "sq in" : "sqft"}`;
+    return {
+      type: "letter",
+      letterIndex: index,
+      item: `Letter ${label} #${index + 1} - ${productOption.label}`,
+      dimension,
+      qty,
+      rate,
+      rateText: quoteRateText(rate, productOption.unit === "sqin" ? "sq in" : "sqft", rates.currency),
+      unit: productOption.unit,
+      formula: `${dimension} = ${formatControlNumber(qtyValue)} ${productOption.unit === "sqin" ? "sq in" : "sqft"} x ${money(rate, rates.currency)}`,
+      total: qtyValue * rate,
+      breakdown: [
+        `Letter: ${label}`,
+        `Dimension: ${dimension}`,
+        `Area: ${formatControlNumber(areaSqin)} sq in`,
+        `Product: ${productOption.label}`,
+        `Rate: ${quoteRateText(rate, productOption.unit === "sqin" ? "sq in" : "sqft", rates.currency)}`
+      ]
+    };
+  }
+
+  const embossPricing = rates.embossPricing;
+  const lightingRate = embossPricing?.lighting?.[lighting];
+  const materialAddon = embossPricing?.materials?.find((material) => material.label === selectedMaterial);
+  const isSmall = height < 12;
+  const baseRate = isSmall
+    ? rateOverride("embossHeightRate", lightingRate?.lessThan12PerHeightIn || 0)
+    : rateOverride("embossAreaRate", lightingRate?.atLeast12PerSqIn || 0);
+  const addonRate = isSmall
+    ? rateOverride("materialHeightRate", materialAddon?.lessThan12AddPerHeightIn || 0)
+    : rateOverride("materialAreaRate", materialAddon?.atLeast12AddPerSqIn || 0);
+  const qtyValue = isSmall ? height : areaSqin;
+  const unit = isSmall ? "height in" : "sq in";
+  const baseTotal = qtyValue * baseRate;
+  const addonTotal = qtyValue * addonRate;
+  const total = baseTotal + addonTotal;
+  const rule = isSmall ? "height-inch rule" : "square-inch rule";
+  const rateText = `(${money(baseRate, rates.currency)} + ${money(addonRate, rates.currency)})/${unit}`;
+
+  return {
+    type: "letter",
+    letterIndex: index,
+    item: `Letter ${label} #${index + 1} - ${selectedMaterial}, ${lighting}`,
+    dimension,
+    qty: `${formatControlNumber(qtyValue)} ${unit}`,
+    rate: baseRate + addonRate,
+    rateText,
+    unit,
+    formula: `${rule}: ${isSmall ? formatControlNumber(height) : `${formatControlNumber(width)} x ${formatControlNumber(height)} = ${formatControlNumber(areaSqin)}`} ${unit} x (${money(baseRate, rates.currency)} base + ${money(addonRate, rates.currency)} material)`,
+    total,
+    breakdown: [
+      `Letter: ${label}`,
+      `Dimension: ${dimension}`,
+      `Area: ${formatControlNumber(areaSqin)} sq in`,
+      `Rule: ${rule}`,
+      `Base: ${formatControlNumber(qtyValue)} ${unit} x ${money(baseRate, rates.currency)} = ${money(baseTotal, rates.currency)}`,
+      `Material add-on: ${formatControlNumber(qtyValue)} ${unit} x ${money(addonRate, rates.currency)} = ${money(addonTotal, rates.currency)}`,
+      `Letter total: ${money(total, rates.currency)}`
+    ]
+  };
+}
+
 function calculateSignageQuote(recognition, pricing) {
   const rates = pricing || sampleSignagePricing();
   const lighting = signageLightingSelect.value;
@@ -3825,31 +3989,18 @@ function calculateSignageQuote(recognition, pricing) {
       item: `${backing.name} - ${backing.material || signageBackingOptionLabel(option)}`,
       qty: `${formatControlNumber(backing.areaSqft)} sqft`,
       rate,
+      rateText: quoteRateText(rate, "sqft", rates.currency),
       unit: "sqft",
+      dimension: `${formatControlNumber(backing.widthIn)} in x ${formatControlNumber(backing.heightIn)} in`,
       formula: `${formatControlNumber(backing.widthIn)} x ${formatControlNumber(backing.heightIn)} in / 144 = ${formatControlNumber(backing.areaSqft)} sqft x ${money(rate, rates.currency)}`,
       total
     });
   });
 
-  const embossTotal = productCategory === "emboss" && lightingRate
-    ? recognition.letters.reduce((sum, letter) => {
-      const width = Number(letter.widthIn) || 0;
-      const height = Number(letter.heightIn) || 0;
-      const isSmall = height < 12;
-      const base = isSmall
-        ? height * rateOverride("embossHeightRate", lightingRate.lessThan12PerHeightIn || 0)
-        : width * height * rateOverride("embossAreaRate", lightingRate.atLeast12PerSqIn || 0);
-      const addon = isSmall
-        ? height * rateOverride("materialHeightRate", materialAddon?.lessThan12AddPerHeightIn || 0)
-        : width * height * rateOverride("materialAreaRate", materialAddon?.atLeast12AddPerSqIn || 0);
-      return sum + base + addon;
-    }, 0)
-    : 0;
-  const productTotal = productCategory !== "emboss" && productOption
-    ? (productOption.unit === "sqin"
-      ? letterAreaSqin * rateOverride("productRate", productOption.rate)
-      : (letterAreaSqin / 144) * rateOverride("productRate", productOption.rate))
-    : 0;
+  recognition.letters.forEach((letter, index) => {
+    lines.push(buildSignageLetterQuoteLine(letter, index, rates));
+  });
+
   const ledAreaRate = Number(rates.ledPricing?.options?.find((option) => Number(option.rateSqIn) > 0)?.rateSqIn || 0);
   const ledMeters = productCategory === "emboss" && lighting === "back-lit" ? recognition.letters.reduce((sum, letter) => {
     return sum + (2 * (Number(letter.widthIn) + Number(letter.heightIn))) / 39.3701;
@@ -3867,40 +4018,20 @@ function calculateSignageQuote(recognition, pricing) {
   const psuCost = rateOverride("psuCost", rates.ledPricing?.psuOptions?.[0]?.unitCost || rates.psuCost || 0);
   const psuTotal = psuQty * psuCost;
 
-  if (productCategory === "emboss") {
-    lines.push({
-      item: `Emboss alphabet set, ${selectedMaterial}, ${lighting}`,
-      qty: `${recognition.letters.length} letters`,
-      rate: lightingRate ? rateOverride("embossAreaRate", lightingRate.atLeast12PerSqIn || 0) : 0,
-      unit: "mixed",
-      formula: "Letters below 12 in high use height-inch rate; 12 in and above use square-inch area rate.",
-      total: embossTotal
-    });
-  } else if (productOption) {
-    lines.push({
-      item: `${productOption.label}`,
-      qty: productOption.unit === "sqin" ? `${formatControlNumber(letterAreaSqin)} sq in` : `${formatControlNumber(letterAreaSqin / 144)} sqft`,
-      rate: rateOverride("productRate", productOption.rate),
-      unit: productOption.unit,
-      formula: productOption.unit === "sqin"
-        ? `${formatControlNumber(letterAreaSqin)} sq in x ${money(rateOverride("productRate", productOption.rate), rates.currency)}`
-        : `${formatControlNumber(letterAreaSqin / 144)} sqft x ${money(rateOverride("productRate", productOption.rate), rates.currency)}`,
-      total: productTotal
-    });
-  }
-
   if (ledTotal > 0) {
     lines.push({
       item: lighting === "front-lit" && ledAreaRate ? "Front-lit 6mm LED estimate" : "Back-lit LED perimeter estimate",
       qty: lighting === "front-lit" && ledAreaRate ? `${formatControlNumber(letterAreaSqin)} sq in` : `${formatControlNumber(ledMeters)} m`,
       rate: activeLedRate,
+      rateText: quoteRateText(activeLedRate, lighting === "front-lit" && ledAreaRate ? "sq in" : "m", rates.currency),
       unit: lighting === "front-lit" && ledAreaRate ? "sqin" : "meter",
+      dimension: `${recognition.letters.length} letter box(es)`,
       formula: lighting === "front-lit" && ledAreaRate
         ? `${formatControlNumber(letterAreaSqin)} sq in x ${money(activeLedRate, rates.currency)}`
         : `Perimeter ${formatControlNumber(ledMeters)} m x ${money(activeLedRate, rates.currency)}`,
       total: ledTotal
     });
-    lines.push({ item: `PSU ${rates.psuWatt || 200}W`, qty: String(psuQty), rate: psuCost, unit: "unit", formula: `${psuQty} x ${money(psuCost, rates.currency)}`, total: psuTotal });
+    lines.push({ item: `PSU ${rates.psuWatt || 200}W`, dimension: "-", qty: String(psuQty), rate: psuCost, rateText: quoteRateText(psuCost, "unit", rates.currency), unit: "unit", formula: `${psuQty} x ${money(psuCost, rates.currency)}`, total: psuTotal });
   }
 
   [
@@ -3909,7 +4040,7 @@ function calculateSignageQuote(recognition, pricing) {
     { label: "Installation", value: Number(signageInstallationCostInput?.value || 0) }
   ].forEach((addon) => {
     if (addon.value > 0) {
-      lines.push({ item: addon.label, qty: "1", rate: addon.value, unit: "manual", formula: "Manual add-on cost", total: addon.value });
+      lines.push({ item: addon.label, dimension: "-", qty: "1", rate: addon.value, rateText: quoteRateText(addon.value, "manual", rates.currency), unit: "manual", formula: "Manual add-on cost", total: addon.value });
     }
   });
 
@@ -3927,59 +4058,13 @@ function money(value, currency = signageCurrency) {
 
 function signageLetterQuoteDetails(letter) {
   const rates = signagePricing || sampleSignagePricing();
-  const lighting = signageLightingSelect.value;
-  const selectedMaterial = signageMaterialSelect.value;
-  const width = Number(letter.widthIn) || 0;
-  const height = Number(letter.heightIn) || 0;
-  const areaSqin = width * height;
-  const isSmall = height < 12;
-  const lightingRate = rates.embossPricing?.lighting?.[lighting];
-  const materialAddon = rates.embossPricing?.materials?.find((material) => material.label === selectedMaterial);
-  let embossBase = 0;
-  let embossAddon = 0;
-  let formula = "";
-
-  if (lightingRate) {
-    if (isSmall) {
-      embossBase = height * Number(lightingRate.lessThan12PerHeightIn || 0);
-      embossAddon = height * Number(materialAddon?.lessThan12AddPerHeightIn || 0);
-      formula = `${formatControlNumber(height)} in height x ${money(Number(lightingRate.lessThan12PerHeightIn || 0))}/height in`;
-    } else {
-      embossBase = areaSqin * Number(lightingRate.atLeast12PerSqIn || 0);
-      embossAddon = areaSqin * Number(materialAddon?.atLeast12AddPerSqIn || 0);
-      formula = `${formatControlNumber(width)} x ${formatControlNumber(height)} = ${formatControlNumber(areaSqin)} sq in x ${money(Number(lightingRate.atLeast12PerSqIn || 0))}/sq in`;
-    }
-  } else {
-    embossBase = (areaSqin / 144) * Number((rates.embossRateByLighting || {})[lighting] || rates.embossRateSqft || 0) * 5;
-    formula = `${formatControlNumber(areaSqin / 144)} sqft x fallback rate`;
-  }
-
-  const ledAreaRate = Number(rates.ledPricing?.options?.find((option) => Number(option.rateSqIn) > 0)?.rateSqIn || 0);
-  const ledMeters = lighting === "back-lit" ? (2 * (width + height)) / 39.3701 : 0;
-  const ledRate = Number(rates.ledPricing?.options?.[0]?.ratePerMeter || 0);
-  const ledTotal = lighting === "front-lit" && ledAreaRate ? areaSqin * ledAreaRate : ledMeters * ledRate;
-  const psuShare = signageQuote && lighting !== "no-lit" && signageRecognition?.letters?.length
-    ? (signageQuote.lines.find((line) => line.item.startsWith("PSU"))?.total || 0) / signageRecognition.letters.length
-    : 0;
-  const total = embossBase + embossAddon + ledTotal + psuShare;
-  const lines = [
-    `${letter.text || "?"} alphabet quote`,
-    `Size: ${formatControlNumber(width)} in x ${formatControlNumber(height)} in`,
-    `Emboss: ${formula} = ${money(embossBase, rates.currency)}`,
-    `Material add-on: ${selectedMaterial} = ${money(embossAddon, rates.currency)}`
-  ];
-
-  if (lighting !== "no-lit") {
-    if (lighting === "front-lit" && ledAreaRate) {
-      lines.push(`LED: 6mm area ${formatControlNumber(areaSqin)} sq in x ${money(ledAreaRate, rates.currency)}/sq in = ${money(ledTotal, rates.currency)}`);
-    } else {
-      lines.push(`LED: perimeter ${formatControlNumber(ledMeters)} m x ${money(ledRate, rates.currency)}/m = ${money(ledTotal, rates.currency)}`);
-    }
-    lines.push(`PSU shared estimate: ${money(psuShare, rates.currency)}`);
-  }
-
-  lines.push(`Alphabet total estimate: ${money(total, rates.currency)}`);
-  return lines.join("\n");
+  const index = signageRecognition?.letters?.indexOf(letter) ?? 0;
+  const line = buildSignageLetterQuoteLine(letter, Math.max(0, index), rates);
+  return [
+    ...line.breakdown,
+    `Formula: ${line.formula}`,
+    `Visible quote line total: ${money(line.total, rates.currency)}`
+  ].join("\n");
 }
 
 function ensureSignageLetterTooltip() {
@@ -4201,8 +4286,14 @@ function renderSignageQuote() {
   signageAiNote.textContent = signageQuote.note;
   signageQuote.lines.forEach((line) => {
     const row = document.createElement("tr");
-    const detail = line.formula ? `<small>${escapeXml(line.formula)}</small>` : "";
-    row.innerHTML = `<td>${escapeXml(line.item)}${detail}</td><td>${escapeXml(line.qty)}</td><td>${money(line.total, signageQuote.currency)}</td>`;
+    row.innerHTML = [
+      `<td>${escapeXml(line.item)}</td>`,
+      `<td>${escapeXml(line.dimension || "-")}</td>`,
+      `<td>${escapeXml(line.qty || "-")}</td>`,
+      `<td>${escapeXml(line.rateText || quoteRateText(line.rate, line.unit, signageQuote.currency) || "-")}</td>`,
+      `<td>${line.formula ? `<small>${escapeXml(line.formula)}</small>` : "-"}</td>`,
+      `<td>${money(line.total, signageQuote.currency)}</td>`
+    ].join("");
     signageQuoteLines.append(row);
   });
   signageQuoteTotal.textContent = money(signageQuote.total, signageQuote.currency);
@@ -4349,8 +4440,11 @@ function renderSignagePrintTemplate() {
   const canvasPreview = signageCanvasPreviewDataUrl();
   const rows = quote.lines.map((line) => `
     <tr>
-      <td>${escapeXml(line.item)}${line.formula ? `<br><small>${escapeXml(line.formula)}</small>` : ""}</td>
+      <td>${escapeXml(line.item)}</td>
+      <td>${escapeXml(line.dimension || "-")}</td>
       <td>${escapeXml(line.qty)}</td>
+      <td>${escapeXml(line.rateText || quoteRateText(line.rate, line.unit, quote.currency) || "-")}</td>
+      <td>${line.formula ? `<small>${escapeXml(line.formula)}</small>` : "-"}</td>
       <td>${escapeXml(money(line.total, quote.currency))}</td>
     </tr>
   `).join("");
@@ -4379,8 +4473,8 @@ function renderSignagePrintTemplate() {
         <img src="${canvasPreview}" alt="Signage marked preview">
       </section>
       <table class="print-quote-table">
-        <thead><tr><th>Item</th><th>Qty</th><th>Total</th></tr></thead>
-        <tbody>${rows || `<tr><td colspan="3">No quote lines yet.</td></tr>`}</tbody>
+        <thead><tr><th>Item</th><th>Dimension</th><th>Qty</th><th>Rate</th><th>Formula</th><th>Total</th></tr></thead>
+        <tbody>${rows || `<tr><td colspan="6">No quote lines yet.</td></tr>`}</tbody>
       </table>
       <section class="print-quote-note">
         <h2>Notes</h2>
@@ -4396,19 +4490,29 @@ function printSignageQuote() {
   window.print();
 }
 
+function truncateSvgText(value, maxLength) {
+  const text = String(value || "");
+  return text.length > maxLength ? `${text.slice(0, Math.max(0, maxLength - 3))}...` : text;
+}
+
 function saveSignageQuotePng() {
   const quoteLines = signageQuote ? signageQuote.lines : [];
   const canvasPreview = signageCanvasPreviewDataUrl();
+  const rowHeight = 46;
+  const tableTop = 306;
+  const totalTop = tableTop + 34 + Math.max(1, quoteLines.length) * rowHeight + 18;
+  const svgHeight = Math.max(620, totalTop + 94);
   const rows = quoteLines.map((line, index) => {
-    const y = 310 + index * 30;
-    return `<text x="52" y="${y}" font-size="18" fill="#172026">${escapeXml(line.item)}</text><text x="570" y="${y}" font-size="18" fill="#172026">${escapeXml(line.qty)}</text><text x="690" y="${y}" font-size="18" fill="#172026">${escapeXml(money(line.total, signageQuote.currency))}</text>`;
+    const y = tableTop + 48 + index * rowHeight;
+    const formula = truncateSvgText(line.formula || "", 78);
+    return `<text x="52" y="${y}" font-size="15" font-weight="700" fill="#172026">${escapeXml(truncateSvgText(line.item, 36))}</text><text x="260" y="${y}" font-size="14" fill="#172026">${escapeXml(line.dimension || "-")}</text><text x="410" y="${y}" font-size="14" fill="#172026">${escapeXml(line.qty || "-")}</text><text x="525" y="${y}" font-size="14" fill="#172026">${escapeXml(truncateSvgText(line.rateText || quoteRateText(line.rate, line.unit, signageQuote.currency) || "-", 24))}</text><text x="52" y="${y + 18}" font-size="12" fill="#65727c">${escapeXml(formula)}</text><text x="748" y="${y}" font-size="15" font-weight="700" text-anchor="end" fill="#172026">${escapeXml(money(line.total, signageQuote.currency))}</text><line x1="52" y1="${y + 28}" x2="848" y2="${y + 28}" stroke="#e2e8f0"/>`;
   }).join("");
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="900" height="620"><rect width="900" height="620" fill="#ffffff"/><text x="52" y="58" font-size="30" font-weight="700" fill="#172026">Weeseng Advertising</text><text x="52" y="92" font-size="20" fill="#0f766e">Signage Quotation Draft</text><image x="52" y="112" width="796" height="160" preserveAspectRatio="xMidYMid meet" href="${canvasPreview}"/><line x1="52" y1="292" x2="848" y2="292" stroke="#d8e0e5"/><text x="52" y="306" font-size="15" font-weight="700" fill="#65727c">Item</text><text x="570" y="306" font-size="15" font-weight="700" fill="#65727c">Qty</text><text x="690" y="306" font-size="15" font-weight="700" fill="#65727c">Total</text>${rows}<rect x="52" y="530" width="796" height="58" fill="#f0fdfa" stroke="#99f6e4"/><text x="72" y="566" font-size="22" font-weight="700" fill="#115e59">Total quotation</text><text x="650" y="566" font-size="22" font-weight="700" fill="#115e59">${escapeXml(money(signageQuote?.total || 0, signageQuote?.currency || "MYR"))}</text></svg>`;
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="900" height="${svgHeight}"><rect width="900" height="${svgHeight}" fill="#ffffff"/><text x="52" y="58" font-size="30" font-weight="700" fill="#172026">Weeseng Advertising</text><text x="52" y="92" font-size="20" fill="#0f766e">Signage Quotation Draft</text><image x="52" y="112" width="796" height="160" preserveAspectRatio="xMidYMid meet" href="${canvasPreview}"/><line x1="52" y1="292" x2="848" y2="292" stroke="#d8e0e5"/><text x="52" y="${tableTop}" font-size="13" font-weight="700" fill="#65727c">Item / formula</text><text x="260" y="${tableTop}" font-size="13" font-weight="700" fill="#65727c">Dimension</text><text x="410" y="${tableTop}" font-size="13" font-weight="700" fill="#65727c">Qty</text><text x="525" y="${tableTop}" font-size="13" font-weight="700" fill="#65727c">Rate</text><text x="748" y="${tableTop}" font-size="13" font-weight="700" text-anchor="end" fill="#65727c">Total</text>${rows || `<text x="52" y="${tableTop + 48}" font-size="15" fill="#65727c">No quote lines yet.</text>`}<rect x="52" y="${totalTop}" width="796" height="58" fill="#f0fdfa" stroke="#99f6e4"/><text x="72" y="${totalTop + 36}" font-size="22" font-weight="700" fill="#115e59">Total quotation</text><text x="800" y="${totalTop + 36}" font-size="22" font-weight="700" text-anchor="end" fill="#115e59">${escapeXml(money(signageQuote?.total || 0, signageQuote?.currency || "MYR"))}</text></svg>`;
   const image = new Image();
   image.onload = () => {
     const canvas = document.createElement("canvas");
     canvas.width = 900;
-    canvas.height = 620;
+    canvas.height = svgHeight;
     const context = canvas.getContext("2d");
     context.drawImage(image, 0, 0);
     canvas.toBlob((blob) => {
@@ -4508,6 +4612,124 @@ function clampSignageBoxToPhoto(box) {
     width,
     height
   };
+}
+
+function clampSignageBoxToTextBoundary(box) {
+  const bounds = signageTextBoundary().box;
+  const width = Math.max(1, Math.min(box.width, bounds.width));
+  const height = Math.max(1, Math.min(box.height, bounds.height));
+  return {
+    x: Math.max(bounds.x, Math.min(bounds.x + bounds.width - width, box.x)),
+    y: Math.max(bounds.y, Math.min(bounds.y + bounds.height - height, box.y)),
+    width,
+    height
+  };
+}
+
+function signageBoxInsideBounds(box, bounds) {
+  return (
+    box.x >= bounds.x &&
+    box.y >= bounds.y &&
+    box.x + box.width <= bounds.x + bounds.width &&
+    box.y + box.height <= bounds.y + bounds.height
+  );
+}
+
+function openManualLetterPopover(box) {
+  pendingManualLetterBox = clampSignageBoxToTextBoundary(box);
+  if (!signageManualLetterPopover) {
+    confirmManualLetterBoxes();
+    return;
+  }
+
+  signageManualLetterTextInput.value = "";
+  signageManualLetterCountXInput.value = "1";
+  signageManualLetterCountYInput.value = "1";
+  signageManualLetterSpacingXInput.value = "0";
+  signageManualLetterSpacingYInput.value = "0";
+  signageManualLetterPopover.hidden = false;
+  signageManualLetterTextInput.focus();
+  const boundary = signageTextBoundary();
+  if (boundary.warning) {
+    setLog(boundary.warning, "warning");
+  }
+}
+
+function closeManualLetterPopover() {
+  pendingManualLetterBox = null;
+  if (signageManualLetterPopover) {
+    signageManualLetterPopover.hidden = true;
+  }
+  renderSignageCanvas();
+}
+
+function confirmManualLetterBoxes() {
+  if (!pendingManualLetterBox) {
+    return;
+  }
+
+  ensureSignageRecognitionDraft();
+  const boundary = signageTextBoundary();
+  const baseBox = clampSignageBoxToTextBoundary(pendingManualLetterBox);
+  const countX = Math.max(1, Math.floor(Number(signageManualLetterCountXInput?.value || 1) || 1));
+  const countY = Math.max(1, Math.floor(Number(signageManualLetterCountYInput?.value || 1) || 1));
+  const spacingX = Math.max(0, Number(signageManualLetterSpacingXInput?.value || 0) || 0);
+  const spacingY = Math.max(0, Number(signageManualLetterSpacingYInput?.value || 0) || 0);
+  const text = (signageManualLetterTextInput?.value || "").trim() || "?";
+  const createdBoxes = [];
+  let skipped = 0;
+
+  for (let yIndex = 0; yIndex < countY; yIndex += 1) {
+    for (let xIndex = 0; xIndex < countX; xIndex += 1) {
+      const candidate = {
+        x: baseBox.x + xIndex * (baseBox.width + spacingX),
+        y: baseBox.y + yIndex * (baseBox.height + spacingY),
+        width: baseBox.width,
+        height: baseBox.height
+      };
+      if (signageBoxInsideBounds(candidate, boundary.box)) {
+        createdBoxes.push(candidate);
+      } else {
+        skipped += 1;
+      }
+    }
+  }
+
+  if (!createdBoxes.length) {
+    setLog(t("manualLettersSkipped", { created: 0, skipped }), "warning");
+    closeManualLetterPopover();
+    return;
+  }
+
+  const startIndex = signageRecognition.letters.length;
+  const textChars = Array.from(text);
+  const splitText = textChars.length === createdBoxes.length;
+  createdBoxes.forEach((box, index) => {
+    const dimensions = signageBoxDimensionsIn(box);
+    signageRecognition.letters.push({
+      text: splitText ? textChars[index] : text,
+      widthIn: dimensions.widthIn,
+      heightIn: dimensions.heightIn,
+      confidence: 1,
+      box,
+      backingId: activeSignageBackingId || activeSignageBacking()?.id || "",
+      source: "manual",
+      color: "#7c3aed"
+    });
+  });
+
+  selectedSignageLetterIndex = startIndex;
+  pendingManualLetterBox = null;
+  if (signageManualLetterPopover) {
+    signageManualLetterPopover.hidden = true;
+  }
+  refreshSignageQuoteFromEdits();
+  setSignageStep(3);
+  const message = skipped > 0
+    ? t("manualLettersSkipped", { created: createdBoxes.length, skipped })
+    : t("manualLettersCreated", { created: createdBoxes.length });
+  setLog(boundary.warning ? `${message} ${boundary.warning}` : message, skipped > 0 ? "warning" : "success");
+  renderSignageCanvas();
 }
 
 function resizeSignageBoxFromHandle(originalBox, deltaX, deltaY, handle) {
@@ -4868,23 +5090,9 @@ function finishSignageDrag(event) {
   }
 
   if (signageDragPreview?.tool === "letter") {
-    ensureSignageRecognitionDraft();
     const box = signageDragPreview.box;
     if (box.width >= 8 && box.height >= 8) {
-      const dimensions = signageBoxDimensionsIn(box);
-      selectedSignageLetterIndex = signageRecognition.letters.length;
-      signageRecognition.letters.push({
-        text: "?",
-        widthIn: dimensions.widthIn,
-        heightIn: dimensions.heightIn,
-        confidence: 1,
-        box: clampSignageBoxToPhoto(box),
-        backingId: activeSignageBackingId || activeSignageBacking()?.id || "",
-        source: "manual",
-        color: "#7c3aed"
-      });
-      refreshSignageQuoteFromEdits();
-      setSignageStep(3);
+      openManualLetterPopover(box);
     }
   }
 
@@ -5758,6 +5966,14 @@ signageSelectedLetterBackingSelect.addEventListener("change", () => {
   input.addEventListener("input", updateSelectedSignageBackingFromInputs);
 });
 signageSelectedBackingColorInput.addEventListener("input", updateSelectedSignageBackingColor);
+signageManualLetterConfirmButton?.addEventListener("click", confirmManualLetterBoxes);
+signageManualLetterCancelButton?.addEventListener("click", closeManualLetterPopover);
+signageManualLetterTextInput?.addEventListener("keydown", (event) => {
+  if (event.key === "Enter") {
+    event.preventDefault();
+    confirmManualLetterBoxes();
+  }
+});
 
 document.querySelectorAll(".signage-tools .tool-button").forEach((button) => {
   button.addEventListener("click", () => {
@@ -5802,6 +6018,11 @@ signageCanvasWrap()?.addEventListener("wheel", (event) => {
 }, { passive: false });
 
 document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" && signageManualLetterPopover && !signageManualLetterPopover.hidden) {
+    closeManualLetterPopover();
+    return;
+  }
+
   if (event.key === "Escape" && signageCanvasFullscreen) {
     setSignageCanvasFullscreen(false);
     return;
