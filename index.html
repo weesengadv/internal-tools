@@ -247,7 +247,7 @@
             <div class="signage-steps">
               <button class="signage-step active" type="button" data-signage-step="0"><span>1</span><strong data-i18n="stepProjectSetup">Project setup</strong></button>
               <button class="signage-step" type="button" data-signage-step="1"><span>2</span><strong data-i18n="stepGuideline">Mark guideline</strong></button>
-              <button class="signage-step" type="button" data-signage-step="2" hidden><span>3</span><strong data-i18n="stepRecognize">AI recognize</strong></button>
+              <button class="signage-step" type="button" data-signage-step="2"><span>3</span><strong data-i18n="stepBacking">Backing</strong></button>
               <button class="signage-step" type="button" data-signage-step="3"><span>4</span><strong data-i18n="stepReview">Review draft</strong></button>
               <button class="signage-step" type="button" data-signage-step="4"><span>5</span><strong data-i18n="stepMaterialPricing">Material & pricing</strong></button>
               <button class="signage-step" type="button" data-signage-step="5"><span>6</span><strong data-i18n="stepExport">Print / image</strong></button>
@@ -267,6 +267,7 @@
                   <button class="tool-button numbered active" id="signageToolGuideline" type="button"><span class="tool-number">1</span><span data-i18n="guidelineTool">Guideline</span></button>
                   <button class="tool-button numbered" id="signageToolBacking" type="button"><span class="tool-number">2</span><span data-i18n="backingBoxTool">Backing box</span></button>
                   <button class="tool-button numbered" id="signageToolLetter" type="button" hidden disabled><span class="tool-number">3</span><span data-i18n="letterBoxTool">Letter box</span></button>
+                  <button class="secondary-button danger-button" id="signageDeleteSelectedButton" type="button" data-i18n="deleteSelected" hidden disabled>Delete selected</button>
                   <a class="secondary-button manual-link" href="SIGNAGE_QUOTATION_MANUAL.html" target="_blank" rel="noopener" data-i18n="openManual">Open manual</a>
                 </div>
 
@@ -275,6 +276,13 @@
                   <output id="signageZoomValue">100%</output>
                   <button class="secondary-button" id="signageZoomInButton" type="button" data-i18n="zoomIn">Zoom in</button>
                   <button class="secondary-button" id="signageZoomResetButton" type="button" data-i18n="resetZoom">Reset</button>
+                  <div class="canvas-pan-controls" aria-label="Canvas pan">
+                    <button class="secondary-button" id="signagePanLeftButton" type="button" title="Pan left">←</button>
+                    <button class="secondary-button" id="signagePanUpButton" type="button" title="Pan up">↑</button>
+                    <button class="secondary-button" id="signagePanDownButton" type="button" title="Pan down">↓</button>
+                    <button class="secondary-button" id="signagePanRightButton" type="button" title="Pan right">→</button>
+                    <button class="secondary-button" id="signagePanCenterButton" type="button" data-i18n="centerCanvas">Center</button>
+                  </div>
                 </div>
 
                 <div class="signage-canvas-wrap">
@@ -349,7 +357,54 @@
                   <p class="signage-hint" data-i18n="calibrationHint">Use tool 1 to draw one reference line across a known real size. Drawing again replaces the previous guideline.</p>
                 </section>
 
-                <section class="signage-inspector-section" data-signage-step-panel="2" hidden></section>
+                <section class="signage-inspector-section" data-signage-step-panel="2">
+                  <div class="signage-section-title">
+                    <h3 data-i18n="stepBacking">Backing</h3>
+                    <span data-i18n="backingBoxTool">Backing box</span>
+                  </div>
+                  <div class="signage-actions review-primary-actions">
+                    <button class="secondary-button" id="signageAddBackingButton" type="button" data-i18n="addBacking">Add backing</button>
+                  </div>
+                  <div class="signage-setup-grid">
+                    <label>
+                      <span data-i18n="backingMaterial">Backing material</span>
+                      <select id="signageBackingMaterial"></select>
+                    </label>
+                    <label>
+                      <span data-i18n="activeBacking">Active backing</span>
+                      <select id="signageBackingSelect"></select>
+                    </label>
+                  </div>
+                  <div class="signage-table-wrap">
+                    <table class="signage-table">
+                      <thead>
+                        <tr>
+                          <th data-i18n="backingName">Name</th>
+                          <th data-i18n="widthIn">Width</th>
+                          <th data-i18n="heightIn">Height</th>
+                          <th data-i18n="quoteRate">Rate</th>
+                          <th data-i18n="actions">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody id="signageBackingsTable"></tbody>
+                    </table>
+                  </div>
+                  <div class="selected-letter-editor" id="signageSelectedBackingEditor" hidden>
+                    <div class="signage-section-title compact">
+                      <h3 data-i18n="selectedBacking">Selected backing</h3>
+                      <span id="signageSelectedBackingSource">-</span>
+                    </div>
+                    <div class="box-edit-grid">
+                      <label><span data-i18n="backingName">Name</span><input id="signageSelectedBackingName" type="text"></label>
+                      <label><span>X</span><input id="signageSelectedBackingX" type="number" step="0.1"></label>
+                      <label><span>Y</span><input id="signageSelectedBackingY" type="number" step="0.1"></label>
+                      <label><span>W</span><input id="signageSelectedBackingW" type="number" min="1" step="0.1"></label>
+                      <label><span>H</span><input id="signageSelectedBackingH" type="number" min="1" step="0.1"></label>
+                      <label><span data-i18n="boxColor">Color</span><input id="signageSelectedBackingColor" type="color" value="#0f766e"></label>
+                    </div>
+                  </div>
+                  <p class="signage-hint" data-i18n="backingHint">Draw one or more backing boxes. If no backing is listed, no backing will be charged.</p>
+                </section>
 
                 <section class="signage-inspector-section" data-signage-step-panel="3">
                   <div class="signage-section-title">
@@ -358,7 +413,14 @@
                   </div>
                   <div class="signage-actions review-primary-actions">
                     <button class="secondary-button" id="signageTraceBrightButton" type="button" data-i18n="traceBrightLetters">Auto trace bright letters</button>
+                    <button class="secondary-button" id="signageClearLettersButton" type="button" data-i18n="clearAllLetters">Clear all</button>
+                    <button class="secondary-button" id="signageToggleSummaryButton" type="button" data-i18n="hideSummary">Hide summary</button>
+                    <button class="secondary-button" id="signageFullscreenButton" type="button" data-i18n="fullscreenCanvas">Fullscreen canvas</button>
                   </div>
+                  <label class="signage-inline-select">
+                    <span data-i18n="activeBacking">Active backing</span>
+                    <select id="signageLetterBackingSelect"></select>
+                  </label>
                   <div class="signage-correction review-fallback">
                     <label>
                       <span data-i18n="correctionPrompt">AI correction prompt</span>
@@ -374,6 +436,7 @@
                       <button class="secondary-button" id="signageExportTraceButton" type="button" data-i18n="exportAiTrace">AI Trace Debug</button>
                     </div>
                   </div>
+                  <div class="letter-summary-block" id="signageLetterSummaryBlock">
                   <div class="metric-grid signage-metrics">
                     <div>
                       <dt data-i18n="backingSize">Backing size</dt>
@@ -395,12 +458,15 @@
                           <th data-i18n="letter">Letter</th>
                           <th data-i18n="widthIn">Width</th>
                           <th data-i18n="heightIn">Height</th>
+                          <th data-i18n="activeBacking">Backing</th>
+                          <th data-i18n="boxColor">Color</th>
                           <th data-i18n="confidence">Confidence</th>
                           <th data-i18n="actions">Actions</th>
                         </tr>
                       </thead>
                       <tbody id="signageDetections"></tbody>
                     </table>
+                  </div>
                   </div>
                   <div class="selected-letter-editor" id="signageSelectedLetterEditor" hidden>
                     <div class="signage-section-title compact">
@@ -413,6 +479,7 @@
                       <label><span>W</span><input id="signageSelectedBoxW" type="number" min="1" step="0.1"></label>
                       <label><span>H</span><input id="signageSelectedBoxH" type="number" min="1" step="0.1"></label>
                       <label><span data-i18n="boxColor">Color</span><input id="signageSelectedBoxColor" type="color" value="#dc2626"></label>
+                      <label><span data-i18n="activeBacking">Backing</span><select id="signageSelectedLetterBacking"></select></label>
                     </div>
                   </div>
                 </section>
@@ -424,6 +491,20 @@
                   </div>
                   <div class="signage-setup-grid">
                     <label>
+                      <span data-i18n="productCategory">Product category</span>
+                      <select id="signageProductCategory">
+                        <option value="emboss" data-i18n="embossWord">Emboss word</option>
+                        <option value="cut-material" data-i18n="cutMaterial">Cut material</option>
+                        <option value="paibian" data-i18n="paibian">Paibian / plaque</option>
+                        <option value="notice" data-i18n="noticeSign">Notice sign</option>
+                        <option value="etching" data-i18n="etching">Etching</option>
+                      </select>
+                    </label>
+                    <label>
+                      <span data-i18n="productOption">Product option</span>
+                      <select id="signageProductOption"></select>
+                    </label>
+                    <label id="signageLightingField">
                       <span data-i18n="signageLighting">Lighting</span>
                       <select id="signageLighting">
                         <option value="front-lit" data-i18n="frontLit">Front lit</option>
@@ -431,7 +512,7 @@
                         <option value="no-lit" data-i18n="noLit">No lit</option>
                       </select>
                     </label>
-                    <label>
+                    <label id="signageMaterialField">
                       <span data-i18n="signageMaterial">Emboss material/model</span>
                       <select id="signageMaterial">
                         <option value="Acrylic emboss">Acrylic emboss</option>
@@ -443,6 +524,59 @@
                       <span data-i18n="quoteAction">Quote action</span>
                       <button class="secondary-button" id="signageRefreshQuoteButton" type="button" data-i18n="refreshQuote">Refresh quote</button>
                     </label>
+                  </div>
+                  <div class="rate-edit-grid" id="signageRateEditGrid">
+                    <label>
+                      <span data-i18n="backingRateEdit">Backing rate / sqft</span>
+                      <input id="signageBackingRateOverride" type="number" min="0" step="0.01">
+                    </label>
+                    <label id="signageProductRateField">
+                      <span data-i18n="productRateEdit">Product rate</span>
+                      <input id="signageProductRateOverride" type="number" min="0" step="0.01">
+                    </label>
+                    <label id="signageEmbossHeightRateField">
+                      <span data-i18n="heightRateEdit">Height inch rate</span>
+                      <input id="signageEmbossHeightRateOverride" type="number" min="0" step="0.01">
+                    </label>
+                    <label id="signageEmbossAreaRateField">
+                      <span data-i18n="areaRateEdit">Square inch rate</span>
+                      <input id="signageEmbossAreaRateOverride" type="number" min="0" step="0.01">
+                    </label>
+                    <label id="signageMaterialHeightRateField">
+                      <span data-i18n="materialHeightRateEdit">Material height add-on</span>
+                      <input id="signageMaterialHeightRateOverride" type="number" min="0" step="0.01">
+                    </label>
+                    <label id="signageMaterialAreaRateField">
+                      <span data-i18n="materialAreaRateEdit">Material area add-on</span>
+                      <input id="signageMaterialAreaRateOverride" type="number" min="0" step="0.01">
+                    </label>
+                    <label id="signageLedRateField">
+                      <span data-i18n="ledRateEdit">LED rate</span>
+                      <input id="signageLedRateOverride" type="number" min="0" step="0.01">
+                    </label>
+                    <label id="signagePsuRateField">
+                      <span data-i18n="psuRateEdit">PSU cost</span>
+                      <input id="signagePsuRateOverride" type="number" min="0" step="0.01">
+                    </label>
+                  </div>
+                  <div class="rate-preview" id="signageRatePreview"></div>
+                  <div class="signage-setup-grid addon-grid">
+                    <label>
+                      <span data-i18n="skyliftCost">Skylift</span>
+                      <input id="signageSkyliftCost" type="number" min="0" step="0.01" value="0">
+                    </label>
+                    <label>
+                      <span data-i18n="assemblyCost">Assembly</span>
+                      <input id="signageAssemblyCost" type="number" min="0" step="0.01" value="0">
+                    </label>
+                    <label>
+                      <span data-i18n="installationCost">Installation</span>
+                      <input id="signageInstallationCost" type="number" min="0" step="0.01" value="0">
+                    </label>
+                  </div>
+                  <div class="quotation-rules" id="signageQuotationRules">
+                    <strong data-i18n="quotationRules">Quotation rules</strong>
+                    <p data-i18n="quotationRulesText">Letters below 12 inch high use height-inch rate. Larger letters use square-inch area rate. Front-lit LED uses 6mm LED area rate when available; back-lit uses perimeter meter rate. Add-on costs at 0 are excluded.</p>
                   </div>
                 </section>
 

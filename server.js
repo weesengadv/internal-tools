@@ -282,6 +282,28 @@ function parseLedTab(matrix) {
   return led;
 }
 
+function parseSimpleRateTab(matrix, unit) {
+  const rows = matrix.filter((row) => row.some(Boolean));
+  const header = rows[0] || [];
+  return rows.slice(1)
+    .filter((row) => row.some(Boolean))
+    .map((row) => {
+      const first = row[0] || "";
+      const second = row[1] || "";
+      const third = row[2] || "";
+      const rateCell = [...row].reverse().find((cell) => asNumber(cell) > 0) || "";
+      return {
+        label: [first, second].filter(Boolean).join(" - ") || first || "Option",
+        type: first,
+        detail: second,
+        rate: asNumber(rateCell),
+        unit,
+        header
+      };
+    })
+    .filter((option) => option.rate > 0);
+}
+
 function pricingFromWorkbook(tabs, config) {
   const pricing = samplePricing();
   const workbook = {};
@@ -318,8 +340,28 @@ function pricingFromWorkbook(tabs, config) {
     pricing.psuWatt = defaultPsu?.watt || pricing.psuWatt;
   }
 
+  const etching = tabs.find((tab) => normalizeKey(tab.name) === "etching");
+  if (etching) {
+    pricing.etchingOptions = parseSimpleRateTab(etching.matrix, "sqin");
+  }
+
+  const paibian = tabs.find((tab) => normalizeKey(tab.name) === "paibianplaquehouseplate");
+  if (paibian) {
+    pricing.paibianOptions = parseSimpleRateTab(paibian.matrix, "sqft");
+  }
+
+  const notice = tabs.find((tab) => normalizeKey(tab.name) === "noticesigndangersignwarningsign");
+  if (notice) {
+    pricing.noticeOptions = parseSimpleRateTab(notice.matrix, "sqft");
+  }
+
+  const skylift = tabs.find((tab) => normalizeKey(tab.name) === "skylift");
+  if (skylift) {
+    pricing.skyliftDefault = asNumber(skylift.matrix.flat().find((cell) => asNumber(cell) > 0));
+  }
+
   pricing.otherTabs = tabs
-    .filter((tab) => !["embossword", "backingwithmetalframe", "cutmaterial", "led"].includes(normalizeKey(tab.name)))
+    .filter((tab) => !["embossword", "backingwithmetalframe", "cutmaterial", "led", "etching", "paibianplaquehouseplate", "noticesigndangersignwarningsign", "skylift"].includes(normalizeKey(tab.name)))
     .map((tab) => ({ name: tab.name, rows: tab.matrix }));
   pricing.source = "google-workbook";
   pricing.currency = config.currency || pricing.currency;

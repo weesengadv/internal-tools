@@ -60,6 +60,29 @@ const signageBackingWidthInput = document.getElementById("signageBackingWidth");
 const signageBackingHeightInput = document.getElementById("signageBackingHeight");
 const signageLightingSelect = document.getElementById("signageLighting");
 const signageMaterialSelect = document.getElementById("signageMaterial");
+const signageProductCategorySelect = document.getElementById("signageProductCategory");
+const signageProductOptionSelect = document.getElementById("signageProductOption");
+const signageRatePreview = document.getElementById("signageRatePreview");
+const signageLightingField = document.getElementById("signageLightingField");
+const signageMaterialField = document.getElementById("signageMaterialField");
+const signageProductRateField = document.getElementById("signageProductRateField");
+const signageEmbossHeightRateField = document.getElementById("signageEmbossHeightRateField");
+const signageEmbossAreaRateField = document.getElementById("signageEmbossAreaRateField");
+const signageMaterialHeightRateField = document.getElementById("signageMaterialHeightRateField");
+const signageMaterialAreaRateField = document.getElementById("signageMaterialAreaRateField");
+const signageLedRateField = document.getElementById("signageLedRateField");
+const signagePsuRateField = document.getElementById("signagePsuRateField");
+const signageBackingRateOverrideInput = document.getElementById("signageBackingRateOverride");
+const signageProductRateOverrideInput = document.getElementById("signageProductRateOverride");
+const signageEmbossHeightRateOverrideInput = document.getElementById("signageEmbossHeightRateOverride");
+const signageEmbossAreaRateOverrideInput = document.getElementById("signageEmbossAreaRateOverride");
+const signageMaterialHeightRateOverrideInput = document.getElementById("signageMaterialHeightRateOverride");
+const signageMaterialAreaRateOverrideInput = document.getElementById("signageMaterialAreaRateOverride");
+const signageLedRateOverrideInput = document.getElementById("signageLedRateOverride");
+const signagePsuRateOverrideInput = document.getElementById("signagePsuRateOverride");
+const signageSkyliftCostInput = document.getElementById("signageSkyliftCost");
+const signageAssemblyCostInput = document.getElementById("signageAssemblyCost");
+const signageInstallationCostInput = document.getElementById("signageInstallationCost");
 const signageCanvas = document.getElementById("signageCanvas");
 const signageCanvasBadge = document.getElementById("signageCanvasBadge");
 const signageEmpty = document.getElementById("signageEmpty");
@@ -74,6 +97,8 @@ const signageCorrectionPrompt = document.getElementById("signageCorrectionPrompt
 const signageRerunButton = document.getElementById("signageRerunButton");
 const signageExportTraceButton = document.getElementById("signageExportTraceButton");
 const signageTraceBrightButton = document.getElementById("signageTraceBrightButton");
+const signageClearLettersButton = document.getElementById("signageClearLettersButton");
+const signageFullscreenButton = document.getElementById("signageFullscreenButton");
 const signagePrintButton = document.getElementById("signagePrintButton");
 const signagePngButton = document.getElementById("signagePngButton");
 const signageSelectedLetterEditor = document.getElementById("signageSelectedLetterEditor");
@@ -83,6 +108,20 @@ const signageSelectedBoxWInput = document.getElementById("signageSelectedBoxW");
 const signageSelectedBoxHInput = document.getElementById("signageSelectedBoxH");
 const signageSelectedBoxColorInput = document.getElementById("signageSelectedBoxColor");
 const signageSelectedBoxSource = document.getElementById("signageSelectedBoxSource");
+const signageSelectedLetterBackingSelect = document.getElementById("signageSelectedLetterBacking");
+const signageAddBackingButton = document.getElementById("signageAddBackingButton");
+const signageBackingMaterialSelect = document.getElementById("signageBackingMaterial");
+const signageBackingSelect = document.getElementById("signageBackingSelect");
+const signageLetterBackingSelect = document.getElementById("signageLetterBackingSelect");
+const signageBackingsTable = document.getElementById("signageBackingsTable");
+const signageSelectedBackingEditor = document.getElementById("signageSelectedBackingEditor");
+const signageSelectedBackingNameInput = document.getElementById("signageSelectedBackingName");
+const signageSelectedBackingXInput = document.getElementById("signageSelectedBackingX");
+const signageSelectedBackingYInput = document.getElementById("signageSelectedBackingY");
+const signageSelectedBackingWInput = document.getElementById("signageSelectedBackingW");
+const signageSelectedBackingHInput = document.getElementById("signageSelectedBackingH");
+const signageSelectedBackingColorInput = document.getElementById("signageSelectedBackingColor");
+const signageSelectedBackingSource = document.getElementById("signageSelectedBackingSource");
 const signagePromptButtons = document.querySelectorAll("[data-prompt]");
 const signageRefreshQuoteButton = document.getElementById("signageRefreshQuoteButton");
 const signageStepButtons = document.querySelectorAll("[data-signage-step]");
@@ -97,10 +136,18 @@ const signageTools = document.querySelector(".signage-tools");
 const signageToolGuidelineButton = document.getElementById("signageToolGuideline");
 const signageToolBackingButton = document.getElementById("signageToolBacking");
 const signageToolLetterButton = document.getElementById("signageToolLetter");
+const signageDeleteSelectedButton = document.getElementById("signageDeleteSelectedButton");
 const signageZoomOutButton = document.getElementById("signageZoomOutButton");
 const signageZoomInButton = document.getElementById("signageZoomInButton");
 const signageZoomResetButton = document.getElementById("signageZoomResetButton");
 const signageZoomValue = document.getElementById("signageZoomValue");
+const signagePanLeftButton = document.getElementById("signagePanLeftButton");
+const signagePanUpButton = document.getElementById("signagePanUpButton");
+const signagePanDownButton = document.getElementById("signagePanDownButton");
+const signagePanRightButton = document.getElementById("signagePanRightButton");
+const signagePanCenterButton = document.getElementById("signagePanCenterButton");
+const signageToggleSummaryButton = document.getElementById("signageToggleSummaryButton");
+const signageLetterSummaryBlock = document.getElementById("signageLetterSummaryBlock");
 const signageCustomerNameInput = document.getElementById("signageCustomerName");
 const signageProjectNameInput = document.getElementById("signageProjectName");
 const signageCustomerContactInput = document.getElementById("signageCustomerContact");
@@ -150,28 +197,38 @@ let signagePhotoName = "";
 let signageActiveTool = "guideline";
 let signageCalibrationMode = "guideline";
 let signageCalibration = { x1: 216, y1: 338, x2: 984, y2: 338, inches: 144 };
+let signageCalibrationValid = true;
 let signageBackingBox = null;
+let signageBackings = [];
+let selectedSignageBackingIndex = null;
+let activeSignageBackingId = null;
+let signageBackingIdCounter = 1;
 let signageRawRecognition = null;
 let signageRecognition = null;
 let signagePricing = null;
 let signageQuote = null;
+let signageRateOverrides = {};
 let signageCurrency = "MYR";
 let signageDragStart = null;
 let signageDragPreview = null;
 let signageBoxDrag = null;
+let signageCanvasPan = null;
 let selectedSignageLetterIndex = null;
 let signageLetterTooltip = null;
 let activeSignageStep = Number(localStorage.getItem("weesengSignageActiveStep") || 0);
 let signageCanvasZoom = Number(localStorage.getItem("weesengSignageCanvasZoom") || 1);
+let signageSummaryHidden = localStorage.getItem("weesengSignageSummaryHidden") === "true";
 let signageAutosaveTimer = null;
 let isRestoringSignageProject = false;
 let signageTesseractLoadPromise = null;
+let signageCanvasFullscreen = false;
 
 const previewLimit = 1500000;
 const signageAutosaveKey = "weesengSignageQuoteDraft";
-const signageProjectSchemaVersion = 1;
+const signageSummaryHiddenKey = "weesengSignageSummaryHidden";
+const signageProjectSchemaVersion = 2;
 const signageTesseractCdnUrl = "https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js";
-const hiddenSignageStepIndexes = new Set([2]);
+const hiddenSignageStepIndexes = new Set();
 const messages = {
   en: {
     addTool: "Add Tool",
@@ -258,6 +315,7 @@ const messages = {
     signageWizardStatus: "Step-by-step quotation workflow.",
     statusProjectSetup: "Enter customer/project details and upload a photo or load a saved project.",
     statusGuideline: "Draw one reference guideline and confirm the real-world size.",
+    statusBacking: "Draw and edit one or more backing boxes. Leave empty when backing is not needed.",
     statusRecognize: "Run AI recognition or add correction notes before re-running.",
     statusReview: "Review detected letters, edit dimensions, and inspect per-letter quote logic.",
     statusMaterialPricing: "Select material and lighting, then refresh the deterministic Google Sheet quote.",
@@ -274,12 +332,51 @@ const messages = {
     exportCsv: "Export CSV",
     exportAiTrace: "AI Trace Debug",
     traceBrightLetters: "Auto trace bright letters",
+    clearAllLetters: "Clear all",
+    deleteSelected: "Delete selected",
+    selectedLetterDeleted: "Selected letter deleted.",
+    signageGuidelineDeleted: "Guideline deleted. Please mark a new scale before tracing or quoting.",
+    signageNothingSelected: "Nothing selected to delete.",
+    signageNeedCalibration: "Please mark a guideline or backing size before tracing or quoting.",
+    fullscreenCanvas: "Fullscreen canvas",
+    exitFullscreenCanvas: "Exit fullscreen",
     backStep: "Back",
     nextStep: "Next",
     finishStep: "Finish",
     calibrationHint: "Use tool 1 to draw one straight horizontal or vertical reference line across a known real size. Drawing again replaces the previous guideline.",
     quoteAction: "Quote action",
     refreshQuote: "Refresh quote",
+    stepBacking: "Backing",
+    addBacking: "Add backing",
+    activeBacking: "Active backing",
+    backingName: "Backing name",
+    backingMaterial: "Backing material",
+    selectedBacking: "Selected backing",
+    backingHint: "Draw one or more backing boxes. If no backing is listed, no backing will be charged.",
+    productCategory: "Product category",
+    productOption: "Product option",
+    embossWord: "Emboss word",
+    cutMaterial: "Cut material",
+    paibian: "Paibian / plaque",
+    noticeSign: "Notice sign",
+    etching: "Etching",
+    quoteRate: "Rate",
+    skyliftCost: "Skylift",
+    assemblyCost: "Assembly",
+    installationCost: "Installation",
+    quotationRules: "Quotation rules",
+    quotationRulesText: "Letters below 12 inch high use height-inch rate. Larger letters use square-inch area rate. Front-lit LED uses 6mm LED area rate when available; back-lit uses perimeter meter rate. Add-on costs at 0 are excluded.",
+    backingRateEdit: "Backing rate / sqft",
+    productRateEdit: "Product rate",
+    heightRateEdit: "Height inch rate",
+    areaRateEdit: "Square inch rate",
+    materialHeightRateEdit: "Material height add-on",
+    materialAreaRateEdit: "Material area add-on",
+    ledRateEdit: "LED rate",
+    psuRateEdit: "PSU cost",
+    signageAiResponseReceived: "AI response received. Normalizing boxes...",
+    signageAiNoLetters: "AI did not return usable letter boxes. Existing boxes were kept. Use Auto Trace or draw Letter box manually.",
+    signageLettersCleared: "Cleared all review draft letter boxes.",
     frontLit: "Front lit",
     backLit: "Back lit",
     noLit: "No lit",
@@ -296,6 +393,9 @@ const messages = {
     zoomIn: "Zoom in",
     zoomOut: "Zoom out",
     resetZoom: "Reset",
+    centerCanvas: "Center",
+    hideSummary: "Hide summary",
+    showSummary: "Show summary",
     signageEmpty: "Upload or sample a signage photo, then mark the backing or guideline size.",
     correctionPrompt: "AI correction prompt",
     correctionPlaceholder: "Tell AI what to fix. Example: The word is HAPPY, backing is 96 x 24 inch, letter H is 18 inch tall.",
@@ -506,6 +606,9 @@ const messages = {
     zoomIn: "放大",
     zoomOut: "缩小",
     resetZoom: "重置",
+    centerCanvas: "居中",
+    hideSummary: "隐藏表格",
+    showSummary: "显示表格",
     signageEmpty: "上传或载入招牌照片，然后标底板或参考尺寸。",
     correctionPrompt: "AI 修正提示",
     correctionPlaceholder: "告诉 AI 要修正什么。例如：字是 HAPPY，底板 96 x 24 inch，H 字高 18 inch。",
@@ -600,6 +703,36 @@ messages.cn.selectedBox = "\u5df2\u9009\u6846";
 messages.cn.boxColor = "\u989c\u8272";
 messages.cn.exportAiTrace = "AI \u8ffd\u8e2a\u8c03\u8bd5";
 messages.cn.signageTraceExported = "\u5df2\u5bfc\u51fa AI \u8ffd\u8e2a\u8c03\u8bd5 {fileName}\u3002";
+messages.cn.stepBacking = "\u5e95\u677f";
+messages.cn.statusBacking = "\u7ed8\u5236\u548c\u7f16\u8f91\u4e00\u4e2a\u6216\u591a\u4e2a\u5e95\u677f\u6846\u3002\u4e0d\u9700\u8981\u5e95\u677f\u65f6\u7559\u7a7a\u3002";
+messages.cn.addBacking = "\u65b0\u589e\u5e95\u677f";
+messages.cn.activeBacking = "\u5f53\u524d\u5e95\u677f";
+messages.cn.backingName = "\u5e95\u677f\u540d\u79f0";
+messages.cn.backingMaterial = "\u5e95\u677f\u6750\u6599";
+messages.cn.selectedBacking = "\u5df2\u9009\u5e95\u677f";
+messages.cn.productCategory = "\u4ea7\u54c1\u7c7b\u522b";
+messages.cn.productOption = "\u4ea7\u54c1\u9009\u9879";
+messages.cn.embossWord = "\u7acb\u4f53\u5b57";
+messages.cn.cutMaterial = "\u5207\u5272\u6750\u6599";
+messages.cn.paibian = "\u724c\u533e / \u95e8\u724c";
+messages.cn.noticeSign = "\u544a\u793a\u724c";
+messages.cn.etching = "\u8680\u523b";
+messages.cn.quoteRate = "\u5355\u4ef7";
+messages.cn.skyliftCost = "\u9ad8\u7a7a\u8f66";
+messages.cn.assemblyCost = "\u7ec4\u88c5";
+messages.cn.installationCost = "\u5b89\u88c5";
+messages.cn.quotationRules = "\u62a5\u4ef7\u89c4\u5219";
+messages.cn.quotationRulesText = "12 inch \u4ee5\u4e0b\u7528\u9ad8\u5ea6 inch \u8ba1\u4ef7\uff0c12 inch \u6216\u4ee5\u4e0a\u7528\u5e73\u65b9 inch \u8ba1\u4ef7\u3002\u6b63\u53d1\u5149 LED \u4f18\u5148\u7528 6mm LED \u9762\u79ef\u5355\u4ef7\uff0c\u80cc\u53d1\u5149\u7528\u5468\u957f meter \u5355\u4ef7\u3002\u9644\u52a0\u8d39\u4e3a 0 \u65f6\u4e0d\u5217\u5165\u62a5\u4ef7\u3002";
+messages.cn.clearAllLetters = "\u6e05\u7a7a\u5168\u90e8";
+messages.cn.deleteSelected = "\u5220\u9664\u9009\u4e2d";
+messages.cn.selectedLetterDeleted = "\u5df2\u5220\u9664\u9009\u4e2d\u5b57\u6846\u3002";
+messages.cn.signageGuidelineDeleted = "\u5df2\u5220\u9664\u53c2\u8003\u7ebf\u3002\u8bf7\u91cd\u65b0\u6807\u8bb0\u6bd4\u4f8b\u540e\u518d\u8ffd\u8e2a\u6216\u62a5\u4ef7\u3002";
+messages.cn.signageNothingSelected = "\u6ca1\u6709\u9009\u4e2d\u53ef\u5220\u9664\u7684\u9879\u76ee\u3002";
+messages.cn.signageNeedCalibration = "\u8bf7\u5148\u6807\u8bb0\u53c2\u8003\u7ebf\u6216\u5e95\u677f\u5c3a\u5bf8\uff0c\u518d\u8ffd\u8e2a\u6216\u62a5\u4ef7\u3002";
+messages.cn.fullscreenCanvas = "\u5168\u5c4f\u753b\u5e03";
+messages.cn.exitFullscreenCanvas = "\u9000\u51fa\u5168\u5c4f";
+messages.cn.signageAiNoLetters = "AI \u6ca1\u6709\u8fd4\u56de\u53ef\u7528\u7684\u5b57\u6846\u3002\u5df2\u4fdd\u7559\u73b0\u6709\u6846\uff0c\u8bf7\u7528\u81ea\u52a8\u8ffd\u8e2a\u6216\u624b\u52a8\u753b\u5b57\u6846\u3002";
+messages.cn.signageLettersCleared = "\u5df2\u6e05\u7a7a Review Draft \u7684\u5b57\u6846\u3002";
 
 if (!messages[activeLanguage]) {
   activeLanguage = "en";
@@ -718,6 +851,8 @@ function applyToolUi() {
     initSignageCanvas();
     updateSignageWizard();
     loadSignagePricing().then(() => {
+      renderSignageBackings();
+      renderSignageRatePreview();
       if (signageRecognition) {
         refreshSignageQuoteFromEdits();
       }
@@ -1439,6 +1574,7 @@ function initSignageCanvas() {
   updateSignageCanvasZoom();
   updateSignageToolAvailability();
   renderSignageCanvas();
+  renderSignageBackings();
   renderSignageDetections();
   renderSignageQuote();
 }
@@ -1460,13 +1596,26 @@ function renderSignageCanvas() {
   }
 
   const isCalibrationStep = activeSignageStep === 1;
-  if (isCalibrationStep && signageActiveTool === "guideline") {
+  const isBackingStep = activeSignageStep === 2;
+  const showQuoteBackings = activeSignageStep >= 2;
+  if (isCalibrationStep && signageActiveTool === "guideline" && hasValidSignageCalibration()) {
     drawLine(context, signageCalibration, "#9a3412", `${signageCalibration.inches} in`);
   }
 
   const activeBackingBox = signageRecognition?.backing?.box || signageBackingBox;
-  if (isCalibrationStep && signageActiveTool === "backing" && activeBackingBox) {
+  if (isCalibrationStep && signageActiveTool === "backing" && hasValidSignageCalibration() && activeBackingBox) {
     drawBox(context, activeBackingBox, "#0f766e", "Backing");
+  }
+
+  if (showQuoteBackings) {
+    signageBackings.forEach((backing, index) => {
+      const box = normalizeSignageBox(backing.box) || backing.box;
+      const isSelected = index === selectedSignageBackingIndex || backing.id === activeSignageBackingId;
+      drawBox(context, box, backing.color || defaultBackingColor(index), backing.name || `Backing ${index + 1}`);
+      if (isBackingStep && isSelected) {
+        drawSelectedSignageBox(context, box, backing.color || defaultBackingColor(index));
+      }
+    });
   }
 
   if (signageRecognition) {
@@ -1480,8 +1629,9 @@ function renderSignageCanvas() {
     });
   }
 
-  if (signageDragPreview?.box && (signageDragPreview.tool === "letter" || isCalibrationStep)) {
-    drawBox(context, signageDragPreview.box, signageDragPreview.tool === "letter" ? "#7c3aed" : "#0f766e", signageDragPreview.label);
+  if (signageDragPreview?.box && (signageDragPreview.tool === "letter" || signageDragPreview.tool === "backing" || isCalibrationStep)) {
+    const previewColor = signageDragPreview.tool === "letter" ? "#7c3aed" : "#0f766e";
+    drawBox(context, signageDragPreview.box, previewColor, signageDragPreview.label);
   }
 }
 
@@ -1492,7 +1642,38 @@ function signageBackingSizeInputs() {
   };
 }
 
+function hasValidSignageCalibration() {
+  if (!signageCalibrationValid) {
+    return false;
+  }
+  if (signageCalibrationMode === "backing") {
+    const backingSize = signageBackingSizeInputs();
+    return Boolean(signageBackingBox?.width > 0 && signageBackingBox?.height > 0 && backingSize.widthIn > 0 && backingSize.heightIn > 0);
+  }
+  if (signageCalibrationMode === "guideline") {
+    const lineLength = Math.hypot(
+      Number(signageCalibration?.x2) - Number(signageCalibration?.x1),
+      Number(signageCalibration?.y2) - Number(signageCalibration?.y1)
+    );
+    return lineLength > 1 && Number(signageCalibration?.inches) > 0;
+  }
+  return false;
+}
+
+function requireSignageCalibration() {
+  if (hasValidSignageCalibration()) {
+    return true;
+  }
+  signageAiNote.textContent = t("signageNeedCalibration");
+  setLog(t("signageNeedCalibration"), "warning");
+  setSignageStep(1);
+  return false;
+}
+
 function signagePixelsPerInch() {
+  if (!hasValidSignageCalibration()) {
+    return { x: 0, y: 0 };
+  }
   const backingSize = signageBackingSizeInputs();
   if (signageCalibrationMode === "backing" && signageBackingBox?.width > 0 && signageBackingBox?.height > 0) {
     return {
@@ -1508,10 +1689,108 @@ function signagePixelsPerInch() {
 
 function signageBoxDimensionsIn(box) {
   const pixelsPerInch = signagePixelsPerInch();
+  if (!pixelsPerInch.x || !pixelsPerInch.y) {
+    return { widthIn: 0, heightIn: 0 };
+  }
   return {
     widthIn: box.width / pixelsPerInch.x,
     heightIn: box.height / pixelsPerInch.y
   };
+}
+
+function signageAreaSqft(widthIn, heightIn) {
+  return (Number(widthIn) * Number(heightIn)) / 144;
+}
+
+function nextSignageBackingId() {
+  const id = `backing-${signageBackingIdCounter}`;
+  signageBackingIdCounter += 1;
+  return id;
+}
+
+function defaultBackingColor(index = signageBackings.length) {
+  return ["#0f766e", "#b45309", "#7c3aed", "#0369a1", "#be123c"][index % 5];
+}
+
+function signageBackingOptionLabel(option) {
+  if (!option) {
+    return "Backing with metal frame";
+  }
+  return [option.type, option.color].filter(Boolean).join(" - ") || option.label || "Backing with metal frame";
+}
+
+function selectedBackingRateOption(backing = activeSignageBacking()) {
+  const options = signagePricing?.backingOptions || sampleSignagePricing().backingOptions || [];
+  const material = backing?.material || signageBackingMaterialSelect?.value || signageBackingOptionLabel(options[0]);
+  return options.find((option) => signageBackingOptionLabel(option) === material) || options[0] || null;
+}
+
+function normalizeSignageBacking(backing = {}, index = signageBackings.length) {
+  const box = normalizeSignageBox(backing.box || signageCalibrationBox()) || signageCalibrationBox();
+  const dimensions = signageBoxDimensionsIn(box);
+  const option = selectedBackingRateOption(backing);
+  const rateSqft = Number(backing.rateSqft ?? option?.rateSqft ?? signagePricing?.backingRateSqft ?? sampleSignagePricing().backingRateSqft ?? 0);
+  const id = backing.id || nextSignageBackingId();
+  return {
+    id,
+    name: backing.name || `Backing ${index + 1}`,
+    material: backing.material || signageBackingOptionLabel(option),
+    widthIn: Number(backing.widthIn) || dimensions.widthIn,
+    heightIn: Number(backing.heightIn) || dimensions.heightIn,
+    areaSqft: Number(backing.areaSqft) || signageAreaSqft(dimensions.widthIn, dimensions.heightIn),
+    rateSqft,
+    box,
+    color: backing.color || defaultBackingColor(index),
+    source: backing.source || "manual"
+  };
+}
+
+function activeSignageBacking() {
+  if (!signageBackings.length) {
+    return null;
+  }
+  const byId = signageBackings.find((backing) => backing.id === activeSignageBackingId);
+  return byId || signageBackings[0];
+}
+
+function activeSignageBackingIndex() {
+  const active = activeSignageBacking();
+  return active ? signageBackings.findIndex((backing) => backing.id === active.id) : -1;
+}
+
+function updateActiveBackingFromIndex(index) {
+  if (!signageBackings.length) {
+    selectedSignageBackingIndex = null;
+    activeSignageBackingId = null;
+    return;
+  }
+  const safeIndex = Math.max(0, Math.min(signageBackings.length - 1, Number(index) || 0));
+  selectedSignageBackingIndex = safeIndex;
+  activeSignageBackingId = signageBackings[safeIndex].id;
+}
+
+function recalculateSignageBacking(index) {
+  const backing = signageBackings[index];
+  if (!backing) {
+    return null;
+  }
+  const box = clampSignageBoxToPhoto(backing.box);
+  const dimensions = signageBoxDimensionsIn(box);
+  const option = selectedBackingRateOption(backing);
+  backing.box = box;
+  backing.widthIn = dimensions.widthIn;
+  backing.heightIn = dimensions.heightIn;
+  backing.areaSqft = signageAreaSqft(dimensions.widthIn, dimensions.heightIn);
+  backing.rateSqft = Number(option?.rateSqft ?? backing.rateSqft ?? 0);
+  backing.material = backing.material || signageBackingOptionLabel(option);
+  return backing;
+}
+
+function assignLetterBacking(letter) {
+  if (!letter.backingId && activeSignageBacking()) {
+    letter.backingId = activeSignageBacking().id;
+  }
+  return letter;
 }
 
 function defaultSignageLetterColor(letter = {}) {
@@ -1538,14 +1817,15 @@ function ensureSignageRecognitionDraft() {
   }
 
   const backingSize = signageBackingSizeInputs();
+  const activeBacking = activeSignageBacking();
   signageRecognition = {
     source: "manual",
     aiNote: t("signageQuoteReady"),
     backing: {
-      widthIn: backingSize.widthIn,
-      heightIn: backingSize.heightIn,
-      areaSqft: (backingSize.widthIn * backingSize.heightIn) / 144,
-      box: signageBackingBox || signageCalibrationBox()
+      widthIn: activeBacking?.widthIn || backingSize.widthIn,
+      heightIn: activeBacking?.heightIn || backingSize.heightIn,
+      areaSqft: activeBacking?.areaSqft || signageAreaSqft(backingSize.widthIn, backingSize.heightIn),
+      box: activeBacking?.box || signageBackingBox || signageCalibrationBox()
     },
     wordGroups: [],
     letters: [],
@@ -2031,6 +2311,10 @@ function traceVisibleLetterComponents() {
 }
 
 async function replaceSignageWithPixelTrace() {
+  if (!requireSignageCalibration()) {
+    return;
+  }
+
   signageTraceBrightButton.disabled = true;
   signageTraceBrightButton.textContent = t("signagePixelTracing");
   signageAiNote.textContent = t("signagePixelTracing");
@@ -2106,6 +2390,7 @@ async function replaceSignageWithPixelTrace() {
         heightIn: dimensions.heightIn,
         confidence: label === "?" ? 0.55 : 0.88,
         box,
+        backingId: activeSignageBackingId || activeSignageBacking()?.id || "",
         source: label === "?" ? box.source || "pixel-trace" : `${box.source || "pixel-trace"}-ocr`,
         color: box.color || defaultSignageLetterColor({ source: box.source })
       };
@@ -2408,12 +2693,17 @@ function resetSignageProjectForNewPhoto() {
   signageRawRecognition = null;
   signageQuote = null;
   signageBackingBox = null;
+  signageBackings = [];
+  selectedSignageBackingIndex = null;
+  activeSignageBackingId = null;
+  signageBackingIdCounter = 1;
   signageDragStart = null;
   signageDragPreview = null;
   signageBoxDrag = null;
   selectedSignageLetterIndex = null;
   signageActiveTool = "guideline";
   signageCalibrationMode = "guideline";
+  signageCalibrationValid = true;
   activeSignageStep = 0;
   signageCorrectionPrompt.value = "";
   signageAiNote.textContent = t("aiNoteEmpty");
@@ -2426,6 +2716,7 @@ function resetSignageProjectForNewPhoto() {
   updateSignageCanvasZoom();
   updateSignageToolAvailability();
   renderSignageCanvas();
+  renderSignageBackings();
   renderSignageDetections();
   renderSignageSelectedLetterEditor();
   renderSignageQuote();
@@ -2437,10 +2728,20 @@ function loadSampleSignage() {
   signagePhotoDataUrl = "";
   signagePhotoName = "Sample signage";
   signageCalibrationMode = "backing";
+  signageCalibrationValid = true;
   signageCalibration = { x1: 216, y1: 338, x2: 984, y2: 338, inches: Number(signageGuidelineSizeInput.value) || 144 };
   signageBackingWidthInput.value = "144";
   signageBackingHeightInput.value = "36";
   signageBackingBox = signageCalibrationBox();
+  signageBackings = [normalizeSignageBacking({
+    id: "backing-sample",
+    name: "Backing 1",
+    box: signageCalibrationBox(),
+    material: signageBackingMaterialSelect?.value,
+    source: "sample"
+  }, 0)];
+  activeSignageBackingId = signageBackings[0].id;
+  selectedSignageBackingIndex = 0;
   signageRecognition = sampleSignageRecognition();
   signageRawRecognition = signageRecognition;
   selectedSignageLetterIndex = signageRecognition.letters.length ? 0 : null;
@@ -2470,8 +2771,9 @@ function sampleSignageRecognition() {
       text,
       widthIn: widths[index],
       heightIn: index === 3 ? 17.6 : 18,
-      confidence: confidences[index],
-      box: { x: startX + index * 70, y: 202, width: index === 0 ? 64 : 52, height: 58 },
+        confidence: confidences[index],
+        backingId: activeSignageBackingId || "",
+        box: { x: startX + index * 70, y: 202, width: index === 0 ? 64 : 52, height: 58 },
       source: "sample",
       color: "#dc2626"
     })),
@@ -2489,6 +2791,21 @@ function sampleSignagePricing() {
       "no-lit": 13
     },
     embossMaterialOptions: ["Acrylic emboss", "Stainless steel emboss", "Aluminium emboss"],
+    backingOptions: [
+      { type: "Backing with metal frame", color: "Standard", rateSqft: 30 }
+    ],
+    cutMaterialOptions: [
+      { material: "Acrylic", thicknessMm: "3", rateSqIn: 0.1, includeMaterial: true }
+    ],
+    etchingOptions: [
+      { label: "Stainless steel", type: "Stainless steel", rate: 1.2, unit: "sqin" }
+    ],
+    paibianOptions: [
+      { label: "PVC paibian 20mm", type: "PVC paibian", detail: "20", rate: 0.55, unit: "sqft" }
+    ],
+    noticeOptions: [
+      { label: "ACP", type: "ACP", rate: 15, unit: "sqft" }
+    ],
     ledWattPerLetter: 12,
     ledCostPerWatt: 4.5,
     psuWatt: 200,
@@ -2517,6 +2834,181 @@ function updateSignageMaterialOptions(pricing) {
   }
 }
 
+function updateSignageBackingMaterialOptions(pricing) {
+  if (!signageBackingMaterialSelect) {
+    return;
+  }
+  const options = pricing?.backingOptions || sampleSignagePricing().backingOptions || [];
+  const current = signageBackingMaterialSelect.value;
+  signageBackingMaterialSelect.innerHTML = "";
+  options.forEach((option) => {
+    const element = document.createElement("option");
+    const label = signageBackingOptionLabel(option);
+    element.value = label;
+    element.textContent = `${label} - ${money(option.rateSqft, pricing?.currency || signageCurrency)}/sqft`;
+    signageBackingMaterialSelect.append(element);
+  });
+  if (current && [...signageBackingMaterialSelect.options].some((option) => option.value === current)) {
+    signageBackingMaterialSelect.value = current;
+  }
+}
+
+function productOptionsForCategory(category, pricing = signagePricing || sampleSignagePricing()) {
+  if (category === "cut-material") {
+    return (pricing.cutMaterialOptions || []).map((option) => ({
+      label: `${option.material} ${option.thicknessMm}mm`,
+      value: `${option.material} ${option.thicknessMm}`,
+      rate: Number(option.rateSqIn || 0),
+      unit: "sqin",
+      raw: option
+    }));
+  }
+  if (category === "etching") {
+    return (pricing.etchingOptions || []).map((option) => ({
+      label: option.label || option.type,
+      value: option.label || option.type,
+      rate: Number(option.rate || 0),
+      unit: "sqin",
+      raw: option
+    }));
+  }
+  if (category === "paibian") {
+    return (pricing.paibianOptions || []).map((option) => ({
+      label: option.label || option.type,
+      value: option.label || option.type,
+      rate: Number(option.rate || 0),
+      unit: "sqft",
+      raw: option
+    }));
+  }
+  if (category === "notice") {
+    return (pricing.noticeOptions || []).map((option) => ({
+      label: option.label || option.type,
+      value: option.label || option.type,
+      rate: Number(option.rate || 0),
+      unit: "sqft",
+      raw: option
+    }));
+  }
+  return [];
+}
+
+function updateSignageProductOptions() {
+  if (!signageProductOptionSelect || !signageProductCategorySelect) {
+    return;
+  }
+  const category = signageProductCategorySelect.value;
+  const current = signageProductOptionSelect.value;
+  const options = productOptionsForCategory(category);
+  signageProductOptionSelect.innerHTML = "";
+  if (category === "emboss") {
+    const element = document.createElement("option");
+    element.value = "emboss";
+    element.textContent = "Emboss word pricing";
+    signageProductOptionSelect.append(element);
+  } else {
+    options.forEach((option) => {
+      const element = document.createElement("option");
+      element.value = option.value;
+      element.textContent = `${option.label} - ${money(option.rate, signageCurrency)}/${option.unit === "sqin" ? "sq in" : "sqft"}`;
+      signageProductOptionSelect.append(element);
+    });
+  }
+  if ([...signageProductOptionSelect.options].some((option) => option.value === current)) {
+    signageProductOptionSelect.value = current;
+  }
+  updateSignagePricingVisibility();
+  renderSignageRatePreview();
+}
+
+function selectedProductOption() {
+  const options = productOptionsForCategory(signageProductCategorySelect?.value || "emboss");
+  return options.find((option) => option.value === signageProductOptionSelect?.value) || options[0] || null;
+}
+
+function rateOverride(key, fallback = 0) {
+  const value = Number(signageRateOverrides[key]);
+  return Number.isFinite(value) && value >= 0 ? value : Number(fallback || 0);
+}
+
+function setRateInputDefault(input, key, fallback) {
+  if (!input) {
+    return;
+  }
+  const value = rateOverride(key, fallback);
+  input.value = Number.isFinite(value) ? formatControlNumber(value) : "";
+}
+
+function syncSignageRateInputs() {
+  const pricing = signagePricing || sampleSignagePricing();
+  const lightingRate = pricing.embossPricing?.lighting?.[signageLightingSelect.value] || {};
+  const materialAddon = pricing.embossPricing?.materials?.find((material) => material.label === signageMaterialSelect.value) || {};
+  const product = selectedProductOption();
+  const backingOption = selectedBackingRateOption();
+  const ledAreaRate = Number(pricing.ledPricing?.options?.find((option) => Number(option.rateSqIn) > 0)?.rateSqIn || pricing.ledPricing?.options?.[0]?.ratePerMeter || 0);
+  const psuCost = Number(pricing.ledPricing?.psuOptions?.[0]?.unitCost || pricing.psuCost || 0);
+
+  setRateInputDefault(signageBackingRateOverrideInput, "backingRateSqft", backingOption?.rateSqft || pricing.backingRateSqft || 0);
+  setRateInputDefault(signageProductRateOverrideInput, "productRate", product?.rate || 0);
+  setRateInputDefault(signageEmbossHeightRateOverrideInput, "embossHeightRate", lightingRate.lessThan12PerHeightIn || 0);
+  setRateInputDefault(signageEmbossAreaRateOverrideInput, "embossAreaRate", lightingRate.atLeast12PerSqIn || 0);
+  setRateInputDefault(signageMaterialHeightRateOverrideInput, "materialHeightRate", materialAddon.lessThan12AddPerHeightIn || 0);
+  setRateInputDefault(signageMaterialAreaRateOverrideInput, "materialAreaRate", materialAddon.atLeast12AddPerSqIn || 0);
+  setRateInputDefault(signageLedRateOverrideInput, "ledRate", ledAreaRate);
+  setRateInputDefault(signagePsuRateOverrideInput, "psuCost", psuCost);
+}
+
+function updateSignagePricingVisibility() {
+  const isEmboss = (signageProductCategorySelect?.value || "emboss") === "emboss";
+  [
+    signageLightingField,
+    signageMaterialField,
+    signageEmbossHeightRateField,
+    signageEmbossAreaRateField,
+    signageMaterialHeightRateField,
+    signageMaterialAreaRateField,
+    signageLedRateField,
+    signagePsuRateField
+  ].forEach((field) => {
+    if (field) {
+      field.hidden = !isEmboss;
+      field.style.display = isEmboss ? "" : "none";
+    }
+  });
+  if (signageProductRateField) {
+    signageProductRateField.hidden = isEmboss;
+    signageProductRateField.style.display = isEmboss ? "none" : "";
+  }
+}
+
+function renderSignageRatePreview() {
+  if (!signageRatePreview) {
+    return;
+  }
+  const pricing = signagePricing || sampleSignagePricing();
+  const productCategory = signageProductCategorySelect?.value || "emboss";
+  const lighting = signageLightingSelect.value;
+  const lightingRate = pricing.embossPricing?.lighting?.[lighting];
+  const materialAddon = pricing.embossPricing?.materials?.find((material) => material.label === signageMaterialSelect.value);
+  const product = selectedProductOption();
+  const backingOption = selectedBackingRateOption();
+  const ledFallback = signageLightingSelect.value === "front-lit"
+    ? Number(pricing.ledPricing?.options?.find((option) => Number(option.rateSqIn) > 0)?.rateSqIn || 0)
+    : Number(pricing.ledPricing?.options?.[0]?.ratePerMeter || 0);
+  const lines = [
+    `Backing: ${backingOption ? `${money(rateOverride("backingRateSqft", backingOption.rateSqft), signageCurrency)}/sqft (${signageBackingOptionLabel(backingOption)})` : "No backing rate"}`
+  ];
+  if (productCategory === "emboss") {
+    lines.push(`Emboss height rate: ${money(rateOverride("embossHeightRate", lightingRate?.lessThan12PerHeightIn || 0), signageCurrency)}/height inch`);
+    lines.push(`Emboss area rate: ${money(rateOverride("embossAreaRate", lightingRate?.atLeast12PerSqIn || 0), signageCurrency)}/sq in`);
+    lines.push(`Material add-on: ${money(rateOverride("materialHeightRate", materialAddon?.lessThan12AddPerHeightIn || 0), signageCurrency)}/height inch or ${money(rateOverride("materialAreaRate", materialAddon?.atLeast12AddPerSqIn || 0), signageCurrency)}/sq in`);
+    lines.push(`LED/PSU: ${money(rateOverride("ledRate", ledFallback), signageCurrency)} active LED rate, ${money(rateOverride("psuCost", pricing.psuCost || 0), signageCurrency)} PSU`);
+  } else if (product) {
+    lines.push(`Selected product: ${product.label} at ${money(rateOverride("productRate", product.rate), signageCurrency)}/${product.unit === "sqin" ? "sq in" : "sqft"}`);
+  }
+  signageRatePreview.innerHTML = lines.map((line) => `<div>${escapeXml(line)}</div>`).join("");
+}
+
 async function loadSignagePricing() {
   try {
     const response = await fetch("/api/signage/pricing");
@@ -2527,9 +3019,18 @@ async function loadSignagePricing() {
     signagePricing = await response.json();
     signageCurrency = signagePricing.currency || "MYR";
     updateSignageMaterialOptions(signagePricing);
+    updateSignageBackingMaterialOptions(signagePricing);
+    updateSignageProductOptions();
+    syncSignageRateInputs();
+    updateSignagePricingVisibility();
   } catch {
     signagePricing = sampleSignagePricing();
     signageCurrency = signagePricing.currency;
+    updateSignageMaterialOptions(signagePricing);
+    updateSignageBackingMaterialOptions(signagePricing);
+    updateSignageProductOptions();
+    syncSignageRateInputs();
+    updateSignagePricingVisibility();
   }
   return signagePricing;
 }
@@ -2538,7 +3039,7 @@ function signageStepDefinitions() {
   return [
     { key: "stepProjectSetup", statusKey: "statusProjectSetup" },
     { key: "stepGuideline", statusKey: "statusGuideline" },
-    { key: "stepRecognize", statusKey: "statusRecognize" },
+    { key: "stepBacking", statusKey: "statusBacking" },
     { key: "stepReview", statusKey: "statusReview" },
     { key: "stepMaterialPricing", statusKey: "statusMaterialPricing" },
     { key: "stepExport", statusKey: "statusExport" }
@@ -2611,6 +3112,7 @@ function updateSignageWizard() {
   signageStageStatus.textContent = t(current.statusKey);
   signageBackStepButton.disabled = activeSignageStep === firstVisibleStep;
   signageNextStepButton.textContent = activeSignageStep === lastVisibleStep ? t("finishStep") : t("nextStep");
+  renderSignageSummaryToggle();
   localStorage.setItem("weesengSignageActiveStep", String(activeSignageStep));
 }
 
@@ -2636,18 +3138,27 @@ function updateSignageToolAvailability() {
 
   const hasRecognition = Boolean(signageRecognition);
   const isCalibrationStep = activeSignageStep === 1;
+  const isBackingStep = activeSignageStep === 2;
   const isReviewStep = activeSignageStep === 3;
   signageToolGuidelineButton.hidden = !isCalibrationStep;
   signageToolGuidelineButton.disabled = !isCalibrationStep;
-  signageToolBackingButton.hidden = !isCalibrationStep;
-  signageToolBackingButton.disabled = !isCalibrationStep;
+  signageToolBackingButton.hidden = !(isCalibrationStep || isBackingStep);
+  signageToolBackingButton.disabled = !(isCalibrationStep || isBackingStep);
   signageToolLetterButton.hidden = !isReviewStep;
   signageToolLetterButton.disabled = !isReviewStep;
-  signageTools.hidden = !isCalibrationStep && !isReviewStep;
+  if (signageDeleteSelectedButton) {
+    const canDeleteCalibration = isCalibrationStep && hasValidSignageCalibration();
+    const canDeleteLetter = isReviewStep && Boolean(signageRecognition?.letters?.[selectedSignageLetterIndex]);
+    signageDeleteSelectedButton.hidden = !(isCalibrationStep || isReviewStep);
+    signageDeleteSelectedButton.disabled = !(canDeleteCalibration || canDeleteLetter);
+  }
+  signageTools.hidden = !isCalibrationStep && !isBackingStep && !isReviewStep;
   signageTools.style.display = signageTools.hidden ? "none" : "";
 
   if (isCalibrationStep && signageActiveTool === "letter") {
     signageActiveTool = "guideline";
+  } else if (isBackingStep) {
+    signageActiveTool = "backing";
   } else if (isReviewStep) {
     signageActiveTool = "letter";
   } else if (!hasRecognition && signageActiveTool === "letter") {
@@ -2671,12 +3182,66 @@ function updateSignageToolAvailability() {
 }
 
 function updateSignageCanvasZoom() {
-  signageCanvasZoom = Math.max(0.5, Math.min(3, Number(signageCanvasZoom) || 1));
+  signageCanvasZoom = Math.max(0.5, Math.min(5, Number(signageCanvasZoom) || 1));
   signageCanvas.style.width = `${signageCanvasZoom * 100}%`;
   signageCanvas.style.margin = signageCanvasZoom <= 1 ? "0 auto" : "0";
   signageCanvasBadge.textContent = `1200 x 720 canvas - ${Math.round(signageCanvasZoom * 100)}%`;
   signageZoomValue.textContent = `${Math.round(signageCanvasZoom * 100)}%`;
   localStorage.setItem("weesengSignageCanvasZoom", String(signageCanvasZoom));
+}
+
+function signageCanvasWrap() {
+  return signageCanvas.closest(".signage-canvas-wrap");
+}
+
+function centerSignageCanvasView() {
+  const wrap = signageCanvasWrap();
+  if (!wrap) {
+    return;
+  }
+  wrap.scrollLeft = Math.max(0, (wrap.scrollWidth - wrap.clientWidth) / 2);
+  wrap.scrollTop = Math.max(0, (wrap.scrollHeight - wrap.clientHeight) / 2);
+}
+
+function panSignageCanvasView(deltaX, deltaY) {
+  const wrap = signageCanvasWrap();
+  if (!wrap) {
+    return;
+  }
+  wrap.scrollLeft += deltaX;
+  wrap.scrollTop += deltaY;
+}
+
+function zoomSignageCanvas(delta, anchorEvent = null) {
+  const wrap = signageCanvasWrap();
+  if (!wrap) {
+    return;
+  }
+  const oldZoom = signageCanvasZoom;
+  const oldRect = signageCanvas.getBoundingClientRect();
+  const anchorX = anchorEvent ? anchorEvent.clientX - oldRect.left : wrap.clientWidth / 2;
+  const anchorY = anchorEvent ? anchorEvent.clientY - oldRect.top : wrap.clientHeight / 2;
+  signageCanvasZoom += delta;
+  updateSignageCanvasZoom();
+  const scale = signageCanvasZoom / oldZoom;
+  wrap.scrollLeft += anchorX * (scale - 1);
+  wrap.scrollTop += anchorY * (scale - 1);
+  scheduleSignageAutosave();
+}
+
+function renderSignageSummaryToggle() {
+  if (!signageLetterSummaryBlock || !signageToggleSummaryButton) {
+    return;
+  }
+  signageLetterSummaryBlock.hidden = signageSummaryHidden;
+  signageLetterSummaryBlock.style.display = signageSummaryHidden ? "none" : "";
+  signageToggleSummaryButton.textContent = t(signageSummaryHidden ? "showSummary" : "hideSummary");
+}
+
+function toggleSignageSummary() {
+  signageSummaryHidden = !signageSummaryHidden;
+  localStorage.setItem(signageSummaryHiddenKey, String(signageSummaryHidden));
+  renderSignageSummaryToggle();
 }
 
 function setSignageStep(step, direction = 1) {
@@ -2730,8 +3295,11 @@ function createSignageProjectState() {
       dataUrl: signagePhotoDataUrl
     },
     calibration: signageCalibration,
+    calibrationValid: signageCalibrationValid,
     calibrationMode: signageCalibrationMode,
     backingBox: signageBackingBox,
+    backings: signageBackings,
+    activeBackingId: activeSignageBackingId,
     rawRecognition: signageRawRecognition,
     activeTool: signageActiveTool,
     recognition: signageRecognition,
@@ -2740,10 +3308,16 @@ function createSignageProjectState() {
     settings: {
       lighting: signageLightingSelect.value,
       material: signageMaterialSelect.value,
+      productCategory: signageProductCategorySelect?.value || "emboss",
+      productOption: signageProductOptionSelect?.value || "",
+      rateOverrides: signageRateOverrides,
       correctionPrompt: signageCorrectionPrompt.value,
       backingWidthIn: signageBackingWidthInput.value,
       backingHeightIn: signageBackingHeightInput.value,
-      canvasZoom: signageCanvasZoom
+      canvasZoom: signageCanvasZoom,
+      skyliftCost: signageSkyliftCostInput?.value || "0",
+      assemblyCost: signageAssemblyCostInput?.value || "0",
+      installationCost: signageInstallationCostInput?.value || "0"
     }
   };
 }
@@ -2759,9 +3333,25 @@ async function applySignageProjectState(state) {
   signagePhotoDataUrl = state.photo?.dataUrl || "";
   await loadSignageImageFromDataUrl(signagePhotoDataUrl);
   signageCalibration = { ...signageCalibration, ...(state.calibration || {}) };
+  signageCalibrationValid = state.calibrationValid !== false;
   signageCalibrationMode = state.calibrationMode || "guideline";
   signageGuidelineSizeInput.value = formatControlNumber(signageCalibration.inches || 144);
   signageBackingBox = state.backingBox || null;
+  signageBackings = Array.isArray(state.backings) ? state.backings.map(normalizeSignageBacking) : [];
+  if (!signageBackings.length && state.backingBox && state.recognition?.backing) {
+    signageBackings = [normalizeSignageBacking({
+      id: "backing-legacy",
+      name: "Backing 1",
+      box: state.backingBox,
+      widthIn: state.recognition.backing.widthIn,
+      heightIn: state.recognition.backing.heightIn,
+      areaSqft: state.recognition.backing.areaSqft,
+      source: "legacy"
+    }, 0)];
+  }
+  activeSignageBackingId = state.activeBackingId || signageBackings[0]?.id || null;
+  selectedSignageBackingIndex = activeSignageBackingIndex();
+  signageBackingIdCounter = Math.max(1, ...signageBackings.map((backing) => Number(String(backing.id).match(/\d+$/)?.[0]) || 0)) + 1;
   signageBackingWidthInput.value = state.settings?.backingWidthIn || state.recognition?.backing?.widthIn || 144;
   signageBackingHeightInput.value = state.settings?.backingHeightIn || state.recognition?.backing?.heightIn || 36;
   signageCanvasZoom = Number(state.settings?.canvasZoom) || signageCanvasZoom;
@@ -2774,17 +3364,34 @@ async function applySignageProjectState(state) {
   signageCurrency = signagePricing.currency || "MYR";
   updateSignageMaterialOptions(signagePricing);
   signageLightingSelect.value = state.settings?.lighting || signageLightingSelect.value;
+  if (state.settings?.productCategory && signageProductCategorySelect) {
+    signageProductCategorySelect.value = state.settings.productCategory;
+  }
+  updateSignageProductOptions();
+  if (state.settings?.productOption && signageProductOptionSelect) {
+    signageProductOptionSelect.value = state.settings.productOption;
+  }
+  signageRateOverrides = state.settings?.rateOverrides || {};
+  syncSignageRateInputs();
+  updateSignagePricingVisibility();
   if (state.settings?.material) {
     signageMaterialSelect.value = state.settings.material;
   }
+  syncSignageRateInputs();
+  updateSignagePricingVisibility();
+  if (signageSkyliftCostInput) signageSkyliftCostInput.value = state.settings?.skyliftCost || "0";
+  if (signageAssemblyCostInput) signageAssemblyCostInput.value = state.settings?.assemblyCost || "0";
+  if (signageInstallationCostInput) signageInstallationCostInput.value = state.settings?.installationCost || "0";
   signageCorrectionPrompt.value = state.settings?.correctionPrompt || "";
   signageQuote = signageRecognition ? calculateSignageQuote(signageRecognition, signagePricing) : state.quote || null;
   activeSignageStep = Number.isInteger(state.activeStep) ? state.activeStep : 0;
   isRestoringSignageProject = false;
 
   renderSignageCanvas();
+  renderSignageBackings();
   renderSignageDetections();
   renderSignageQuote();
+  renderSignageRatePreview();
   updateSignageCanvasZoom();
   updateSignageToolAvailability();
   updateSignageWizard();
@@ -2873,10 +3480,10 @@ function exportSignageQuoteCsv() {
     ["Validity", fields.validity],
     ["Prepared by", fields.preparedBy],
     [],
-    ["Item", "Qty", "Total", "Currency"],
-    ...lines.map((line) => [line.item, line.qty, Number(line.total || 0).toFixed(2), signageQuote?.currency || signageCurrency]),
+    ["Item", "Qty", "Rate", "Unit", "Formula", "Total", "Currency"],
+    ...lines.map((line) => [line.item, line.qty, line.rate ?? "", line.unit || "", line.formula || "", Number(line.total || 0).toFixed(2), signageQuote?.currency || signageCurrency]),
     [],
-    ["Total", "", Number(signageQuote?.total || 0).toFixed(2), signageQuote?.currency || signageCurrency],
+    ["Total", "", "", "", "", Number(signageQuote?.total || 0).toFixed(2), signageQuote?.currency || signageCurrency],
     ["Notes", fields.notes]
   ];
   const csv = rows.map((row) => row.map(csvCell).join(",")).join("\n");
@@ -2938,6 +3545,10 @@ function exportSignageTrace() {
 }
 
 async function recognizeSignage() {
+  if (!requireSignageCalibration()) {
+    return;
+  }
+
   if (!signagePhotoDataUrl && signageRecognition?.source !== "sample") {
     signageAiNote.textContent = t("signageNeedPhoto");
     setLog(t("signageNeedPhoto"), "warning");
@@ -2951,6 +3562,7 @@ async function recognizeSignage() {
   signageCanvasZoom = 1;
   updateSignageCanvasZoom();
   renderSignageCanvas();
+  const previousRecognition = signageRecognition ? JSON.parse(JSON.stringify(signageRecognition)) : null;
 
   try {
     setLog(t("signagePricingLoading"), "info");
@@ -2983,7 +3595,12 @@ async function recognizeSignage() {
     }
 
     signageRawRecognition = await response.json();
+    setLog(t("signageAiResponseReceived"), "info");
     signageRecognition = normalizeSignageRecognition(signageRawRecognition);
+    if (!signageRecognition.letters.length && previousRecognition?.letters?.length) {
+      signageRecognition.letters = previousRecognition.letters;
+      signageRecognition.aiNote = `${signageRawRecognition.aiNote || ""} ${t("signageAiNoLetters")}`.trim();
+    }
     selectedSignageLetterIndex = signageRecognition.letters.length ? 0 : null;
     signageQuote = calculateSignageQuote(signageRecognition, pricing);
     signageAiNote.textContent = signageRecognition.aiNote;
@@ -2994,9 +3611,9 @@ async function recognizeSignage() {
     renderSignageQuote();
     setSignageStep(Math.max(activeSignageStep, 3));
     scheduleSignageAutosave();
-    setLog(t("signageRecognized", { count: signageRecognition.letters.length }), "success");
+    setLog(signageRecognition.letters.length ? t("signageRecognized", { count: signageRecognition.letters.length }) : t("signageAiNoLetters"), signageRecognition.letters.length ? "success" : "warning");
   } catch (error) {
-    signageAiNote.textContent = error.message;
+    signageAiNote.textContent = `${error.message}. ${t("signageAiNoLetters")}`;
     renderSignageCanvas();
     renderSignageDetections();
     renderSignageQuote();
@@ -3055,10 +3672,6 @@ function normalizeSignageRecognition(result) {
   const letters = Array.isArray(result.letters) ? result.letters : [];
   const reviewItems = Array.isArray(result.reviewItems) ? [...result.reviewItems] : [];
 
-  if (!letters.length) {
-    throw new Error(result.aiNote || "AI did not return any alphabet boxes. Try a clearer guideline or type the expected word in the correction prompt.");
-  }
-
   let normalizedLetters = letters.map((letter, index) => {
     const normalizedBox = normalizeSignageBox(letter.box, photoBounds) || {
       x: 260 + index * 64,
@@ -3075,6 +3688,7 @@ function normalizeSignageRecognition(result) {
       heightIn: boxDimensions.heightIn,
       confidence: Number(letter.confidence ?? 0.5),
       box: refinedBox,
+      backingId: letter.backingId || activeSignageBackingId || activeSignageBacking()?.id || "",
       source: letter.source || "ai",
       color: letter.color || "#2563eb"
     };
@@ -3121,50 +3735,113 @@ function normalizeSignageRecognition(result) {
 function calculateSignageQuote(recognition, pricing) {
   const rates = pricing || sampleSignagePricing();
   const lighting = signageLightingSelect.value;
-  const backingArea = Number(recognition.backing.areaSqft) || 0;
+  const productCategory = signageProductCategorySelect?.value || "emboss";
+  const productOption = selectedProductOption();
   const letterAreaSqin = recognition.letters.reduce((sum, letter) => {
     return sum + (Number(letter.widthIn) * Number(letter.heightIn));
   }, 0);
-  const backingTotal = backingArea * Number(rates.backingRateSqft || 0);
   const embossPricing = rates.embossPricing;
   const selectedMaterial = signageMaterialSelect.value;
   const materialAddon = embossPricing?.materials?.find((material) => material.label === selectedMaterial);
   const lightingRate = embossPricing?.lighting?.[lighting];
-  const embossTotal = lightingRate
+  const lines = [];
+
+  signageBackings.forEach((backing, index) => {
+    recalculateSignageBacking(index);
+    const option = selectedBackingRateOption(backing);
+    const rate = rateOverride("backingRateSqft", backing.rateSqft || option?.rateSqft || rates.backingRateSqft || 0);
+    const total = Number(backing.areaSqft || 0) * rate;
+    lines.push({
+      item: `${backing.name} - ${backing.material || signageBackingOptionLabel(option)}`,
+      qty: `${formatControlNumber(backing.areaSqft)} sqft`,
+      rate,
+      unit: "sqft",
+      formula: `${formatControlNumber(backing.widthIn)} x ${formatControlNumber(backing.heightIn)} in / 144 = ${formatControlNumber(backing.areaSqft)} sqft x ${money(rate, rates.currency)}`,
+      total
+    });
+  });
+
+  const embossTotal = productCategory === "emboss" && lightingRate
     ? recognition.letters.reduce((sum, letter) => {
       const width = Number(letter.widthIn) || 0;
       const height = Number(letter.heightIn) || 0;
       const isSmall = height < 12;
       const base = isSmall
-        ? height * Number(lightingRate.lessThan12PerHeightIn || 0)
-        : width * height * Number(lightingRate.atLeast12PerSqIn || 0);
+        ? height * rateOverride("embossHeightRate", lightingRate.lessThan12PerHeightIn || 0)
+        : width * height * rateOverride("embossAreaRate", lightingRate.atLeast12PerSqIn || 0);
       const addon = isSmall
-        ? height * Number(materialAddon?.lessThan12AddPerHeightIn || 0)
-        : width * height * Number(materialAddon?.atLeast12AddPerSqIn || 0);
+        ? height * rateOverride("materialHeightRate", materialAddon?.lessThan12AddPerHeightIn || 0)
+        : width * height * rateOverride("materialAreaRate", materialAddon?.atLeast12AddPerSqIn || 0);
       return sum + base + addon;
     }, 0)
-    : (letterAreaSqin / 144) * Number((rates.embossRateByLighting || {})[lighting] || rates.embossRateSqft || 0) * 5;
-  const ledMeters = lighting === "no-lit" ? 0 : recognition.letters.reduce((sum, letter) => {
+    : 0;
+  const productTotal = productCategory !== "emboss" && productOption
+    ? (productOption.unit === "sqin"
+      ? letterAreaSqin * rateOverride("productRate", productOption.rate)
+      : (letterAreaSqin / 144) * rateOverride("productRate", productOption.rate))
+    : 0;
+  const ledAreaRate = Number(rates.ledPricing?.options?.find((option) => Number(option.rateSqIn) > 0)?.rateSqIn || 0);
+  const ledMeters = productCategory === "emboss" && lighting === "back-lit" ? recognition.letters.reduce((sum, letter) => {
     return sum + (2 * (Number(letter.widthIn) + Number(letter.heightIn))) / 39.3701;
-  }, 0);
+  }, 0) : 0;
   const sheetLedOption = rates.ledPricing?.options?.[0];
-  const ledTotal = sheetLedOption
-    ? ledMeters * Number(sheetLedOption.ratePerMeter || 0)
+  const activeLedRate = rateOverride("ledRate", lighting === "front-lit" && ledAreaRate ? ledAreaRate : Number(sheetLedOption?.ratePerMeter || 0));
+  const ledTotal = productCategory !== "emboss" || lighting === "no-lit" ? 0 : lighting === "front-lit" && ledAreaRate
+    ? letterAreaSqin * activeLedRate
+    : sheetLedOption
+    ? ledMeters * activeLedRate
     : recognition.letters.length * Number(rates.ledWattPerLetter || 0) * Number(rates.ledCostPerWatt || 0);
-  const ledWatts = lighting === "no-lit" ? 0 : recognition.letters.length * Number(rates.ledWattPerLetter || 0);
+  const ledWatts = productCategory !== "emboss" || lighting === "no-lit" ? 0 : Math.max(recognition.letters.length * Number(rates.ledWattPerLetter || 0), Math.ceil(letterAreaSqin / 24));
   const usablePsu = Number(rates.psuWatt || 1) * Number(rates.psuUsableFactor || 0.8);
   const psuQty = ledTotal > 0 ? Math.max(1, Math.ceil(ledWatts / usablePsu)) : 0;
-  const psuCost = Number(rates.ledPricing?.psuOptions?.[0]?.unitCost || rates.psuCost || 0);
+  const psuCost = rateOverride("psuCost", rates.ledPricing?.psuOptions?.[0]?.unitCost || rates.psuCost || 0);
   const psuTotal = psuQty * psuCost;
-  const lines = [
-    { item: `Backing panel, ${formatControlNumber(backingArea)} sqft`, qty: "1", total: backingTotal },
-    { item: `Emboss alphabet set, ${selectedMaterial}, ${lighting}`, qty: `${recognition.letters.length} letters`, total: embossTotal }
-  ];
+
+  if (productCategory === "emboss") {
+    lines.push({
+      item: `Emboss alphabet set, ${selectedMaterial}, ${lighting}`,
+      qty: `${recognition.letters.length} letters`,
+      rate: lightingRate ? rateOverride("embossAreaRate", lightingRate.atLeast12PerSqIn || 0) : 0,
+      unit: "mixed",
+      formula: "Letters below 12 in high use height-inch rate; 12 in and above use square-inch area rate.",
+      total: embossTotal
+    });
+  } else if (productOption) {
+    lines.push({
+      item: `${productOption.label}`,
+      qty: productOption.unit === "sqin" ? `${formatControlNumber(letterAreaSqin)} sq in` : `${formatControlNumber(letterAreaSqin / 144)} sqft`,
+      rate: rateOverride("productRate", productOption.rate),
+      unit: productOption.unit,
+      formula: productOption.unit === "sqin"
+        ? `${formatControlNumber(letterAreaSqin)} sq in x ${money(rateOverride("productRate", productOption.rate), rates.currency)}`
+        : `${formatControlNumber(letterAreaSqin / 144)} sqft x ${money(rateOverride("productRate", productOption.rate), rates.currency)}`,
+      total: productTotal
+    });
+  }
 
   if (ledTotal > 0) {
-    lines.push({ item: `LED module and wiring, ${formatControlNumber(ledMeters)} m`, qty: "1", total: ledTotal });
-    lines.push({ item: `PSU ${rates.psuWatt || 200}W`, qty: String(psuQty), total: psuTotal });
+    lines.push({
+      item: lighting === "front-lit" && ledAreaRate ? "Front-lit 6mm LED estimate" : "Back-lit LED perimeter estimate",
+      qty: lighting === "front-lit" && ledAreaRate ? `${formatControlNumber(letterAreaSqin)} sq in` : `${formatControlNumber(ledMeters)} m`,
+      rate: activeLedRate,
+      unit: lighting === "front-lit" && ledAreaRate ? "sqin" : "meter",
+      formula: lighting === "front-lit" && ledAreaRate
+        ? `${formatControlNumber(letterAreaSqin)} sq in x ${money(activeLedRate, rates.currency)}`
+        : `Perimeter ${formatControlNumber(ledMeters)} m x ${money(activeLedRate, rates.currency)}`,
+      total: ledTotal
+    });
+    lines.push({ item: `PSU ${rates.psuWatt || 200}W`, qty: String(psuQty), rate: psuCost, unit: "unit", formula: `${psuQty} x ${money(psuCost, rates.currency)}`, total: psuTotal });
   }
+
+  [
+    { label: "Skylift", value: Number(signageSkyliftCostInput?.value || 0) },
+    { label: "Assembly", value: Number(signageAssemblyCostInput?.value || 0) },
+    { label: "Installation", value: Number(signageInstallationCostInput?.value || 0) }
+  ].forEach((addon) => {
+    if (addon.value > 0) {
+      lines.push({ item: addon.label, qty: "1", rate: addon.value, unit: "manual", formula: "Manual add-on cost", total: addon.value });
+    }
+  });
 
   return {
     currency: rates.currency || "MYR",
@@ -3207,9 +3884,10 @@ function signageLetterQuoteDetails(letter) {
     formula = `${formatControlNumber(areaSqin / 144)} sqft x fallback rate`;
   }
 
-  const ledMeters = lighting === "no-lit" ? 0 : (2 * (width + height)) / 39.3701;
+  const ledAreaRate = Number(rates.ledPricing?.options?.find((option) => Number(option.rateSqIn) > 0)?.rateSqIn || 0);
+  const ledMeters = lighting === "back-lit" ? (2 * (width + height)) / 39.3701 : 0;
   const ledRate = Number(rates.ledPricing?.options?.[0]?.ratePerMeter || 0);
-  const ledTotal = ledMeters * ledRate;
+  const ledTotal = lighting === "front-lit" && ledAreaRate ? areaSqin * ledAreaRate : ledMeters * ledRate;
   const psuShare = signageQuote && lighting !== "no-lit" && signageRecognition?.letters?.length
     ? (signageQuote.lines.find((line) => line.item.startsWith("PSU"))?.total || 0) / signageRecognition.letters.length
     : 0;
@@ -3222,7 +3900,11 @@ function signageLetterQuoteDetails(letter) {
   ];
 
   if (lighting !== "no-lit") {
-    lines.push(`LED: perimeter ${formatControlNumber(ledMeters)} m x ${money(ledRate, rates.currency)}/m = ${money(ledTotal, rates.currency)}`);
+    if (lighting === "front-lit" && ledAreaRate) {
+      lines.push(`LED: 6mm area ${formatControlNumber(areaSqin)} sq in x ${money(ledAreaRate, rates.currency)}/sq in = ${money(ledTotal, rates.currency)}`);
+    } else {
+      lines.push(`LED: perimeter ${formatControlNumber(ledMeters)} m x ${money(ledRate, rates.currency)}/m = ${money(ledTotal, rates.currency)}`);
+    }
     lines.push(`PSU shared estimate: ${money(psuShare, rates.currency)}`);
   }
 
@@ -3297,6 +3979,86 @@ function renderSignageSelectedLetterEditor() {
   signageSelectedBoxHInput.value = formatControlNumber(box.height);
   signageSelectedBoxColorInput.value = signageLetterColor(letter);
   signageSelectedBoxSource.textContent = letter.source || signageRecognition?.source || "-";
+  renderBackingSelectOptions(signageSelectedLetterBackingSelect, letter.backingId || activeSignageBackingId);
+}
+
+function renderBackingSelectOptions(select, selectedId = activeSignageBackingId) {
+  if (!select) {
+    return;
+  }
+  select.innerHTML = "";
+  const none = document.createElement("option");
+  none.value = "";
+  none.textContent = "No backing";
+  select.append(none);
+  signageBackings.forEach((backing, index) => {
+    const option = document.createElement("option");
+    option.value = backing.id;
+    option.textContent = `${index + 1}. ${backing.name}`;
+    select.append(option);
+  });
+  select.value = selectedId && signageBackings.some((backing) => backing.id === selectedId) ? selectedId : "";
+}
+
+function renderSignageSelectedBackingEditor() {
+  const backing = Number.isInteger(selectedSignageBackingIndex)
+    ? signageBackings[selectedSignageBackingIndex]
+    : null;
+
+  if (!backing) {
+    if (signageSelectedBackingEditor) {
+      signageSelectedBackingEditor.hidden = true;
+      signageSelectedBackingEditor.style.display = "none";
+    }
+    return;
+  }
+
+  const box = normalizeSignageBox(backing.box) || backing.box;
+  signageSelectedBackingEditor.hidden = false;
+  signageSelectedBackingEditor.style.display = "";
+  signageSelectedBackingNameInput.value = backing.name || "";
+  signageSelectedBackingXInput.value = formatControlNumber(box.x);
+  signageSelectedBackingYInput.value = formatControlNumber(box.y);
+  signageSelectedBackingWInput.value = formatControlNumber(box.width);
+  signageSelectedBackingHInput.value = formatControlNumber(box.height);
+  signageSelectedBackingColorInput.value = backing.color || defaultBackingColor(selectedSignageBackingIndex);
+  signageSelectedBackingSource.textContent = backing.source || "-";
+}
+
+function renderSignageBackings() {
+  if (!signageBackingsTable) {
+    return;
+  }
+  signageBackingsTable.innerHTML = "";
+  if (selectedSignageBackingIndex !== null && !signageBackings[selectedSignageBackingIndex]) {
+    selectedSignageBackingIndex = signageBackings.length ? 0 : null;
+  }
+  if (!activeSignageBackingId && signageBackings.length) {
+    activeSignageBackingId = signageBackings[0].id;
+  }
+  renderBackingSelectOptions(signageBackingSelect, activeSignageBackingId);
+  renderBackingSelectOptions(signageLetterBackingSelect, activeSignageBackingId);
+  renderBackingSelectOptions(signageSelectedLetterBackingSelect, Number.isInteger(selectedSignageLetterIndex) ? signageRecognition?.letters?.[selectedSignageLetterIndex]?.backingId : activeSignageBackingId);
+  const activeBacking = activeSignageBacking();
+  if (signageBackingMaterialSelect && activeBacking?.material && [...signageBackingMaterialSelect.options].some((option) => option.value === activeBacking.material)) {
+    signageBackingMaterialSelect.value = activeBacking.material;
+  }
+
+  signageBackings.forEach((backing, index) => {
+    recalculateSignageBacking(index);
+    const row = document.createElement("tr");
+    row.className = `letter-quote-row${index === selectedSignageBackingIndex ? " selected" : ""}`;
+    row.dataset.backingRowIndex = String(index);
+    row.innerHTML = [
+      `<td><input data-backing-index="${index}" data-field="name" value="${escapeXml(backing.name)}"></td>`,
+      `<td>${formatControlNumber(backing.widthIn)} in</td>`,
+      `<td>${formatControlNumber(backing.heightIn)} in</td>`,
+      `<td>${money(backing.rateSqft, signageCurrency)}/sqft</td>`,
+      `<td><button class="letter-delete-button" type="button" data-delete-backing-index="${index}">${t("deleteLetter")}</button></td>`
+    ].join("");
+    signageBackingsTable.append(row);
+  });
+  renderSignageSelectedBackingEditor();
 }
 
 function renderSignageDetections() {
@@ -3309,6 +4071,9 @@ function renderSignageDetections() {
     signageConfidence.textContent = "-";
     selectedSignageLetterIndex = null;
     renderSignageSelectedLetterEditor();
+    renderSignageBackings();
+    renderSignageSummaryToggle();
+    updateSignageToolAvailability();
     return;
   }
 
@@ -3320,8 +4085,11 @@ function renderSignageDetections() {
   signageWordGroup.textContent = (recognition.wordGroups || []).map((group) => `${group.text} ${formatControlNumber(group.widthIn)} in`).join(", ");
   if (!recognition.letters.length) {
     signageConfidence.textContent = "0%";
-    signageDetections.innerHTML = `<tr><td colspan="5">${escapeXml(recognition.reviewItems?.join(" ") || recognition.aiNote || t("aiNoteEmpty"))}</td></tr>`;
+    signageDetections.innerHTML = `<tr><td colspan="7">${escapeXml(recognition.reviewItems?.join(" ") || recognition.aiNote || t("aiNoteEmpty"))}</td></tr>`;
     renderSignageSelectedLetterEditor();
+    renderSignageBackings();
+    renderSignageSummaryToggle();
+    updateSignageToolAvailability();
     return;
   }
 
@@ -3337,6 +4105,8 @@ function renderSignageDetections() {
       `<td><input data-letter-index="${index}" data-field="text" value="${escapeXml(letter.text)}"></td>`,
       `<td><input data-letter-index="${index}" data-field="widthIn" type="number" step="0.01" value="${formatControlNumber(letter.widthIn)}"></td>`,
       `<td><input data-letter-index="${index}" data-field="heightIn" type="number" step="0.01" value="${formatControlNumber(letter.heightIn)}"></td>`,
+      `<td>${escapeXml(signageBackings.find((backing) => backing.id === letter.backingId)?.name || "No backing")}</td>`,
+      `<td><input class="letter-row-color" data-letter-index="${index}" data-field="color" type="color" value="${escapeXml(signageLetterColor(letter))}"></td>`,
       `<td><span class="confidence-pill${letter.confidence < 0.85 ? " warning" : ""}">${Math.round(letter.confidence * 100)}%</span></td>`,
       `<td><button class="letter-delete-button" type="button" data-delete-letter-index="${index}">${t("deleteLetter")}</button></td>`
     ].join("");
@@ -3344,6 +4114,9 @@ function renderSignageDetections() {
   });
 
   renderSignageSelectedLetterEditor();
+  renderSignageBackings();
+  renderSignageSummaryToggle();
+  updateSignageToolAvailability();
 }
 
 function renderSignageQuote() {
@@ -3358,17 +4131,121 @@ function renderSignageQuote() {
   signageAiNote.textContent = signageQuote.note;
   signageQuote.lines.forEach((line) => {
     const row = document.createElement("tr");
-    row.innerHTML = `<td>${line.item}</td><td>${line.qty}</td><td>${money(line.total, signageQuote.currency)}</td>`;
+    const detail = line.formula ? `<small>${escapeXml(line.formula)}</small>` : "";
+    row.innerHTML = `<td>${escapeXml(line.item)}${detail}</td><td>${escapeXml(line.qty)}</td><td>${money(line.total, signageQuote.currency)}</td>`;
     signageQuoteLines.append(row);
   });
   signageQuoteTotal.textContent = money(signageQuote.total, signageQuote.currency);
+  renderSignageRatePreview();
+}
+
+function clearSignageLetters() {
+  ensureSignageRecognitionDraft();
+  signageRecognition.letters = [];
+  signageRecognition.wordGroups = [];
+  signageRecognition.aiNote = t("signageLettersCleared");
+  selectedSignageLetterIndex = null;
+  refreshSignageQuoteFromEdits();
+  setSignageStep(3);
+  setLog(t("signageLettersCleared"), "success");
+}
+
+function deleteSelectedSignageLetter() {
+  if (!signageRecognition?.letters?.[selectedSignageLetterIndex]) {
+    setLog(t("signageNothingSelected"), "warning");
+    return false;
+  }
+
+  signageRecognition.letters.splice(selectedSignageLetterIndex, 1);
+  selectedSignageLetterIndex = signageRecognition.letters.length
+    ? Math.min(selectedSignageLetterIndex, signageRecognition.letters.length - 1)
+    : null;
+  refreshSignageQuoteFromEdits();
+  setLog(t("selectedLetterDeleted"), "success");
+  return true;
+}
+
+function deleteSignageCalibrationReference() {
+  if (!hasValidSignageCalibration()) {
+    setLog(t("signageNothingSelected"), "warning");
+    return false;
+  }
+
+  signageCalibrationValid = false;
+  signageCalibrationMode = "";
+  signageBackingBox = null;
+  signageRawRecognition = null;
+  signageRecognition = null;
+  signageQuote = null;
+  selectedSignageLetterIndex = null;
+  signageDragStart = null;
+  signageDragPreview = null;
+  signageBoxDrag = null;
+  renderSignageCanvas();
+  renderSignageDetections();
+  renderSignageQuote();
+  signageAiNote.textContent = t("signageGuidelineDeleted");
+  updateSignageToolAvailability();
+  scheduleSignageAutosave();
+  setLog(t("signageGuidelineDeleted"), "warning");
+  return true;
+}
+
+function deleteSelectedSignageItem() {
+  if (activeTool !== "signage-quotation") {
+    return false;
+  }
+  if (activeSignageStep === 1) {
+    return deleteSignageCalibrationReference();
+  }
+  if (activeSignageStep === 3) {
+    return deleteSelectedSignageLetter();
+  }
+  setLog(t("signageNothingSelected"), "warning");
+  return false;
+}
+
+function setSignageCanvasFullscreen(enabled) {
+  signageCanvasFullscreen = Boolean(enabled);
+  signageWorkspace.classList.toggle("canvas-fullscreen", signageCanvasFullscreen);
+  signageFullscreenButton.textContent = signageCanvasFullscreen ? t("exitFullscreenCanvas") : t("fullscreenCanvas");
+  renderSignageCanvas();
+}
+
+function toggleSignageCanvasFullscreen() {
+  setSignageCanvasFullscreen(!signageCanvasFullscreen);
+}
+
+function signageCanvasPreviewDataUrl() {
+  renderSignageCanvas();
+  return signageCanvas.toDataURL("image/png");
+}
+
+function updateActiveBackingMaterial() {
+  const backing = activeSignageBacking();
+  if (!backing || !signageBackingMaterialSelect) {
+    return;
+  }
+  backing.material = signageBackingMaterialSelect.value;
+  const option = selectedBackingRateOption(backing);
+  backing.rateSqft = Number(option?.rateSqft || backing.rateSqft || 0);
+  renderSignageBackings();
+  refreshSignageQuoteFromEdits();
 }
 
 function refreshSignageQuoteFromControls() {
-  if (!signageRecognition) {
-    setLog(t("signageNoQuoteToRefresh"), "warning");
-    signageAiNote.textContent = t("signageNoQuoteToRefresh");
+  if (!requireSignageCalibration()) {
     return;
+  }
+
+  if (!signageRecognition) {
+    if (signageBackings.length) {
+      ensureSignageRecognitionDraft();
+    } else {
+      setLog(t("signageNoQuoteToRefresh"), "warning");
+      signageAiNote.textContent = t("signageNoQuoteToRefresh");
+      return;
+    }
   }
 
   refreshSignageQuoteFromEdits();
@@ -3377,25 +4254,32 @@ function refreshSignageQuoteFromControls() {
 
 function refreshSignageQuoteFromEdits(renderDetections = true) {
   if (!signageRecognition) {
+    renderSignageCanvas();
+    renderSignageBackings();
+    renderSignageRatePreview();
+    scheduleSignageAutosave();
     return;
   }
 
   signageQuote = calculateSignageQuote(signageRecognition, signagePricing || sampleSignagePricing());
   renderSignageCanvas();
+  renderSignageBackings();
   if (renderDetections) {
     renderSignageDetections();
   }
   renderSignageSelectedLetterEditor();
   renderSignageQuote();
+  renderSignageRatePreview();
   scheduleSignageAutosave();
 }
 
 function renderSignagePrintTemplate() {
   const fields = getSignageProjectFields();
   const quote = signageQuote || { lines: [], total: 0, currency: signageCurrency, note: t("aiNoteEmpty") };
+  const canvasPreview = signageCanvasPreviewDataUrl();
   const rows = quote.lines.map((line) => `
     <tr>
-      <td>${escapeXml(line.item)}</td>
+      <td>${escapeXml(line.item)}${line.formula ? `<br><small>${escapeXml(line.formula)}</small>` : ""}</td>
       <td>${escapeXml(line.qty)}</td>
       <td>${escapeXml(money(line.total, quote.currency))}</td>
     </tr>
@@ -3421,6 +4305,9 @@ function renderSignagePrintTemplate() {
         <div><span>Validity</span><strong>${escapeXml(fields.validity || "-")}</strong></div>
         <div><span>Prepared by</span><strong>${escapeXml(fields.preparedBy || "-")}</strong></div>
       </section>
+      <section class="print-canvas-preview">
+        <img src="${canvasPreview}" alt="Signage marked preview">
+      </section>
       <table class="print-quote-table">
         <thead><tr><th>Item</th><th>Qty</th><th>Total</th></tr></thead>
         <tbody>${rows || `<tr><td colspan="3">No quote lines yet.</td></tr>`}</tbody>
@@ -3441,16 +4328,17 @@ function printSignageQuote() {
 
 function saveSignageQuotePng() {
   const quoteLines = signageQuote ? signageQuote.lines : [];
+  const canvasPreview = signageCanvasPreviewDataUrl();
   const rows = quoteLines.map((line, index) => {
-    const y = 150 + index * 34;
+    const y = 310 + index * 30;
     return `<text x="52" y="${y}" font-size="18" fill="#172026">${escapeXml(line.item)}</text><text x="570" y="${y}" font-size="18" fill="#172026">${escapeXml(line.qty)}</text><text x="690" y="${y}" font-size="18" fill="#172026">${escapeXml(money(line.total, signageQuote.currency))}</text>`;
   }).join("");
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="900" height="520"><rect width="900" height="520" fill="#ffffff"/><text x="52" y="58" font-size="30" font-weight="700" fill="#172026">Weeseng Advertising</text><text x="52" y="92" font-size="20" fill="#0f766e">Signage Quotation Draft</text><line x1="52" y1="115" x2="848" y2="115" stroke="#d8e0e5"/><text x="52" y="132" font-size="15" font-weight="700" fill="#65727c">Item</text><text x="570" y="132" font-size="15" font-weight="700" fill="#65727c">Qty</text><text x="690" y="132" font-size="15" font-weight="700" fill="#65727c">Total</text>${rows}<rect x="52" y="420" width="796" height="58" fill="#f0fdfa" stroke="#99f6e4"/><text x="72" y="456" font-size="22" font-weight="700" fill="#115e59">Total quotation</text><text x="650" y="456" font-size="22" font-weight="700" fill="#115e59">${escapeXml(money(signageQuote?.total || 0, signageQuote?.currency || "MYR"))}</text></svg>`;
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="900" height="620"><rect width="900" height="620" fill="#ffffff"/><text x="52" y="58" font-size="30" font-weight="700" fill="#172026">Weeseng Advertising</text><text x="52" y="92" font-size="20" fill="#0f766e">Signage Quotation Draft</text><image x="52" y="112" width="796" height="160" preserveAspectRatio="xMidYMid meet" href="${canvasPreview}"/><line x1="52" y1="292" x2="848" y2="292" stroke="#d8e0e5"/><text x="52" y="306" font-size="15" font-weight="700" fill="#65727c">Item</text><text x="570" y="306" font-size="15" font-weight="700" fill="#65727c">Qty</text><text x="690" y="306" font-size="15" font-weight="700" fill="#65727c">Total</text>${rows}<rect x="52" y="530" width="796" height="58" fill="#f0fdfa" stroke="#99f6e4"/><text x="72" y="566" font-size="22" font-weight="700" fill="#115e59">Total quotation</text><text x="650" y="566" font-size="22" font-weight="700" fill="#115e59">${escapeXml(money(signageQuote?.total || 0, signageQuote?.currency || "MYR"))}</text></svg>`;
   const image = new Image();
   image.onload = () => {
     const canvas = document.createElement("canvas");
     canvas.width = 900;
-    canvas.height = 520;
+    canvas.height = 620;
     const context = canvas.getContext("2d");
     context.drawImage(image, 0, 0);
     canvas.toBlob((blob) => {
@@ -3509,6 +4397,26 @@ function hitSignageLetterBox(point) {
     const letter = signageRecognition.letters[index];
     const box = normalizeSignageBox(letter.box) || letter.box;
     const handle = index === selectedSignageLetterIndex ? hitSignageResizeHandle(point, box) : null;
+    if (handle) {
+      return { index, mode: "resize", handle, box };
+    }
+    if (pointInBox(point, box)) {
+      return { index, mode: "move", handle: null, box };
+    }
+  }
+
+  return null;
+}
+
+function hitSignageBackingBox(point) {
+  if (!signageBackings.length) {
+    return null;
+  }
+
+  for (let index = signageBackings.length - 1; index >= 0; index -= 1) {
+    const backing = signageBackings[index];
+    const box = normalizeSignageBox(backing.box) || backing.box;
+    const handle = index === selectedSignageBackingIndex ? hitSignageResizeHandle(point, box) : null;
     if (handle) {
       return { index, mode: "resize", handle, box };
     }
@@ -3581,6 +4489,15 @@ function updateSignageLetterBox(index, box) {
   letter.heightIn = dimensions.heightIn;
 }
 
+function updateSignageBackingBox(index, box) {
+  const backing = signageBackings[index];
+  if (!backing) {
+    return;
+  }
+  backing.box = clampSignageBoxToPhoto(box);
+  recalculateSignageBacking(index);
+}
+
 function updateSelectedSignageBoxFromInputs() {
   const letter = Number.isInteger(selectedSignageLetterIndex)
     ? signageRecognition?.letters?.[selectedSignageLetterIndex]
@@ -3614,6 +4531,66 @@ function updateSelectedSignageBoxColor() {
   scheduleSignageAutosave();
 }
 
+function updateSelectedSignageBackingFromInputs() {
+  const backing = Number.isInteger(selectedSignageBackingIndex)
+    ? signageBackings[selectedSignageBackingIndex]
+    : null;
+  if (!backing) {
+    return;
+  }
+  backing.name = signageSelectedBackingNameInput.value.trim() || backing.name;
+  updateSignageBackingBox(selectedSignageBackingIndex, {
+    x: Number(signageSelectedBackingXInput.value) || 0,
+    y: Number(signageSelectedBackingYInput.value) || 0,
+    width: Math.max(1, Number(signageSelectedBackingWInput.value) || 1),
+    height: Math.max(1, Number(signageSelectedBackingHInput.value) || 1)
+  });
+  refreshSignageQuoteFromEdits();
+}
+
+function updateSelectedSignageBackingColor() {
+  const backing = Number.isInteger(selectedSignageBackingIndex)
+    ? signageBackings[selectedSignageBackingIndex]
+    : null;
+  if (!backing) {
+    return;
+  }
+  backing.color = signageSelectedBackingColorInput.value || defaultBackingColor(selectedSignageBackingIndex);
+  renderSignageCanvas();
+  renderSignageBackings();
+  scheduleSignageAutosave();
+}
+
+function addSignageBackingFromButton() {
+  const bounds = signagePhotoFrame();
+  const offset = signageBackings.length * 24;
+  const box = clampSignageBoxToPhoto({
+    x: bounds.x + 60 + offset,
+    y: bounds.y + 60 + offset,
+    width: Math.min(360, bounds.width * 0.45),
+    height: Math.min(160, bounds.height * 0.35)
+  });
+  signageBackings.push(normalizeSignageBacking({
+    name: `Backing ${signageBackings.length + 1}`,
+    material: signageBackingMaterialSelect?.value,
+    box
+  }, signageBackings.length));
+  updateActiveBackingFromIndex(signageBackings.length - 1);
+  refreshSignageQuoteFromEdits();
+  renderSignageCanvas();
+  renderSignageBackings();
+  scheduleSignageAutosave();
+}
+
+function setActiveSignageBackingId(id) {
+  activeSignageBackingId = id || null;
+  selectedSignageBackingIndex = activeSignageBackingIndex();
+  renderSignageCanvas();
+  renderSignageBackings();
+  renderSignageDetections();
+  scheduleSignageAutosave();
+}
+
 function clampSignagePointToPhoto(point) {
   if (!signagePhotoImage) {
     return point;
@@ -3631,12 +4608,53 @@ function startSignageDrag(event) {
     return;
   }
 
+  if (event.button === 1) {
+    const wrap = signageCanvasWrap();
+    if (!wrap) {
+      return;
+    }
+    event.preventDefault();
+    signageCanvasPan = {
+      startX: event.clientX,
+      startY: event.clientY,
+      scrollLeft: wrap.scrollLeft,
+      scrollTop: wrap.scrollTop
+    };
+    wrap.classList.add("panning");
+    if (event.pointerId !== undefined && signageCanvas.setPointerCapture) {
+      signageCanvas.setPointerCapture(event.pointerId);
+    }
+    return;
+  }
+
   const point = signageCanvasPoint(event);
+  if (activeSignageStep === 2) {
+    const hit = hitSignageBackingBox(point);
+    if (hit) {
+      updateActiveBackingFromIndex(hit.index);
+      signageBoxDrag = {
+        type: "backing",
+        mode: hit.mode,
+        handle: hit.handle,
+        startPoint: point,
+        originalBox: { ...hit.box },
+        index: hit.index
+      };
+      renderSignageCanvas();
+      renderSignageBackings();
+      if (event.pointerId !== undefined && signageCanvas.setPointerCapture) {
+        signageCanvas.setPointerCapture(event.pointerId);
+      }
+      return;
+    }
+  }
+
   if (activeSignageStep === 3) {
     const hit = hitSignageLetterBox(point);
     if (hit) {
       selectedSignageLetterIndex = hit.index;
       signageBoxDrag = {
+        type: "letter",
         mode: hit.mode,
         handle: hit.handle,
         startPoint: point,
@@ -3666,6 +4684,16 @@ function updateSignageDrag(event) {
     return;
   }
 
+  if (signageCanvasPan) {
+    const wrap = signageCanvasWrap();
+    if (wrap) {
+      event.preventDefault();
+      wrap.scrollLeft = signageCanvasPan.scrollLeft - (event.clientX - signageCanvasPan.startX);
+      wrap.scrollTop = signageCanvasPan.scrollTop - (event.clientY - signageCanvasPan.startY);
+    }
+    return;
+  }
+
   const point = signageCanvasPoint(event);
   if (signageBoxDrag) {
     const deltaX = point.x - signageBoxDrag.startPoint.x;
@@ -3678,9 +4706,14 @@ function updateSignageDrag(event) {
       })
       : resizeSignageBoxFromHandle(signageBoxDrag.originalBox, deltaX, deltaY, signageBoxDrag.handle);
 
-    updateSignageLetterBox(signageBoxDrag.index, nextBox);
-    signageQuote = calculateSignageQuote(signageRecognition, signagePricing || sampleSignagePricing());
+    if (signageBoxDrag.type === "backing") {
+      updateSignageBackingBox(signageBoxDrag.index, nextBox);
+    } else {
+      updateSignageLetterBox(signageBoxDrag.index, nextBox);
+    }
+    signageQuote = signageRecognition ? calculateSignageQuote(signageRecognition, signagePricing || sampleSignagePricing()) : signageQuote;
     renderSignageCanvas();
+    renderSignageBackings();
     renderSignageDetections();
     renderSignageQuote();
     return;
@@ -3692,6 +4725,7 @@ function updateSignageDrag(event) {
 
   if (signageActiveTool === "guideline") {
     signageCalibrationMode = "guideline";
+    signageCalibrationValid = true;
     const deltaX = Math.abs(point.x - signageDragStart.x);
     const deltaY = Math.abs(point.y - signageDragStart.y);
     const straightPoint = deltaX >= deltaY
@@ -3709,8 +4743,9 @@ function updateSignageDrag(event) {
     updateSignageToolAvailability();
     renderSignageDetections();
     renderSignageQuote();
-  } else if (signageActiveTool === "backing") {
+  } else if (signageActiveTool === "backing" && activeSignageStep === 1) {
     signageCalibrationMode = "backing";
+    signageCalibrationValid = true;
     const box = {
       x: Math.min(signageDragStart.x, point.x),
       y: Math.min(signageDragStart.y, point.y),
@@ -3730,6 +4765,14 @@ function updateSignageDrag(event) {
       renderSignageDetections();
       renderSignageQuote();
     }
+  } else if (signageActiveTool === "backing" && activeSignageStep === 2) {
+    const box = {
+      x: Math.min(signageDragStart.x, point.x),
+      y: Math.min(signageDragStart.y, point.y),
+      width: Math.abs(point.x - signageDragStart.x),
+      height: Math.abs(point.y - signageDragStart.y)
+    };
+    signageDragPreview = { tool: "backing", box, label: "New backing" };
   } else if (signageActiveTool === "letter" && activeSignageStep === 3) {
     const box = {
       x: Math.min(signageDragStart.x, point.x),
@@ -3745,6 +4788,11 @@ function updateSignageDrag(event) {
 }
 
 function finishSignageDrag(event) {
+  if (signageCanvasPan) {
+    signageCanvasWrap()?.classList.remove("panning");
+    signageCanvasPan = null;
+  }
+
   if (signageBoxDrag) {
     refreshSignageQuoteFromEdits();
   }
@@ -3761,11 +4809,30 @@ function finishSignageDrag(event) {
         heightIn: dimensions.heightIn,
         confidence: 1,
         box: clampSignageBoxToPhoto(box),
+        backingId: activeSignageBackingId || activeSignageBacking()?.id || "",
         source: "manual",
         color: "#7c3aed"
       });
       refreshSignageQuoteFromEdits();
       setSignageStep(3);
+    }
+  }
+
+  if (signageDragPreview?.tool === "backing") {
+    const box = signageDragPreview.box;
+    if (box.width >= 12 && box.height >= 12) {
+      const backing = normalizeSignageBacking({
+        name: `Backing ${signageBackings.length + 1}`,
+        material: signageBackingMaterialSelect?.value,
+        box: clampSignageBoxToPhoto(box)
+      }, signageBackings.length);
+      signageBackings.push(backing);
+      updateActiveBackingFromIndex(signageBackings.length - 1);
+      if (signageRecognition?.letters?.length) {
+        signageRecognition.letters.forEach((letter) => assignLetterBacking(letter));
+      }
+      refreshSignageQuoteFromEdits();
+      setSignageStep(2);
     }
   }
 
@@ -4267,11 +5334,60 @@ stlExportButton.addEventListener("click", exportResizedStl);
 signageRerunButton.addEventListener("click", recognizeSignage);
 signageExportTraceButton.addEventListener("click", exportSignageTrace);
 signageTraceBrightButton.addEventListener("click", replaceSignageWithPixelTrace);
+signageClearLettersButton.addEventListener("click", clearSignageLetters);
+signageDeleteSelectedButton.addEventListener("click", deleteSelectedSignageItem);
+signageFullscreenButton.addEventListener("click", toggleSignageCanvasFullscreen);
 signageRefreshQuoteButton.addEventListener("click", refreshSignageQuoteFromControls);
-signageLightingSelect.addEventListener("change", refreshSignageQuoteFromControls);
-signageMaterialSelect.addEventListener("change", refreshSignageQuoteFromControls);
+signageLightingSelect.addEventListener("change", () => {
+  signageRateOverrides = {};
+  syncSignageRateInputs();
+  refreshSignageQuoteFromControls();
+});
+signageMaterialSelect.addEventListener("change", () => {
+  signageRateOverrides = {};
+  syncSignageRateInputs();
+  refreshSignageQuoteFromControls();
+});
+signageProductCategorySelect.addEventListener("change", () => {
+  signageRateOverrides = {};
+  updateSignageProductOptions();
+  syncSignageRateInputs();
+  refreshSignageQuoteFromControls();
+});
+signageProductOptionSelect.addEventListener("change", () => {
+  delete signageRateOverrides.productRate;
+  syncSignageRateInputs();
+  refreshSignageQuoteFromControls();
+});
+[signageBackingRateOverrideInput, signageProductRateOverrideInput, signageEmbossHeightRateOverrideInput, signageEmbossAreaRateOverrideInput, signageMaterialHeightRateOverrideInput, signageMaterialAreaRateOverrideInput, signageLedRateOverrideInput, signagePsuRateOverrideInput].forEach((input) => {
+  input.addEventListener("input", () => {
+    const map = new Map([
+      [signageBackingRateOverrideInput, "backingRateSqft"],
+      [signageProductRateOverrideInput, "productRate"],
+      [signageEmbossHeightRateOverrideInput, "embossHeightRate"],
+      [signageEmbossAreaRateOverrideInput, "embossAreaRate"],
+      [signageMaterialHeightRateOverrideInput, "materialHeightRate"],
+      [signageMaterialAreaRateOverrideInput, "materialAreaRate"],
+      [signageLedRateOverrideInput, "ledRate"],
+      [signagePsuRateOverrideInput, "psuCost"]
+    ]);
+    const key = map.get(input);
+    if (key) {
+      signageRateOverrides[key] = Number(input.value) || 0;
+      refreshSignageQuoteFromControls();
+    }
+  });
+});
+signageAddBackingButton.addEventListener("click", addSignageBackingFromButton);
+signageBackingMaterialSelect.addEventListener("change", updateActiveBackingMaterial);
+signageBackingSelect.addEventListener("change", () => setActiveSignageBackingId(signageBackingSelect.value));
+signageLetterBackingSelect.addEventListener("change", () => setActiveSignageBackingId(signageLetterBackingSelect.value));
+[signageSkyliftCostInput, signageAssemblyCostInput, signageInstallationCostInput].forEach((input) => {
+  input.addEventListener("input", refreshSignageQuoteFromControls);
+});
 signageGuidelineSizeInput.addEventListener("input", () => {
   signageCalibrationMode = "guideline";
+  signageCalibrationValid = true;
   signageCalibration.inches = Number(signageGuidelineSizeInput.value) || signageCalibration.inches;
   updateSignageGuidelineMirror();
   renderSignageCanvas();
@@ -4281,6 +5397,7 @@ signageGuidelineSizeInput.addEventListener("input", () => {
   input.addEventListener("input", () => {
     if (signageBackingBox) {
       signageCalibrationMode = "backing";
+      signageCalibrationValid = true;
     }
     updateSignageGuidelineMirror();
     if (signageRecognition?.backing && signageBackingBox) {
@@ -4300,21 +5417,65 @@ signageGuidelineSizeInput.addEventListener("input", () => {
   });
 });
 
-signageZoomOutButton.addEventListener("click", () => {
-  signageCanvasZoom -= 0.1;
-  updateSignageCanvasZoom();
+signageBackingsTable.addEventListener("input", (event) => {
+  const input = event.target;
+  const index = Number(input.dataset.backingIndex);
+  const field = input.dataset.field;
+  if (!Number.isInteger(index) || !signageBackings[index] || !field) {
+    return;
+  }
+  signageBackings[index][field] = input.value;
+  renderSignageCanvas();
+  renderSignageBackings();
   scheduleSignageAutosave();
 });
+
+signageBackingsTable.addEventListener("click", (event) => {
+  const row = event.target.closest("[data-backing-row-index]");
+  if (row) {
+    updateActiveBackingFromIndex(Number(row.dataset.backingRowIndex));
+    renderSignageCanvas();
+    renderSignageBackings();
+  }
+  const button = event.target.closest("[data-delete-backing-index]");
+  if (!button) {
+    return;
+  }
+  const index = Number(button.dataset.deleteBackingIndex);
+  const backing = signageBackings[index];
+  if (!backing) {
+    return;
+  }
+  signageBackings.splice(index, 1);
+  if (signageRecognition?.letters?.length) {
+    signageRecognition.letters.forEach((letter) => {
+      if (letter.backingId === backing.id) {
+        letter.backingId = "";
+      }
+    });
+  }
+  updateActiveBackingFromIndex(Math.min(index, signageBackings.length - 1));
+  refreshSignageQuoteFromEdits();
+});
+
+signageZoomOutButton.addEventListener("click", () => {
+  zoomSignageCanvas(-0.1);
+});
 signageZoomInButton.addEventListener("click", () => {
-  signageCanvasZoom += 0.1;
-  updateSignageCanvasZoom();
-  scheduleSignageAutosave();
+  zoomSignageCanvas(0.1);
 });
 signageZoomResetButton.addEventListener("click", () => {
   signageCanvasZoom = 1;
   updateSignageCanvasZoom();
+  centerSignageCanvasView();
   scheduleSignageAutosave();
 });
+signagePanLeftButton.addEventListener("click", () => panSignageCanvasView(-160, 0));
+signagePanRightButton.addEventListener("click", () => panSignageCanvasView(160, 0));
+signagePanUpButton.addEventListener("click", () => panSignageCanvasView(0, -120));
+signagePanDownButton.addEventListener("click", () => panSignageCanvasView(0, 120));
+signagePanCenterButton.addEventListener("click", centerSignageCanvasView);
+signageToggleSummaryButton.addEventListener("click", toggleSignageSummary);
 
 [
   signageCustomerNameInput,
@@ -4354,7 +5515,7 @@ signageDetections.addEventListener("input", (event) => {
     return;
   }
 
-  signageRecognition.letters[index][field] = field === "text" ? input.value : Number(input.value);
+  signageRecognition.letters[index][field] = field === "text" || field === "color" ? input.value : Number(input.value);
   refreshSignageQuoteFromEdits(false);
   const row = input.closest(".letter-quote-row");
   if (row) {
@@ -4401,6 +5562,18 @@ signageDetections.addEventListener("mouseout", hideSignageLetterTooltip);
   input.addEventListener("input", updateSelectedSignageBoxFromInputs);
 });
 signageSelectedBoxColorInput.addEventListener("input", updateSelectedSignageBoxColor);
+signageSelectedLetterBackingSelect.addEventListener("change", () => {
+  const letter = Number.isInteger(selectedSignageLetterIndex) ? signageRecognition?.letters?.[selectedSignageLetterIndex] : null;
+  if (!letter) {
+    return;
+  }
+  letter.backingId = signageSelectedLetterBackingSelect.value;
+  refreshSignageQuoteFromEdits();
+});
+[signageSelectedBackingNameInput, signageSelectedBackingXInput, signageSelectedBackingYInput, signageSelectedBackingWInput, signageSelectedBackingHInput].forEach((input) => {
+  input.addEventListener("input", updateSelectedSignageBackingFromInputs);
+});
+signageSelectedBackingColorInput.addEventListener("input", updateSelectedSignageBackingColor);
 
 document.querySelectorAll(".signage-tools .tool-button").forEach((button) => {
   button.addEventListener("click", () => {
@@ -4434,6 +5607,31 @@ window.addEventListener("pointerup", finishSignageDrag);
 signageCanvas.addEventListener("mousedown", startSignageDrag);
 signageCanvas.addEventListener("mousemove", updateSignageDrag);
 signageCanvas.addEventListener("mouseup", finishSignageDrag);
+signageCanvas.addEventListener("auxclick", (event) => {
+  if (event.button === 1) {
+    event.preventDefault();
+  }
+});
+signageCanvasWrap()?.addEventListener("wheel", (event) => {
+  event.preventDefault();
+  zoomSignageCanvas(event.deltaY < 0 ? 0.1 : -0.1, event);
+}, { passive: false });
+
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" && signageCanvasFullscreen) {
+    setSignageCanvasFullscreen(false);
+    return;
+  }
+
+  if ((event.key === "Delete" || event.key === "Backspace") && activeTool === "signage-quotation") {
+    const tagName = event.target?.tagName?.toLowerCase();
+    const isTyping = ["input", "select", "textarea"].includes(tagName) || event.target?.isContentEditable;
+    if (!isTyping && (activeSignageStep === 1 || activeSignageStep === 3)) {
+      event.preventDefault();
+      deleteSelectedSignageItem();
+    }
+  }
+});
 window.addEventListener("mouseup", finishSignageDrag);
 
 await restoreSignageAutosave();
