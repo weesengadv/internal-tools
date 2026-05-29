@@ -53,6 +53,7 @@ const stlTargetXInput = document.getElementById("stlTargetX");
 const stlTargetYInput = document.getElementById("stlTargetY");
 const stlTargetZInput = document.getElementById("stlTargetZ");
 const stlResetButton = document.getElementById("stlResetButton");
+const stlFitViewButton = document.getElementById("stlFitViewButton");
 const stlExportButton = document.getElementById("stlExportButton");
 const signageConfigStatus = document.getElementById("signageConfigStatus");
 const signageGuidelineControlCard = document.getElementById("signageGuidelineControlCard");
@@ -244,6 +245,7 @@ const messages = {
     downloadGcode: "Download .gcode",
     editedGcode: "Edited G-code",
     exportResizedStl: "Export resized STL",
+    fitView: "Fit view",
     feature: "Tools",
     gcodeEditorGroup: "Tools G-code Editor",
     freeScale: "Free X/Y/Z scale",
@@ -506,6 +508,7 @@ const messages = {
     downloadGcode: "下载 .gcode",
     editedGcode: "已编辑 G-code",
     exportResizedStl: "导出调整后的 STL",
+    fitView: "\u9002\u5408\u89c6\u56fe",
     feature: "工具",
     gcodeEditorGroup: "G-code 编辑工具",
     freeScale: "自由 X/Y/Z 缩放",
@@ -1277,6 +1280,7 @@ function resizeStlRenderer() {
   stlRenderer.setSize(width, height, false);
   stlCamera.aspect = width / height;
   stlCamera.updateProjectionMatrix();
+  updateStlCameraRange();
 }
 
 function prepareStlGeometry(geometry) {
@@ -1326,20 +1330,46 @@ function fitStlCamera() {
     return;
   }
 
-  const maxDimension = Math.max(
-    stlBaseDimensions.x * stlScale.x,
-    stlBaseDimensions.y * stlScale.y,
-    stlBaseDimensions.z * stlScale.z,
-    10
-  );
-  const distance = maxDimension * 2.4;
-  stlCamera.near = Math.max(0.01, distance / 1000);
-  stlCamera.far = Math.max(1000, distance * 20);
-  stlCamera.position.set(distance * 0.72, distance * 0.58, distance * 0.84);
+  const size = currentStlSize();
+  const radius = currentStlBoundingRadius(size);
+  const fitHeightDistance = radius / Math.sin(THREE.MathUtils.degToRad(stlCamera.fov * 0.5));
+  const fitWidthDistance = fitHeightDistance / Math.max(0.2, stlCamera.aspect);
+  const distance = Math.max(fitHeightDistance, fitWidthDistance) * 1.35;
+  const direction = new THREE.Vector3(0.72, 0.58, 0.84).normalize();
+
+  updateStlCameraRange(distance, radius);
+  stlCamera.position.copy(direction.multiplyScalar(distance));
   stlCamera.lookAt(0, 0, 0);
   stlCamera.updateProjectionMatrix();
   stlControls.target.set(0, 0, 0);
+  stlControls.saveState();
   stlControls.update();
+}
+
+function currentStlSize() {
+  return new THREE.Vector3(
+    Math.max(0.001, stlBaseDimensions.x * stlScale.x),
+    Math.max(0.001, stlBaseDimensions.y * stlScale.y),
+    Math.max(0.001, stlBaseDimensions.z * stlScale.z)
+  );
+}
+
+function currentStlBoundingRadius(size = currentStlSize()) {
+  return Math.max(10, size.length() * 0.5);
+}
+
+function updateStlCameraRange(referenceDistance = null, referenceRadius = null) {
+  if (!stlCamera || !stlControls || !stlBaseBox) {
+    return;
+  }
+
+  const radius = referenceRadius || currentStlBoundingRadius();
+  const distance = referenceDistance || Math.max(stlCamera.position.length(), radius * 3);
+  stlCamera.near = Math.max(0.01, radius / 100000);
+  stlCamera.far = Math.max(100000, radius * 500, distance * 50);
+  stlCamera.updateProjectionMatrix();
+  stlControls.minDistance = Math.max(0.01, radius / 1000);
+  stlControls.maxDistance = Math.max(radius * 200, distance * 20, 100000);
 }
 
 function applyStlScale() {
@@ -1354,6 +1384,7 @@ function applyStlScale() {
     -stlBaseCenter.y * stlScale.y,
     -stlBaseCenter.z * stlScale.z
   );
+  updateStlCameraRange();
   updateStlMeasurements();
 }
 
@@ -5481,6 +5512,7 @@ stlResetButton.addEventListener("click", () => {
   fitStlCamera();
 });
 
+stlFitViewButton.addEventListener("click", fitStlCamera);
 stlExportButton.addEventListener("click", exportResizedStl);
 
 signageRerunButton.addEventListener("click", recognizeSignage);
