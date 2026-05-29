@@ -617,5 +617,5 @@ const server = http.createServer(async (request, response) => {
 });
 
 server.listen(port, host, () => {
-  console.log(`Weeseng Advertising running at http://${host}:${port}/`);
+  console.log(`Weeseng Software running at http://${host}:${port}/`);
 });

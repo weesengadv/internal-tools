@@ -1,0 +1,66 @@
+﻿@media (max-width: 900px) {
+  .app-shell {
+    grid-template-columns: 1fr;
+  }
+
+  .sidebar {
+    padding: 14px;
+  }
+
+  .brand {
+    margin-bottom: 14px;
+  }
+
+  .shortcut-menu {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .workspace {
+    padding: 18px;
+  }
+
+  .settings-grid,
+  .editor-grid,
+  .stl-workspace,
+  .signage-command-strip,
+  .signage-main,
+  .signage-project-grid,
+  .signage-correction {
+    grid-template-columns: 1fr;
+  }
+
+  .signage-panel {
+    max-height: none;
+    overflow: visible;
+    padding-right: 0;
+  }
+
+  .signage-setup-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .signage-steps {
+    grid-template-columns: repeat(6, minmax(132px, 1fr));
+  }
+
+  .stl-viewer,
+  #stlCanvas {
+    min-height: 420px;
+  }
+
+  .topbar,
+  .panel-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .topbar-actions {
+    align-items: stretch;
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .status-pill {
+    max-width: 100%;
+  }
+}

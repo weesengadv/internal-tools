@@ -1,0 +1,129 @@
+﻿.signage-print-template {
+  display: none;
+}
+
+.print-quote-page {
+  color: #0f172a;
+  font-family: Inter, "Segoe UI", Arial, sans-serif;
+}
+
+.print-quote-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  padding-bottom: 18px;
+  border-bottom: 2px solid #0f766e;
+}
+
+.print-quote-header strong {
+  display: block;
+  color: #0f766e;
+  font-size: 28px;
+}
+
+.print-quote-header span {
+  color: #475569;
+  font-size: 14px;
+}
+
+.print-quote-total {
+  text-align: right;
+}
+
+.print-quote-total strong {
+  color: #0f172a;
+  font-size: 26px;
+}
+
+.print-quote-meta {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin: 18px 0;
+}
+
+.print-quote-meta div {
+  padding: 10px;
+  border: 1px solid #d8e0e5;
+  border-radius: 8px;
+}
+
+.print-quote-meta span {
+  display: block;
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.print-quote-meta strong {
+  display: block;
+  margin-top: 4px;
+  font-size: 13px;
+}
+
+.print-quote-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 16px;
+}
+
+.print-quote-table th,
+.print-quote-table td {
+  padding: 10px;
+  border-bottom: 1px solid #d8e0e5;
+  text-align: left;
+}
+
+.print-quote-table th {
+  background: #f8fafc;
+  color: #475569;
+  font-size: 11px;
+  text-transform: uppercase;
+}
+
+.print-quote-table td:last-child,
+.print-quote-table th:last-child {
+  text-align: right;
+}
+
+.print-quote-note {
+  margin-top: 18px;
+  padding: 12px;
+  border: 1px solid #99f6e4;
+  border-radius: 8px;
+  background: #f0fdfa;
+}
+
+.print-quote-note h2 {
+  margin: 0 0 8px;
+  font-size: 16px;
+}
+
+@media print {
+  @page {
+    margin: 14mm;
+  }
+
+  body {
+    background: #fff;
+  }
+
+  body * {
+    visibility: hidden;
+  }
+
+  .signage-print-template {
+    display: block;
+    position: absolute;
+    inset: 0 auto auto 0;
+    width: 100%;
+    visibility: visible;
+  }
+
+  .signage-print-template * {
+    visibility: visible;
+  }
+}
+

@@ -1,0 +1,1012 @@
+﻿.signage-workspace[hidden] {
+  display: none;
+}
+
+.signage-workspace {
+  display: block;
+  min-width: 0;
+}
+
+body[data-active-tool="signage-quotation"] .signage-workspace {
+  padding: 14px;
+  background: #eef2f6;
+}
+
+.signage-command-strip {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.signage-command-strip div {
+  position: relative;
+  min-width: 0;
+  padding: 11px 12px 11px 16px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.04);
+}
+
+.signage-command-strip div::before {
+  content: "";
+  position: absolute;
+  inset: 10px auto 10px 0;
+  width: 4px;
+  border-radius: 0 999px 999px 0;
+  background: var(--accent);
+}
+
+.signage-command-strip span,
+.signage-command-strip strong {
+  display: block;
+}
+
+.signage-command-strip span {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.signage-command-strip strong {
+  margin-top: 4px;
+  overflow: hidden;
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 900;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.signage-command-input {
+  display: block;
+  margin-top: 5px;
+}
+
+.signage-command-input input {
+  width: 100%;
+  min-height: 34px;
+  padding: 7px 9px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: #f8fafc;
+  color: var(--ink);
+  font: inherit;
+  font-weight: 900;
+}
+
+.signage-command-input.split {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 6px;
+}
+
+.signage-steps {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(116px, 1fr));
+  gap: 0;
+  margin-bottom: 12px;
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.signage-step {
+  position: relative;
+  min-width: 116px;
+  padding: 10px 12px 10px 34px;
+  border: 0;
+  border-right: 1px solid var(--line);
+  background: #fff;
+  color: var(--ink);
+  cursor: pointer;
+  text-align: left;
+}
+
+.signage-step:last-child {
+  border-right: 0;
+}
+
+.signage-step span {
+  position: absolute;
+  top: 13px;
+  left: 10px;
+  display: grid;
+  width: 18px;
+  height: 18px;
+  place-items: center;
+  border-radius: 50%;
+  background: #e2e8f0;
+  color: #475569;
+  font-size: 10px;
+  font-weight: 950;
+}
+
+.signage-step.active {
+  background: #ecfeff;
+  color: var(--accent-strong);
+}
+
+.signage-step.active span {
+  background: var(--accent);
+  color: #fff;
+}
+
+.signage-step.complete span {
+  background: #10b981;
+  color: #fff;
+}
+
+.signage-step strong {
+  display: block;
+  font-size: 12px;
+  line-height: 1.25;
+}
+
+.signage-main {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 380px;
+  gap: 14px;
+  align-items: start;
+}
+
+.signage-stage {
+  min-width: 0;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.05);
+}
+
+.signage-stage-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.signage-stage-header h3 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.signage-stage-status {
+  max-width: 280px;
+  padding: 7px 10px;
+  border: 1px solid #99f6e4;
+  border-radius: 999px;
+  background: #f0fdfa;
+  color: var(--accent-strong);
+  font-size: 12px;
+  font-weight: 900;
+  text-align: right;
+}
+
+.signage-tools,
+.signage-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.tool-button.active {
+  border-color: var(--accent);
+  color: var(--accent-strong);
+}
+
+.setting-action button {
+  width: 100%;
+  min-height: 44px;
+}
+
+.tool-button.numbered {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 42px;
+  padding-inline: 10px 13px;
+  border-width: 2px;
+}
+
+.tool-number {
+  display: inline-grid;
+  width: 24px;
+  height: 24px;
+  place-items: center;
+  border-radius: 50%;
+  background: #e5e7eb;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 950;
+}
+
+.tool-button.numbered.active {
+  background: #ecfeff;
+  box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.18);
+}
+
+.tool-button.numbered.active .tool-number {
+  background: var(--accent);
+  color: #fff;
+}
+
+.tool-button[hidden] {
+  display: none;
+}
+
+.signage-zoom-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+  flex-wrap: wrap;
+}
+
+.signage-zoom-controls output {
+  min-width: 56px;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: #fff;
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 900;
+  text-align: center;
+}
+
+.canvas-pan-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding-left: 4px;
+}
+
+.canvas-pan-controls .secondary-button {
+  min-height: 38px;
+  padding: 8px 10px;
+}
+
+.signage-canvas-wrap {
+  position: relative;
+  margin-top: 12px;
+  overflow: auto;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background-color: #e8eef1;
+  background-image: radial-gradient(#cbd5e1 1px, transparent 1px);
+  background-size: 24px 24px;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.55);
+}
+
+.signage-canvas-wrap.panning,
+.signage-canvas-wrap.panning #signageCanvas {
+  cursor: grabbing;
+}
+
+.signage-workspace.canvas-fullscreen {
+  position: fixed;
+  inset: 0;
+  z-index: 900;
+  display: block !important;
+  padding: 0;
+  background: #111827;
+}
+
+.signage-workspace.canvas-fullscreen .signage-command-strip,
+.signage-workspace.canvas-fullscreen .signage-steps,
+.signage-workspace.canvas-fullscreen .signage-stage-header,
+.signage-workspace.canvas-fullscreen .signage-wizard-nav,
+.signage-workspace.canvas-fullscreen .signage-zoom-controls {
+  display: none !important;
+}
+
+.signage-workspace.canvas-fullscreen .signage-tools {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  z-index: 930;
+  display: block !important;
+}
+
+.signage-workspace.canvas-fullscreen .signage-tools > :not(#signageFullscreenButton) {
+  display: none !important;
+}
+
+.signage-workspace.canvas-fullscreen .signage-panel {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  z-index: 930;
+  display: block !important;
+  width: auto;
+  min-width: 0;
+  max-height: none;
+  overflow: visible;
+  padding: 0;
+}
+
+.signage-workspace.canvas-fullscreen .signage-panel .signage-inspector-section {
+  display: none !important;
+}
+
+.signage-workspace.canvas-fullscreen .signage-panel .signage-inspector-section[data-signage-step-panel="3"] {
+  display: block !important;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.signage-workspace.canvas-fullscreen .signage-panel .signage-inspector-section[data-signage-step-panel="3"] > :not(.review-primary-actions) {
+  display: none !important;
+}
+
+.signage-workspace.canvas-fullscreen .signage-panel .signage-inspector-section[data-signage-step-panel="3"] > .manual-letter-popover:not([hidden]) {
+  display: grid !important;
+  z-index: 1200;
+}
+
+.signage-workspace.canvas-fullscreen .review-primary-actions {
+  margin: 0;
+}
+
+.signage-workspace.canvas-fullscreen .review-primary-actions > :not(#signageFullscreenButton) {
+  display: none !important;
+}
+
+.signage-workspace.canvas-fullscreen .signage-main {
+  display: block;
+  width: 100vw;
+  height: 100vh;
+  min-height: 0;
+  padding: 0;
+}
+
+.signage-workspace.canvas-fullscreen .signage-stage {
+  display: grid;
+  width: 100vw;
+  height: 100vh;
+  min-height: 0;
+  padding: 0;
+  place-items: center;
+  border: 0;
+  background: transparent;
+}
+
+.signage-workspace.canvas-fullscreen .signage-canvas-wrap {
+  display: block;
+  width: 100vw;
+  height: 100vh;
+  margin: 0;
+  overflow: auto;
+  border: 0;
+  border-radius: 0;
+  background-color: #111827;
+  background-image: none;
+  box-shadow: none;
+}
+
+.signage-workspace.canvas-fullscreen #signageCanvas {
+  width: min(100vw, calc(100vh * 5 / 3));
+  height: auto !important;
+  margin: 0 auto !important;
+}
+
+.signage-workspace.canvas-fullscreen #signageFullscreenButton {
+  display: inline-flex !important;
+  min-height: 42px;
+  border-color: #99f6e4;
+  background: rgba(15, 23, 42, 0.86);
+  color: #f8fafc;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.28);
+}
+
+.signage-workspace.canvas-fullscreen .signage-canvas-badge {
+  top: auto;
+  right: 16px;
+  bottom: 16px;
+  background: rgba(15, 23, 42, 0.72);
+  color: #e5e7eb;
+  border-color: rgba(148, 163, 184, 0.45);
+}
+
+#signageCanvas {
+  display: block;
+  width: 100%;
+  aspect-ratio: 5 / 3;
+  border: 0;
+}
+
+.signage-canvas-badge {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  padding: 6px 9px;
+  border: 1px solid rgba(216, 224, 229, 0.88);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.9);
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.signage-empty {
+  position: absolute;
+  inset: 50% auto auto 50%;
+  width: min(360px, calc(100% - 32px));
+  transform: translate(-50%, -50%);
+  padding: 13px 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.94);
+  color: var(--muted);
+  font-weight: 800;
+  text-align: center;
+}
+
+.signage-empty[hidden] {
+  display: none;
+}
+
+.signage-correction {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: stretch;
+  gap: 10px;
+}
+
+.signage-correction textarea {
+  width: 100%;
+  min-height: 78px;
+  background: #fff;
+  color: var(--ink);
+  font-family: Inter, "Segoe UI", Arial, sans-serif;
+  font-size: 13px;
+}
+
+.signage-ai-controls {
+  display: grid;
+  gap: 8px;
+}
+
+.prompt-shortcuts {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.prompt-shortcuts button {
+  min-height: 32px;
+  padding: 6px 9px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: #fff;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.prompt-shortcuts button:hover {
+  border-color: var(--accent);
+  color: var(--accent-strong);
+}
+
+.review-fallback {
+  margin-bottom: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--line);
+}
+
+.review-primary-actions {
+  margin: 10px 0 12px;
+}
+
+.review-primary-actions #signageTraceBrightButton {
+  border-color: var(--accent);
+  background: #ecfeff;
+  color: var(--accent-strong);
+}
+
+#signageRerunButton:disabled {
+  cursor: wait;
+  opacity: 0.72;
+}
+
+.signage-panel {
+  display: grid;
+  align-content: start;
+  gap: 12px;
+  min-width: 0;
+  max-height: calc(100vh - 220px);
+  overflow-y: auto;
+  padding-right: 2px;
+}
+
+.signage-inspector-section[hidden] {
+  display: none;
+}
+
+.signage-inspector-section {
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.05);
+}
+
+.signage-section-title.compact {
+  margin-bottom: 8px;
+}
+
+.selected-letter-editor {
+  margin-top: 12px;
+  padding: 12px;
+  border: 1px solid #c7d2fe;
+  border-radius: 8px;
+  background: #f8fafc;
+}
+
+.selected-letter-editor[hidden] {
+  display: none;
+}
+
+.manual-letter-popover[hidden] {
+  display: none;
+}
+
+.manual-letter-popover {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  background: rgba(15, 23, 42, 0.38);
+}
+
+.manual-letter-popover-card {
+  width: min(560px, calc(100vw - 36px));
+  padding: 16px;
+  border: 1px solid #99f6e4;
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: 0 22px 60px rgba(15, 23, 42, 0.28);
+}
+
+.manual-letter-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.letter-summary-block[hidden] {
+  display: none !important;
+}
+
+.signage-inline-select {
+  display: grid;
+  gap: 5px;
+  margin: 0 0 12px;
+}
+
+.rate-preview,
+.quotation-rules {
+  margin-top: 12px;
+  padding: 10px;
+  border: 1px solid #99f6e4;
+  border-radius: 8px;
+  background: #f0fdfa;
+  color: var(--accent-strong);
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.55;
+}
+
+.rate-edit-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.rate-edit-grid label[hidden] {
+  display: none;
+}
+
+.rate-preview div + div {
+  margin-top: 4px;
+}
+
+.quotation-rules {
+  border-color: #bfdbfe;
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+.quotation-rules strong {
+  display: block;
+  margin-bottom: 4px;
+}
+
+.quotation-rules p {
+  margin: 0;
+}
+
+.addon-grid {
+  margin-top: 12px;
+}
+
+.box-edit-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.box-edit-grid label {
+  display: grid;
+  gap: 4px;
+}
+
+.box-edit-grid input[type="color"] {
+  min-height: 38px;
+  padding: 4px;
+}
+
+.signage-project-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.signage-project-grid .full {
+  grid-column: 1 / -1;
+}
+
+.signage-project-grid textarea {
+  min-height: 90px;
+  resize: vertical;
+}
+
+.signage-hint {
+  margin: 12px 0 0;
+  padding: 10px;
+  border: 1px solid #fed7aa;
+  border-radius: 8px;
+  background: #fff7ed;
+  color: var(--warn);
+  font-size: 13px;
+  font-weight: 750;
+  line-height: 1.45;
+}
+
+.signage-section-title {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.signage-section-title h3 {
+  margin: 0;
+  font-size: 16px;
+}
+
+.signage-section-title span {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.signage-setup-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.signage-setup-grid label:first-child,
+.signage-setup-grid label:last-child {
+  grid-column: 1 / -1;
+}
+
+.signage-wizard-nav {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 12px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.signage-wizard-nav button {
+  min-width: 128px;
+}
+
+.signage-wizard-nav button:disabled {
+  cursor: not-allowed;
+  opacity: 0.48;
+}
+
+.signage-table-wrap {
+  overflow-x: auto;
+  margin-top: 12px;
+}
+
+.signage-table {
+  width: 100%;
+  border-collapse: collapse;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  font-size: 13px;
+}
+
+.signage-table th,
+.signage-table td {
+  padding: 8px;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+  vertical-align: middle;
+}
+
+.signage-table th {
+  background: #f8fafc;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.signage-table tr:last-child td {
+  border-bottom: 0;
+}
+
+.signage-table input {
+  min-height: 34px;
+  padding: 0 8px;
+}
+
+.signage-table small {
+  display: block;
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.print-canvas-preview {
+  margin: 16px 0;
+  border: 1px solid var(--line);
+}
+
+.print-canvas-preview img {
+  display: block;
+  width: 100%;
+  max-height: 260px;
+  object-fit: contain;
+  background: #f8fafc;
+}
+
+.confidence-pill {
+  display: inline-block;
+  padding: 3px 7px;
+  border-radius: 999px;
+  background: #dcfce7;
+  color: #166534;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.confidence-pill.warning {
+  background: #fff7ed;
+  color: var(--warn);
+}
+
+.letter-quote-row {
+  cursor: help;
+}
+
+.letter-quote-row:hover td {
+  background: #f0fdfa;
+}
+
+.letter-quote-row.selected td {
+  background: #eef2ff;
+  box-shadow: inset 0 1px 0 #c7d2fe, inset 0 -1px 0 #c7d2fe;
+}
+
+.letter-row-color {
+  width: 42px;
+  min-width: 42px;
+  height: 34px;
+  padding: 3px;
+  cursor: pointer;
+}
+
+.letter-delete-button {
+  min-height: 30px;
+  padding: 5px 8px;
+  border: 1px solid #fecaca;
+  border-radius: 6px;
+  background: #fff1f2;
+  color: #991b1b;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.floating-letter-tooltip {
+  position: fixed;
+  z-index: 1000;
+  width: min(360px, calc(100vw - 24px));
+  padding: 12px 13px;
+  border: 1px solid #99f6e4;
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: 0 18px 42px rgba(15, 23, 42, 0.18);
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 750;
+  line-height: 1.55;
+  white-space: pre-line;
+  pointer-events: none;
+}
+
+.floating-letter-tooltip[hidden] {
+  display: none;
+}
+
+.signage-ai-note {
+  padding: 10px;
+  border: 1px solid #bfdbfe;
+  border-radius: 8px;
+  background: #eff6ff;
+  color: #1d4ed8;
+  font-weight: 800;
+}
+
+.quote-total {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 12px;
+  padding: 14px;
+  border: 1px solid #99f6e4;
+  border-radius: 8px;
+  background: #f0fdfa;
+  color: var(--accent-strong);
+}
+
+.quote-total strong {
+  font-size: 22px;
+}
+
+.quote-inspector {
+  box-shadow: 0 -10px 28px rgba(22, 32, 38, 0.08);
+}
+
+body[data-active-tool="signage-quotation"] .result-log {
+  margin: 0 14px 14px;
+}
+
+textarea:focus,
+input:focus,
+select:focus {
+  border-color: var(--accent);
+  outline: 3px solid rgba(15, 118, 110, 0.18);
+}
+
+.command-row {
+  margin-top: 16px;
+}
+
+.load-progress {
+  width: 100%;
+  height: 12px;
+  margin-top: 14px;
+  accent-color: var(--accent);
+}
+
+.icon-button,
+.primary-button,
+.secondary-button {
+  display: inline-grid;
+  place-items: center;
+  min-height: 40px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 0 14px;
+  cursor: pointer;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.icon-button,
+.secondary-button {
+  background: #f9fbfc;
+  color: var(--ink);
+}
+
+.danger-button {
+  border-color: #fecaca;
+  background: #fff1f2;
+  color: #991b1b;
+}
+
+.danger-button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.primary-button {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: #fff;
+}
+
+.primary-button:hover {
+  background: var(--accent-strong);
+}
+
+.file-input-wrap {
+  display: grid;
+  gap: 4px;
+}
+
+.file-input-label {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.file-input-control {
+  min-width: 240px;
+  max-width: 100%;
+  padding: 8px;
+  background: #f9fbfc;
+}
+
+.result-log {
+  display: block;
+  margin-top: 14px;
+  min-height: 42px;
+  padding: 11px 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #f9fbfc;
+  color: var(--muted);
+}
+
+.result-log.warning {
+  border-color: #fed7aa;
+  background: #fff7ed;
+  color: var(--warn);
+}
+
+.result-log.success {
+  border-color: #99f6e4;
+  background: #f0fdfa;
+  color: var(--accent-strong);
+}
+
+.result-log.info {
+  border-color: #bfdbfe;
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
