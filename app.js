@@ -11,6 +11,7 @@ const toolTitle = document.getElementById("toolTitle");
 const shortcutButtons = document.querySelectorAll(".shortcut[data-tool]");
 const resumeSettings = document.getElementById("resumeSettings");
 const simp3dSettings = document.getElementById("simp3dSettings");
+const zActualHeightSettings = document.getElementById("zActualHeightSettings");
 const stlSettings = document.getElementById("stlSettings");
 const stlWorkspace = document.getElementById("stlWorkspace");
 const signageSettings = document.getElementById("signageSettings");
@@ -22,6 +23,7 @@ const startZInput = document.getElementById("startZ");
 const nextZInput = document.getElementById("nextZ");
 const simp3dLayersInput = document.getElementById("simp3dLayers");
 const simp3dHeightInput = document.getElementById("simp3dHeight");
+const zActualHeightInput = document.getElementById("zActualHeight");
 const previewToggle = document.getElementById("previewToggle");
 const simp3dPreviewToggle = document.getElementById("simp3dPreviewToggle");
 const inputGcode = document.getElementById("inputGcode");
@@ -170,6 +172,7 @@ let sourceGcode = "";
 let editedGcode = "";
 let lastProcessedNextZ = "";
 let lastSimp3dTargetZ = "";
+let lastZActualHeight = "";
 let activeTool = localStorage.getItem("gcodeEditorActiveTool") || "resume-print";
 let activeLanguage = localStorage.getItem("gcodeEditorLanguage") || "en";
 let sourceLayers = [];
@@ -282,6 +285,14 @@ const messages = {
     simp3dResumeDone: "Kept 3 startup lines after PRINT_START, removed code before ;Z:{targetZ}. {count} line(s) removed.",
     simp3dResumePrint: "SIMP3D Resume Print",
     runSimp3dResumePrint: "Run SIMP3D Resume Print",
+    zActualHeightTool: "SIMP3D actual height",
+    fileFromStep1: "File from step 1",
+    actualHeightInMachine: "Actual height in machine",
+    runZActualHeight: "Run Z actual height",
+    zActualHeightDescription: "Insert G92 Z after the first G90 -> G21 -> M83 startup sequence",
+    zActualHeightInvalid: "Actual height in machine must be a valid number.",
+    zActualSequenceMissing: "Error: cannot find G90 -> G21 -> M83 in order.",
+    zActualHeightDone: "Inserted G92 Z{height} after M83 at line {line}.",
     layerCount: "Layer count",
     layerHeight: "Layer height",
     startZ: "Start Z",
@@ -536,6 +547,14 @@ const messages = {
     simp3dResumeDone: "\u5df2\u4fdd\u7559 PRINT_START \u540e\u7684 3 \u884c\u542f\u52a8\u4ee3\u7801\uff0c\u5e76\u5220\u9664\u5230 ;Z:{targetZ} \u524d\u7684\u4ee3\u7801\uff0c\u5171\u5220\u9664 {count} \u884c\u3002",
     simp3dResumePrint: "SIMP3D \u7eed\u6253",
     runSimp3dResumePrint: "\u6267\u884c SIMP3D \u7eed\u6253",
+    zActualHeightTool: "SIMP3D \u5b9e\u9645\u9ad8\u5ea6",
+    fileFromStep1: "\u7b2c 1 \u6b65\u6587\u4ef6",
+    actualHeightInMachine: "\u673a\u5668\u5b9e\u9645\u9ad8\u5ea6",
+    runZActualHeight: "\u6267\u884c Z \u5b9e\u9645\u9ad8\u5ea6",
+    zActualHeightDescription: "\u5728\u7b2c\u4e00\u7ec4 G90 -> G21 -> M83 \u542f\u52a8\u6307\u4ee4\u540e\u63d2\u5165 G92 Z",
+    zActualHeightInvalid: "\u673a\u5668\u5b9e\u9645\u9ad8\u5ea6\u5fc5\u987b\u662f\u6709\u6548\u6570\u5b57\u3002",
+    zActualSequenceMissing: "\u9519\u8bef\uff1a\u627e\u4e0d\u5230 G90 -> G21 -> M83 \u987a\u5e8f\u3002",
+    zActualHeightDone: "\u5df2\u5728\u7b2c {line} \u884c M83 \u540e\u63d2\u5165 G92 Z{height}\u3002",
     layerCount: "\u5c42\u6570",
     layerHeight: "\u5c42\u9ad8",
     startZ: "起始 Z",
@@ -738,7 +757,7 @@ if (!messages[activeLanguage]) {
   activeLanguage = "en";
 }
 
-if (!["resume-print", "simp3d-resume", "stl-viewer", "signage-quotation"].includes(activeTool)) {
+if (!["resume-print", "simp3d-resume", "simp3d-z-actual-height", "stl-viewer", "signage-quotation"].includes(activeTool)) {
   activeTool = "resume-print";
 }
 
@@ -776,6 +795,20 @@ const simp3dSampleGcode = [
   "G1 X18 Y12 E0.40"
 ].join("\n");
 
+const zActualHeightSampleGcode = [
+  ";HEADER:SIMP3D Z ACTUAL HEIGHT SAMPLE",
+  "G28",
+  "G90",
+  "; Units setup",
+  "G21",
+  "M104 S210",
+  "M83",
+  "G1 X10 Y10 E0.10",
+  ";LAYER_CHANGE",
+  ";Z:0.20",
+  "G1 X12 Y10 E0.20"
+].join("\n");
+
 function t(key, replacements = {}) {
   const template = messages[activeLanguage][key] || messages.en[key] || key;
   return template.replace(/\{(\w+)\}/g, (_, name) => replacements[name] ?? "");
@@ -809,6 +842,7 @@ function applyLanguage() {
 
 function applyToolUi() {
   const isSimp3d = activeTool === "simp3d-resume";
+  const isZActualHeight = activeTool === "simp3d-z-actual-height";
   const isStl = activeTool === "stl-viewer";
   const isSignage = activeTool === "signage-quotation";
   const isResume = activeTool === "resume-print";
@@ -818,6 +852,8 @@ function applyToolUi() {
   resumeSettings.style.display = isResume ? "" : "none";
   simp3dSettings.hidden = !isSimp3d;
   simp3dSettings.style.display = isSimp3d ? "" : "none";
+  zActualHeightSettings.hidden = !isZActualHeight;
+  zActualHeightSettings.style.display = isZActualHeight ? "" : "none";
   stlSettings.hidden = !isStl;
   stlSettings.style.display = isStl ? "" : "none";
   signageSettings.hidden = !isSignage;
@@ -831,11 +867,11 @@ function applyToolUi() {
   gcodeActions.hidden = isStl || isSignage;
   gcodeActions.style.display = isStl || isSignage ? "none" : "";
 
-  const titleKey = isSignage ? "signageQuotation" : isStl ? "stlViewer" : isSimp3d ? "simp3dResumePrint" : "resumePrint";
+  const titleKey = isSignage ? "signageQuotation" : isStl ? "stlViewer" : isZActualHeight ? "zActualHeightTool" : isSimp3d ? "simp3dResumePrint" : "resumePrint";
   toolTitle.textContent = t(titleKey);
-  processButton.textContent = t(isSimp3d ? "runSimp3dResumePrint" : "runResumePrint");
+  processButton.textContent = t(isZActualHeight ? "runZActualHeight" : isSimp3d ? "runSimp3dResumePrint" : "runResumePrint");
   fileInput.accept = isSignage ? "image/*" : isStl ? ".stl" : ".gcode,.gco,.gc,.txt";
-  fileInputLabel.textContent = t(isSignage ? "openSignagePhoto" : isStl ? "openStl" : "openGcode");
+  fileInputLabel.textContent = t(isSignage ? "openSignagePhoto" : isStl ? "openStl" : isZActualHeight ? "fileFromStep1" : "openGcode");
   shortcutButtons.forEach((button) => {
     button.classList.toggle("active", button.dataset.tool === activeTool);
   });
@@ -914,6 +950,7 @@ function clearOutput() {
   outputGcode.value = "";
   lastProcessedNextZ = "";
   lastSimp3dTargetZ = "";
+  lastZActualHeight = "";
   outputStats.textContent = lineLabel(0);
 }
 
@@ -1118,7 +1155,9 @@ async function loadGcodeFile(file) {
     setProgress(0);
     setLog(t("fileStarting", { fileName: file.name, size: formatBytes(file.size) }), "info");
     sourceBaseName = file.name.replace(/\.(gcode|gco|gc|txt)$/i, "") || "edited";
-    loadedFileName = `${sourceBaseName}.resume.gcode`;
+    loadedFileName = activeTool === "simp3d-z-actual-height"
+      ? `${sourceBaseName}.z-actual-height.gcode`
+      : `${sourceBaseName}.resume.gcode`;
     sourceGcode = await readFileText(file);
     sourceIndexDirty = true;
     rebuildSourceIndex();
@@ -4879,9 +4918,19 @@ function zFilePart(value) {
   return Number.isFinite(numeric) ? formatZ(numeric) : normalized || "0.00";
 }
 
+function actualHeightFilePart(value = lastZActualHeight || zActualHeightInput.value) {
+  const normalized = String(value || "").trim();
+  const numeric = Number(normalized);
+  return Number.isFinite(numeric) ? String(numeric).replace(/[\\/:*?"<>|]+/g, "_") : sanitizeFilePart(normalized || "0");
+}
+
 function buildDownloadFileName() {
   if (activeTool === "simp3d-resume") {
     return `${sanitizeFilePart(sourceBaseName)}.simp3d-resume.Z-${zFilePart(lastSimp3dTargetZ)}.gcode`;
+  }
+
+  if (activeTool === "simp3d-z-actual-height") {
+    return `${sanitizeFilePart(sourceBaseName)}.z-actual-height-${actualHeightFilePart()}.gcode`;
   }
 
   return `${sanitizeFilePart(sourceBaseName)}.resume.nextZ-${zFilePart()}.gcode`;
@@ -5048,6 +5097,98 @@ function findSimp3dCut(text, targetNumber) {
   };
 }
 
+function normalizeGcodeCommand(line) {
+  return String(line || "")
+    .split(";")[0]
+    .trim()
+    .toUpperCase();
+}
+
+function findZActualHeightInsertion(text) {
+  let lineStart = 0;
+  let lineNumber = 1;
+  let stage = 0;
+  let m83Line = null;
+
+  while (lineStart <= text.length) {
+    let lineEnd = text.indexOf("\n", lineStart);
+    if (lineEnd === -1) {
+      lineEnd = text.length;
+    }
+
+    const command = normalizeGcodeCommand(readLineAt(text, lineStart, lineEnd));
+
+    if (stage === 0 && command === "G90") {
+      stage = 1;
+    } else if (stage === 1 && command === "G21") {
+      stage = 2;
+    } else if (stage === 2 && command === "M83") {
+      m83Line = { lineEnd, lineNumber };
+      break;
+    }
+
+    if (lineEnd === text.length) {
+      break;
+    }
+
+    lineNumber += 1;
+    lineStart = lineEnd + 1;
+  }
+
+  if (!m83Line) {
+    throw new Error(t("zActualSequenceMissing"));
+  }
+
+  const newline = text.includes("\r\n") ? "\r\n" : "\n";
+  const insertLine = `G92 Z${String(zActualHeightInput.value).trim()}`;
+  const hasLineBreakAfterM83 = m83Line.lineEnd < text.length;
+  const insertIndex = hasLineBreakAfterM83 ? m83Line.lineEnd + 1 : text.length;
+  const insertion = hasLineBreakAfterM83 ? `${insertLine}${newline}` : `${newline}${insertLine}`;
+
+  return {
+    text: text.slice(0, insertIndex) + insertion + text.slice(insertIndex),
+    insertedLineNumber: m83Line.lineNumber + 1
+  };
+}
+
+function runZActualHeightInMachine() {
+  const source = inputGcode.readOnly ? sourceGcode : inputGcode.value;
+  const actualHeight = String(zActualHeightInput.value || "").trim();
+  const actualHeightNumber = Number(actualHeight);
+
+  if (!source.trim()) {
+    setLog(t("emptySource"), "warning");
+    return;
+  }
+
+  if (!actualHeight || !Number.isFinite(actualHeightNumber)) {
+    setLog(t("zActualHeightInvalid"), "warning");
+    zActualHeightInput.focus();
+    return;
+  }
+
+  try {
+    if (source !== sourceGcode) {
+      sourceGcode = source;
+      sourceLineCount = countLines(sourceGcode);
+      sourceIndexDirty = true;
+    }
+
+    const result = findZActualHeightInsertion(source);
+    editedGcode = result.text;
+    editedLineCount = countLines(editedGcode);
+    lastZActualHeight = actualHeight;
+    renderOutputGcode();
+    setLog(t("zActualHeightDone", { height: actualHeight, line: result.insertedLineNumber }), "success");
+  } catch (error) {
+    editedGcode = "";
+    editedLineCount = 0;
+    outputGcode.value = "";
+    updateStats();
+    setLog(error.message, "warning");
+  }
+}
+
 function runResumePrint() {
   const source = inputGcode.readOnly ? sourceGcode : inputGcode.value;
   const startZ = normalizeZ(startZInput.value);
@@ -5177,8 +5318,12 @@ sampleButton.addEventListener("click", () => {
   }
 
   sourceBaseName = "sample";
-  loadedFileName = "sample.resume.gcode";
-  sourceGcode = activeTool === "simp3d-resume" ? simp3dSampleGcode : sampleGcode;
+  loadedFileName = activeTool === "simp3d-z-actual-height" ? "sample.z-actual-height.gcode" : "sample.resume.gcode";
+  sourceGcode = activeTool === "simp3d-resume"
+    ? simp3dSampleGcode
+    : activeTool === "simp3d-z-actual-height"
+      ? zActualHeightSampleGcode
+      : sampleGcode;
   sourceIndexDirty = true;
   rebuildSourceIndex();
   renderInputGcode();
@@ -5186,6 +5331,8 @@ sampleButton.addEventListener("click", () => {
   if (activeTool === "simp3d-resume") {
     simp3dLayersInput.value = "3";
     simp3dHeightInput.value = "0.20";
+  } else if (activeTool === "simp3d-z-actual-height") {
+    zActualHeightInput.value = "35.6";
   } else {
     startZInput.value = "0.40";
     nextZInput.value = "0.60";
@@ -5212,6 +5359,11 @@ inputGcode.addEventListener("input", () => {
 processButton.addEventListener("click", () => {
   if (activeTool === "simp3d-resume") {
     runSimp3dResumePrint();
+    return;
+  }
+
+  if (activeTool === "simp3d-z-actual-height") {
+    runZActualHeightInMachine();
     return;
   }
 

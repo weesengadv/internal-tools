@@ -27,6 +27,10 @@
             <span class="shortcut-icon">S</span>
             <span data-i18n="simp3dResumePrint">SIMP3D Resume Print</span>
           </button>
+          <button class="shortcut" type="button" data-tool="simp3d-z-actual-height" title="SIMP3D actual height">
+            <span class="shortcut-icon">Z</span>
+            <span data-i18n="zActualHeightTool">SIMP3D actual height</span>
+          </button>
           <div class="shortcut-group" data-i18n="viewerGroup">3D Viewer</div>
           <button class="shortcut" type="button" data-tool="stl-viewer" title="3D Viewer - Area Checker">
             <span class="shortcut-icon">3D</span>
@@ -113,6 +117,17 @@
               <input id="simp3dPreviewToggle" type="checkbox">
               <span data-i18n="showPreview">Show G-code preview</span>
             </label>
+          </div>
+
+          <div class="settings-grid tool-settings" id="zActualHeightSettings" hidden>
+            <label>
+              <span data-i18n="actualHeightInMachine">Actual height in machine</span>
+              <input id="zActualHeight" type="text" inputmode="decimal" placeholder="35.6">
+            </label>
+            <div class="cut-summary">
+              <span data-i18n="zActualHeightTool">SIMP3D actual height</span>
+              <strong data-i18n="zActualHeightDescription">Insert G92 Z after the first G90 -> G21 -> M83 startup sequence</strong>
+            </div>
           </div>
 
           <div class="settings-grid tool-settings" id="stlSettings" hidden>
