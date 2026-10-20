@@ -1,0 +1,55 @@
+:root {
+  color-scheme: light;
+  --ink: #192c2b;
+  --panel: #fff;
+  --surface: #f1f5f4;
+  --well: #edf1f0;
+  --tint: #e0f4ee;
+  --teal: #00796e;
+  --line: #dbe4e1;
+  --muted: #637a75;
+  --subtle: #455b58;
+  --blue: #087ffa;
+  --purple: #a575d1;
+  --danger: #b54435;
+  --danger-bg: #fff0ed;
+  --warning-bg: #fff3e1;
+  --grid: #c8d6d733;
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --ink: #e3efec;
+  --panel: #1a272b;
+  --surface: #213237;
+  --well: #131f23;
+  --tint: #203f3a;
+  --teal: #62d8bd;
+  --line: #30484a;
+  --muted: #94b0a7;
+  --subtle: #b6cbc5;
+  --blue: #7dbbff;
+  --purple: #c29deb;
+  --danger: #ffa89e;
+  --danger-bg: #422b2b;
+  --warning-bg: #413623;
+  --grid: #7b9e9e14;
+}
+html, body, #root, .app { background: var(--panel); color: var(--ink); }
+.topbar { min-height: 50px; height: auto; padding-block: 8px; }
+.brand { font-size: 18px; letter-spacing: -.3px; }
+.brand span { font-size: 9px; letter-spacing: .08em; }
+.stagebar { height: 42px; }
+.stage.active { color: var(--teal); background: var(--tint); }
+.stage.active span, button.primary { color: #fff; }
+:root[data-theme="dark"] .stage.active span, :root[data-theme="dark"] button.primary { color: #102824; }
+.stage.active span { border-color: var(--teal); }
+button.primary:hover { filter: brightness(1.08); background: var(--teal); }
+.drawing.grid { background-color: var(--well); background-image: linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px); }
+.fitting-view svg text { fill: var(--subtle); }
+.number-row input, select { color: var(--ink); background: var(--panel); }
+.dock-render { background: var(--well); }
+.dock-render img { background: #eef2f4; }
+.dock-render span { color: var(--subtle); background: var(--panel); }
+button:focus-visible, input:focus-visible, select:focus-visible { outline-color: var(--teal); }
+@media (max-width: 480px) { .inspector { flex-direction: column; }.topbar .brand { font-size: 16px; }.stage { font-size: 11px; } }
+@media (prefers-reduced-motion: reduce) { button { transition: none; } }

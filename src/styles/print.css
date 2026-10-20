@@ -88,6 +88,30 @@
   text-align: right;
 }
 
+.print-total-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  margin-top: 16px;
+  padding: 18px;
+  border: 1px solid #d8e0e5;
+  border-radius: 8px;
+  background: #f8fafc;
+}
+
+.print-total-summary span {
+  color: #475569;
+  font-size: 13px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.print-total-summary strong {
+  color: #0f172a;
+  font-size: 24px;
+}
+
 .print-quote-note {
   margin-top: 18px;
   padding: 12px;

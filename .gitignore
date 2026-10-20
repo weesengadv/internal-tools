@@ -1,1 +1,16 @@
 signage-config.json
+node_modules/
+dist/
+release/
+release-*/
+data/
+logs/
+server.out.log
+server.err.log
+.office-publisher/
+tools/word-tools/.venv/
+tools/word-tools/node_modules/
+!tools/word-tools/dist/
+!tools/word-tools/dist/**
+**/__pycache__/
+**/.pytest_cache/

@@ -1,0 +1,8 @@
+.word-tools[hidden], .word-tools [hidden] { display: none !important; }
+.word-tools { height: calc(100dvh - var(--topbar-height) - 20px); min-height: 560px; }
+.word-tools iframe { display: block; width: 100%; height: calc(100% - 38px); border: 1px solid var(--line-soft); border-radius: 8px; background: #fff; }
+.word-tools-connection { height: 38px; display: flex; justify-content: space-between; align-items: center; gap: 12px; color: var(--muted); font-size: 12px; }
+.word-tools-connection button { padding: 3px 10px; min-height: 28px; font-size: 12px; }
+.word-tools-status { padding: 40px 24px; background: var(--panel); border: 1px solid var(--line-soft); border-radius: 8px; }
+.word-tools-status p { color: var(--muted); overflow-wrap: anywhere; }
+body[data-active-tool="3d-word-tools"] .workspace { padding-bottom: 0; }

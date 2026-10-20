@@ -2,5 +2,9 @@
 @import url("./src/styles/gcode.css");
 @import url("./src/styles/stl-viewer.css");
 @import url("./src/styles/signage.css");
+@import url("./src/styles/character-cropper.css");
+@import url("./src/styles/word-tools.css");
 @import url("./src/styles/print.css");
 @import url("./src/styles/responsive.css");
+@import url("./src/styles/appearance.css");
+@import url("./src/styles/tube-frame.css");

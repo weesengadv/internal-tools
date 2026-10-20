@@ -8,64 +8,93 @@
   </head>
   <body>
     <div class="app-shell">
-      <aside class="sidebar" aria-label="Shortcut menu">
-        <div class="brand">
-          <span class="brand-mark">G</span>
-          <span>
-            <strong data-i18n="appName">Weeseng Software</strong>
-            <small data-i18n="tagline">Production tools</small>
-          </span>
+      <aside class="sidebar" data-i18n-aria-label="Shortcut menu" aria-label="Shortcut menu">
+        <div class="sidebar-header">
+          <div class="brand">
+            <span class="brand-mark">G</span>
+            <span class="brand-text">
+              <strong data-i18n="appName">Weeseng Software</strong>
+              <small data-i18n="tagline">Production tools</small>
+            </span>
+          </div>
+          <div class="sidebar-utilities">
+          <button class="sidebar-toggle" id="sidebarToggle" type="button" aria-controls="shortcutMenu" aria-expanded="true" title="Collapse menu">
+            <span class="sidebar-toggle-icon" aria-hidden="true">&lt;</span>
+            <span class="sidebar-toggle-label">Collapse menu</span>
+          </button>
+          <label class="language-control">
+            <span class="visually-hidden" data-i18n="language">Language</span>
+            <select id="languageSelect" data-i18n-aria-label="Language" aria-label="Language"><option value="en">EN</option><option value="cn">CN</option></select>
+          </label>
+          <button class="theme-toggle" id="themeToggle" type="button" aria-label="Switch to night mode" aria-pressed="false"><span data-theme-icon aria-hidden="true">☾</span></button>
+          </div>
         </div>
 
-        <nav class="shortcut-menu" aria-label="Editor tools">
-          <div class="shortcut-group" data-i18n="gcodeEditorGroup">Tools G-code Editor</div>
+        <nav class="shortcut-menu" id="shortcutMenu" data-i18n-aria-label="Editor tools" aria-label="Editor tools">
+          <div class="shortcut-group" data-i18n="quotationGroup">Quotation</div>
+          <button class="shortcut" type="button" data-tool="signage-quotation" data-i18n-title="Signage Quotation" title="Signage Quotation">
+            <span class="shortcut-icon">AI</span>
+            <span class="shortcut-label" data-i18n="signageQuotation">Signage Quotation</span>
+          </button>
+          <div class="shortcut-group" data-i18n="wordToolsGroup">3D Emboss word</div>
+          <button class="shortcut" type="button" data-tool="3d-word-tools" title="Hole and 3D Print Word">
+            <span class="shortcut-icon">Aa</span>
+            <span class="shortcut-label" data-i18n="wordTools">Hole and 3D Print Word</span>
+          </button>
+          <div class="shortcut-group" data-i18n="viewerGroup">3D Sculpting</div>
+          <button class="shortcut" type="button" data-tool="stl-viewer" title="3D Viewer - Area Checker">
+            <span class="shortcut-icon">3D</span>
+            <span class="shortcut-label" data-i18n="stlViewer">3D Viewer - Area Checker</span>
+          </button>
+          <button class="shortcut" type="button" data-tool="character-cropper" title="Character Cropper">
+            <span class="shortcut-icon">▧</span>
+            <span class="shortcut-label" data-i18n="characterCropper">Character Cropper</span>
+          </button>
+          <div class="shortcut-group" data-i18n="productionToolsGroup">Production Tools</div>
+          <button class="shortcut" type="button" data-tool="tube-frame" title="Tube & Frame">
+            <span class="shortcut-icon">TF</span>
+            <span class="shortcut-label" data-i18n="tubeFrame">Tube &amp; Frame</span>
+          </button>
+          <div class="shortcut-group" data-i18n="gcodeEditorGroup">G code</div>
           <button class="shortcut active" type="button" data-tool="resume-print" title="Resume Print">
             <span class="shortcut-icon">R</span>
-            <span data-i18n="resumePrint">Resume Print</span>
+            <span class="shortcut-label" data-i18n="resumePrint">Resume Print</span>
           </button>
           <button class="shortcut" type="button" data-tool="simp3d-resume" title="SIMP3D Resume Print">
             <span class="shortcut-icon">S</span>
-            <span data-i18n="simp3dResumePrint">SIMP3D Resume Print</span>
+            <span class="shortcut-label" data-i18n="simp3dResumePrint">SIMP3D Resume Print</span>
           </button>
           <button class="shortcut" type="button" data-tool="simp3d-z-actual-height" title="SIMP3D actual height">
             <span class="shortcut-icon">Z</span>
-            <span data-i18n="zActualHeightTool">SIMP3D actual height</span>
+            <span class="shortcut-label" data-i18n="zActualHeightTool">SIMP3D actual height</span>
           </button>
-          <div class="shortcut-group" data-i18n="viewerGroup">3D Viewer</div>
-          <button class="shortcut" type="button" data-tool="stl-viewer" title="3D Viewer - Area Checker">
-            <span class="shortcut-icon">3D</span>
-            <span data-i18n="stlViewer">3D Viewer - Area Checker</span>
-          </button>
-          <div class="shortcut-group" data-i18n="quotationGroup">Quotation</div>
-          <button class="shortcut" type="button" data-tool="signage-quotation" title="Signage Quotation">
-            <span class="shortcut-icon">AI</span>
-            <span data-i18n="signageQuotation">Signage Quotation</span>
+          <div class="shortcut-group" data-i18n="canvasGroup">Canvas</div>
+          <button class="shortcut" id="cowartLauncher" type="button" title="Cowart Canvas">
+            <span class="shortcut-icon">C</span>
+            <span class="shortcut-label" data-i18n="cowartCanvas">Cowart Canvas</span>
           </button>
           <button class="shortcut" type="button" disabled title="Coming later">
             <span class="shortcut-icon">+</span>
-            <span data-i18n="addTool">Add Tool</span>
+            <span class="shortcut-label" data-i18n="addTool">Add Tool</span>
           </button>
         </nav>
       </aside>
 
       <main class="workspace">
-        <header class="topbar">
-          <div>
-            <p class="eyebrow" data-i18n="feature">Tools</p>
-            <h1 data-i18n="appName">Weeseng Software</h1>
+        <section class="tube-frame" id="tubeFrameWorkspace" aria-label="Tube & Frame" hidden></section>
+        <section class="character-cropper" id="characterCropperWorkspace" data-i18n-aria-label="Character view cropper" aria-label="Character view cropper" hidden></section>
+        <section class="word-tools" id="wordToolsWorkspace" data-i18n-aria-label="3D word tools" aria-label="3D word tools" hidden>
+          <div class="word-tools-connection" hidden>
+            <span>DXF · STL workbench</span>
+            <button class="secondary-button" id="wordToolsReconnect" type="button">Reconnect</button>
           </div>
-          <div class="topbar-actions">
-            <label class="language-control">
-              <span data-i18n="language">Language</span>
-              <select id="languageSelect">
-                <option value="en">EN</option>
-                <option value="cn">CN</option>
-              </select>
-            </label>
-            <div class="status-pill" id="fileStatus">No file loaded</div>
+          <div class="word-tools-status" role="status">
+            <h2 data-i18n="3D word tools">3D word tools</h2>
+            <p class="word-tools-message">Opening 3D word tools…</p>
+            <button class="secondary-button" type="button" id="wordToolsRetry" hidden>Retry</button>
           </div>
-        </header>
-
+          <iframe id="wordToolsFrame" title="3D word tools — DXF letter workbench" hidden></iframe>
+        </section>
         <section class="tool-panel" id="resumePrintPanel">
           <div class="panel-header">
             <div>
@@ -77,7 +106,7 @@
                 <span class="file-input-label" data-i18n="openGcode">Open G-code</span>
                 <input id="fileInput" class="file-input-control" type="file" accept=".gcode,.gco,.gc,.txt">
               </label>
-              <button class="icon-button" id="sampleButton" type="button" title="Load sample" data-i18n="sample">Sample</button>
+              <button class="icon-button" id="sampleButton" type="button" data-i18n-title="Load sample" title="Load sample" data-i18n="sample">Sample</button>
             </div>
           </div>
 
@@ -120,6 +149,7 @@
           </div>
 
           <div class="settings-grid tool-settings" id="zActualHeightSettings" hidden>
+            <p class="z-actual-height-help" id="zActualHeightHelp" data-i18n="zActualHeightHelp">This tool only works with a file processed by SIMP3D Resume Print. First run SIMP3D Resume Print and download the result. Upload that file here, then enter the actual height shown on your machine.</p>
             <label>
               <span data-i18n="actualHeightInMachine">Actual height in machine</span>
               <input id="zActualHeight" type="text" inputmode="decimal" placeholder="35.6">
@@ -136,8 +166,8 @@
               <select id="stlUnit">
                 <option value="mm">mm</option>
                 <option value="cm">cm</option>
-                <option value="inch">inch</option>
-                <option value="meter">meter</option>
+                <option value="inch" data-i18n="inch">inch</option>
+                <option value="meter" data-i18n="meter">meter</option>
               </select>
             </label>
             <label>
@@ -238,25 +268,32 @@
                 <strong>signage-config.json</strong>
               </div>
               <div id="signageGuidelineControlCard">
-                <span data-i18n="signageGuideline">Guideline size (inch)</span>
-                <label class="signage-command-input">
-                  <input id="signageGuidelineSize" type="number" min="0.01" step="0.01" value="144" aria-label="Guideline size in inches">
+                <span data-i18n="signageGuideline">Guideline size</span>
+                <label class="signage-command-input with-unit">
+                  <input id="signageGuidelineSize" type="number" min="0.01" step="0.01" value="144" data-i18n-aria-label="Guideline size" aria-label="Guideline size">
+                  <select id="signageMeasureUnit" data-i18n-aria-label="Measurement unit" aria-label="Measurement unit">
+                    <option value="mm">mm</option>
+                    <option value="cm">cm</option>
+                    <option value="m">m</option>
+                    <option value="inch" selected data-i18n="inch">inch</option>
+                    <option value="feet" data-i18n="feet">feet</option>
+                  </select>
                 </label>
               </div>
               <div id="signageBackingControlCard" hidden>
-                <span data-i18n="backingRealSize">Backing size (inch)</span>
+                <span data-i18n="backingRealSize">Backing size</span>
                 <label class="signage-command-input split">
-                  <input id="signageBackingWidth" type="number" min="0.01" step="0.01" value="144" aria-label="Backing width in inches">
-                  <input id="signageBackingHeight" type="number" min="0.01" step="0.01" value="36" aria-label="Backing height in inches">
+                  <input id="signageBackingWidth" type="number" min="0.01" step="0.01" value="144" data-i18n-aria-label="Backing width" aria-label="Backing width">
+                  <input id="signageBackingHeight" type="number" min="0.01" step="0.01" value="36" data-i18n-aria-label="Backing height" aria-label="Backing height">
                 </label>
               </div>
               <div>
                 <span data-i18n="stepPricing">Sheet pricing</span>
-                <strong>Google Sheet or sample fallback</strong>
+                <strong data-i18n="Live Google Sheet with last-good cache">Live Google Sheet with last-good cache</strong>
               </div>
               <div>
                 <span data-i18n="projectAutosave">Project autosave</span>
-                <strong id="signageAutosaveStatus">Not saved yet</strong>
+                <strong id="signageAutosaveStatus" data-i18n="Not saved yet">Not saved yet</strong>
               </div>
             </div>
 
@@ -287,16 +324,16 @@
                   <a class="secondary-button manual-link" href="SIGNAGE_QUOTATION_MANUAL.html" target="_blank" rel="noopener" data-i18n="openManual">Open manual</a>
                 </div>
 
-                <div class="signage-zoom-controls" aria-label="Canvas zoom">
+                <div class="signage-zoom-controls" data-i18n-aria-label="Canvas zoom" aria-label="Canvas zoom">
                   <button class="secondary-button" id="signageZoomOutButton" type="button" data-i18n="zoomOut">Zoom out</button>
                   <output id="signageZoomValue">100%</output>
                   <button class="secondary-button" id="signageZoomInButton" type="button" data-i18n="zoomIn">Zoom in</button>
                   <button class="secondary-button" id="signageZoomResetButton" type="button" data-i18n="resetZoom">Reset</button>
-                  <div class="canvas-pan-controls" aria-label="Canvas pan">
-                    <button class="secondary-button" id="signagePanLeftButton" type="button" title="Pan left">&larr;</button>
-                    <button class="secondary-button" id="signagePanUpButton" type="button" title="Pan up">&uarr;</button>
-                    <button class="secondary-button" id="signagePanDownButton" type="button" title="Pan down">&darr;</button>
-                    <button class="secondary-button" id="signagePanRightButton" type="button" title="Pan right">&rarr;</button>
+                  <div class="canvas-pan-controls" data-i18n-aria-label="Canvas pan" aria-label="Canvas pan">
+                    <button class="secondary-button" id="signagePanLeftButton" type="button" data-i18n-title="Pan left" title="Pan left">&larr;</button>
+                    <button class="secondary-button" id="signagePanUpButton" type="button" data-i18n-title="Pan up" title="Pan up">&uarr;</button>
+                    <button class="secondary-button" id="signagePanDownButton" type="button" data-i18n-title="Pan down" title="Pan down">&darr;</button>
+                    <button class="secondary-button" id="signagePanRightButton" type="button" data-i18n-title="Pan right" title="Pan right">&rarr;</button>
                     <button class="secondary-button" id="signagePanCenterButton" type="button" data-i18n="centerCanvas">Center</button>
                   </div>
                 </div>
@@ -362,11 +399,11 @@
                       <input id="signageConfigStatus" type="text" value="signage-config.json" readonly>
                     </label>
                     <label>
-                      <span data-i18n="signageGuideline">Guideline size (inch)</span>
+                      <span data-i18n="signageGuideline">Guideline size</span>
                       <output id="signageGuidelineSizeMirror">144 in</output>
                     </label>
                     <label>
-                      <span data-i18n="backingRealSize">Backing size (inch)</span>
+                      <span data-i18n="backingRealSize">Backing size</span>
                       <output id="signageBackingSizeMirror">144 in x 36 in</output>
                     </label>
                   </div>
@@ -443,7 +480,7 @@
                       <textarea id="signageCorrectionPrompt" data-i18n-placeholder="correctionPlaceholder" placeholder="Example: Letter S height is 18 inch. Recalculate the quote."></textarea>
                     </label>
                     <div class="signage-ai-controls">
-                      <div class="prompt-shortcuts" aria-label="Prompt shortcuts">
+                      <div class="prompt-shortcuts" data-i18n-aria-label="Prompt shortcuts" aria-label="Prompt shortcuts">
                         <button type="button" data-prompt="Read all visible alphabet words. If any letter is unclear, mark it as low confidence and explain what user should correct." data-i18n="promptReadAll">Read all words</button>
                         <button type="button" data-prompt="Use my guideline size as the true scale. Recalculate every letter width and height from the photo." data-i18n="promptUseScale">Use scale</button>
                         <button type="button" data-prompt="Only correct the selected/unclear letters. Keep the other detected letters unchanged." data-i18n="promptCorrectOnly">Correct unclear</button>
@@ -499,8 +536,8 @@
                     </div>
                   </div>
                   <div class="manual-letter-popover" id="signageManualLetterPopover" hidden>
-                    <div class="manual-letter-popover-card">
-                      <div class="signage-section-title compact">
+                    <div class="manual-letter-popover-card" id="signageManualLetterDialog">
+                      <div class="signage-section-title compact manual-letter-drag-handle" id="signageManualLetterDragHandle">
                         <h3 data-i18n="manualLetterTitle">New letter box</h3>
                         <span data-i18n="manualLetterMultiplyHint">Confirm or multiply inside boundary</span>
                       </div>
@@ -508,9 +545,17 @@
                         <label><span data-i18n="letterText">Text</span><input id="signageManualLetterText" type="text" autocomplete="off"></label>
                         <label><span data-i18n="horizontalCount">Horizontal count</span><input id="signageManualLetterCountX" type="number" min="1" step="1" value="1"></label>
                         <label><span data-i18n="verticalCount">Vertical count</span><input id="signageManualLetterCountY" type="number" min="1" step="1" value="1"></label>
-                        <label><span data-i18n="horizontalSpacing">Horizontal spacing</span><input id="signageManualLetterSpacingX" type="number" min="0" step="1" value="0"></label>
-                        <label><span data-i18n="verticalSpacing">Vertical spacing</span><input id="signageManualLetterSpacingY" type="number" min="0" step="1" value="0"></label>
+                        <label><span><span data-i18n="horizontalSpacing">Horizontal spacing</span> (<span class="signage-spacing-unit" data-i18n="inch">inch</span>)</span><input id="signageManualLetterSpacingX" type="number" min="0" step="0.01" value="0"></label>
+                        <label><span><span data-i18n="verticalSpacing">Vertical spacing</span> (<span class="signage-spacing-unit" data-i18n="inch">inch</span>)</span><input id="signageManualLetterSpacingY" type="number" min="0" step="0.01" value="0"></label>
                       </div>
+                      <label class="manual-letter-checkbox">
+                        <input id="signageManualLetterUseTextCount" type="checkbox" checked>
+                        <span data-i18n="useTextAsHorizontalCount">Use text as horizontal count</span>
+                      </label>
+                      <label class="manual-letter-checkbox">
+                        <input id="signageManualLetterTransparent" type="checkbox">
+                        <span data-i18n="transparentDialog">Transparent dialog</span>
+                      </label>
                       <div class="manual-letter-actions">
                         <button class="secondary-button" id="signageManualLetterCancel" type="button" data-i18n="cancel">Cancel</button>
                         <button class="primary-button" id="signageManualLetterConfirm" type="button" data-i18n="confirm">Confirm</button>
@@ -550,16 +595,21 @@
                     <label id="signageMaterialField">
                       <span data-i18n="signageMaterial">Emboss material/model</span>
                       <select id="signageMaterial">
-                        <option value="Acrylic emboss">Acrylic emboss</option>
-                        <option value="Stainless steel emboss">Stainless steel emboss</option>
-                        <option value="Aluminium emboss">Aluminium emboss</option>
+                        <option value="Acrylic emboss" data-i18n="Acrylic emboss">Acrylic emboss</option>
+                        <option value="Stainless steel emboss" data-i18n="Stainless steel emboss">Stainless steel emboss</option>
+                        <option value="Aluminium emboss" data-i18n="Aluminium emboss">Aluminium emboss</option>
                       </select>
                     </label>
                     <label class="setting-action">
                       <span data-i18n="quoteAction">Quote action</span>
                       <button class="secondary-button" id="signageRefreshQuoteButton" type="button" data-i18n="refreshQuote">Refresh quote</button>
                     </label>
+                    <label class="setting-action sheet-sync-action">
+                      <span data-i18n="Google Sheet">Google Sheet</span>
+                      <button class="secondary-button" id="signageSyncSheetButton" type="button" data-i18n="syncLatestSheet">Sync latest Google Sheet</button>
+                    </label>
                   </div>
+                  <p class="sheet-sync-status" id="signageSheetSyncStatus" aria-live="polite">weesengadv@gmail.com - not synced yet</p>
                   <div class="rate-edit-grid" id="signageRateEditGrid">
                     <label>
                       <span data-i18n="backingRateEdit">Backing rate / sqft</span>
@@ -627,9 +677,9 @@
                         <tr>
                           <th data-i18n="quoteItem">Item</th>
                           <th data-i18n="measurements">Dimension</th>
-                          <th data-i18n="quantity">Qty</th>
-                          <th data-i18n="quoteRate">Rate</th>
-                          <th>Formula</th>
+                          <th data-quote-rate-detail data-i18n="quantity">Qty</th>
+                          <th data-quote-rate-detail data-i18n="quoteRate">Rate</th>
+                          <th data-quote-rate-detail data-i18n="Formula">Formula</th>
                           <th data-i18n="quoteTotal">Total</th>
                         </tr>
                       </thead>
@@ -640,6 +690,46 @@
                     <span data-i18n="totalQuotation">Total quotation</span>
                     <strong id="signageQuoteTotal">RM 0.00</strong>
                   </div>
+                  <section class="production-handoff" aria-labelledby="signageApprovalTitle">
+                    <div class="signage-section-title compact">
+                      <h3 id="signageApprovalTitle" data-i18n="Production handoff">Production handoff</h3>
+                      <span id="signageApprovalStatus" class="approval-status draft" data-i18n="Draft">Draft</span>
+                    </div>
+                    <div class="handoff-identity">
+                      <span data-i18n="Quotation">Quotation</span>
+                      <strong id="signageQuotationIdentity" data-i18n="Not assigned">Not assigned</strong>
+                    </div>
+                    <div class="signage-project-grid handoff-fields">
+                      <label>
+                        <span data-i18n="Approving manager">Approving manager</span>
+                        <input id="signageApprovedBy" type="text" autocomplete="name">
+                      </label>
+                      <label>
+                        <span data-i18n="Customer acceptance reference">Customer acceptance reference</span>
+                        <input id="signageAcceptanceReference" type="text" data-i18n-placeholder="Example: WhatsApp confirmation" placeholder="Example: WhatsApp confirmation">
+                      </label>
+                    </div>
+                    <p class="signage-hint" id="signageApprovalHelp" data-i18n="Confirm only after the customer accepts this quotation. Any important edit will require approval again.">Confirm only after the customer accepts this quotation. Any important edit will require approval again.</p>
+                    <div class="signage-actions">
+                      <button class="secondary-button" id="signageApproveQuotationButton" type="button" data-i18n="Confirm customer acceptance">Confirm customer acceptance</button>
+                      <button class="primary-button" id="signageExportJobButton" type="button" disabled data-i18n="Export for production">Export for production</button>
+                    </div>
+                  </section>
+                  <fieldset class="export-mode-control" data-i18n-aria-label="Export mode" aria-label="Export mode">
+                    <legend data-i18n="exportMode">Export mode</legend>
+                    <label>
+                      <input type="radio" name="signageExportMode" value="full" checked>
+                      <span data-i18n="exportFullDetails">Full details</span>
+                    </label>
+                    <label>
+                      <input type="radio" name="signageExportMode" value="total">
+                      <span data-i18n="exportTotalSum">Total sum</span>
+                    </label>
+                  </fieldset>
+                  <label class="quote-hide-rate-control">
+                    <input id="signageHideRateDetails" type="checkbox">
+                    <span data-i18n="hideRateDetails">Hide qty and rate</span>
+                  </label>
                   <div class="signage-actions">
                     <button class="secondary-button" id="signageExportCsvButton" type="button" data-i18n="exportCsv">Export CSV</button>
                     <button class="secondary-button" id="signagePrintButton" type="button" data-i18n="printQuote">Print / PDF</button>
@@ -688,11 +778,31 @@
       </main>
     </div>
 
+    <div class="app-modal-backdrop" id="cowartFallbackModal" hidden>
+      <section class="app-modal" role="dialog" aria-modal="true" aria-labelledby="cowartFallbackTitle">
+        <div class="app-modal-header">
+          <h2 id="cowartFallbackTitle" data-i18n="cowartFallbackTitle">Could not confirm Codex opened</h2>
+          <button class="icon-button" id="cowartFallbackClose" type="button" data-i18n-aria-label="Close" aria-label="Close" data-i18n="Close">Close</button>
+        </div>
+        <p data-i18n="cowartFallbackMessage">Please install or open Codex, make sure cowart@personal is installed, then click Cowart Canvas again.</p>
+        <div class="app-modal-actions">
+          <a class="secondary-button" id="cowartDirectLink" href="http://127.0.0.1:43217/" target="_blank" rel="noopener" data-i18n="openCowartDirect">Open Cowart directly</a>
+          <a class="primary-button" id="cowartPluginLink" href="codex://plugins/install/cowart?marketplace=personal" data-i18n="openCodexPlugin">Open Codex plugin</a>
+        </div>
+      </section>
+    </div>
+
+    <footer class="global-status-bar" data-i18n-aria-label="Application status" aria-label="Application status">
+      <span><i class="status-dot" aria-hidden="true"></i><span data-i18n="ready">Ready.</span></span>
+      <span class="status-file" id="fileStatus">No file loaded</span>
+      <span class="status-version" data-app-version="1.1.0"><span data-i18n="appName">Weeseng Software</span> v1.1.0</span>
+    </footer>
+
     <script type="importmap">
       {
         "imports": {
-          "three": "https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.module.js",
-          "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.164.1/examples/jsm/"
+          "three": "/vendor/three/build/three.module.js",
+          "three/addons/": "/vendor/three/examples/jsm/"
         }
       }
     </script>

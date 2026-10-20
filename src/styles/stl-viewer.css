@@ -1,16 +1,20 @@
-﻿.stl-workspace {
+.stl-workspace {
   display: grid;
   grid-template-columns: minmax(0, 1.25fr) minmax(320px, 0.75fr);
   gap: 14px;
+  padding: 16px;
 }
 
 .stl-viewer {
   position: relative;
   min-height: 560px;
   overflow: hidden;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  background: #e8eef1;
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius);
+  background-color: var(--viewer-bg);
+  background-image: radial-gradient(var(--viewer-grid) 1px, transparent 1px);
+  background-size: 24px 24px;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.62);
 }
 
 #stlCanvas {
@@ -27,10 +31,10 @@
   width: min(320px, calc(100% - 32px));
   transform: translate(-50%, -50%);
   padding: 13px 14px;
-  border: 1px solid var(--line);
-  border-radius: 8px;
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius);
   background: rgba(255, 255, 255, 0.92);
-  color: var(--muted);
+  color: var(--subtle);
   font-weight: 800;
   text-align: center;
 }
@@ -47,14 +51,14 @@
 
 .stl-card {
   padding: 14px;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  background: #f9fbfc;
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius);
+  background: var(--panel);
+  box-shadow: var(--shadow);
 }
 
 .stl-card h3 {
   margin: 0 0 12px;
-  font-size: 16px;
 }
 
 .metric-grid {
@@ -69,7 +73,7 @@
   justify-content: space-between;
   gap: 12px;
   padding-bottom: 8px;
-  border-bottom: 1px solid var(--line);
+  border-bottom: 1px solid var(--line-soft);
 }
 
 .metric-grid div:last-child {
@@ -78,7 +82,7 @@
 }
 
 .metric-grid dt {
-  color: var(--muted);
+  color: var(--subtle);
   font-size: 12px;
   font-weight: 800;
 }
@@ -102,7 +106,7 @@
 
 .resize-grid input:disabled {
   color: #8a98a3;
-  background: #edf2f4;
+  background: var(--surface);
 }
 
 .stl-actions {
@@ -111,4 +115,3 @@
   flex-wrap: wrap;
   margin-top: 12px;
 }
-

@@ -1,19 +1,31 @@
 const http = require("http");
 const fs = require("fs");
 const path = require("path");
+const { handlePricingApi } = require("./src/server/pricing-api.cjs");
+const { createPricingStore } = require("./src/server/pricing-sync.cjs");
+const { loadRuntimeConfigFromPaths, resolveRuntimePaths } = require("./src/server/runtime-config.cjs");
+const { resolveStaticFile } = require("./src/server/static-paths.cjs");
+const { createWordToolsService } = require("./src/server/word-tools-service.cjs");
+const { allowOfficeRequest } = require('./src/server/office-access.cjs');
+const { proxyWordTools } = require('./src/server/word-tools-proxy.cjs');
+const { createPublisherApi } = require('./src/server/office-publisher-api.cjs');
+const { createTubeFrameService, createTubeFrameApi } = require("./src/server/tube-frame-service.cjs");
 
-const host = "127.0.0.1";
-const port = Number(process.env.PORT || 4173);
-const root = __dirname;
-const configPath = path.join(root, "signage-config.json");
-const configExamplePath = path.join(root, "signage-config.example.json");
+const root = path.resolve(process.env.WEESENG_APP_ROOT || __dirname);
+const runtimePaths = resolveRuntimePaths({
+  appRoot: root,
+  configDir: process.env.WEESENG_CONFIG_DIR || root
+});
 const types = {
   ".html": "text/html; charset=utf-8",
   ".css": "text/css; charset=utf-8",
   ".js": "application/javascript; charset=utf-8",
+  ".mjs": "application/javascript; charset=utf-8",
   ".json": "application/json; charset=utf-8",
   ".md": "text/markdown; charset=utf-8",
-  ".csv": "text/csv; charset=utf-8"
+  ".csv": "text/csv; charset=utf-8",
+  ".wasm": "application/wasm",
+  ".gz": "application/gzip"
 };
 
 function send(response, status, body, contentType = "application/json; charset=utf-8") {
@@ -21,19 +33,8 @@ function send(response, status, body, contentType = "application/json; charset=u
   response.end(typeof body === "string" ? body : JSON.stringify(body));
 }
 
-function readJsonIfExists(filePath) {
-  if (!fs.existsSync(filePath)) {
-    return null;
-  }
-
-  return JSON.parse(fs.readFileSync(filePath, "utf8"));
-}
-
 function loadSignageConfig() {
-  return {
-    ...(readJsonIfExists(configExamplePath) || {}),
-    ...(readJsonIfExists(configPath) || {})
-  };
+  return loadRuntimeConfigFromPaths(runtimePaths);
 }
 
 function collectBody(request) {
@@ -383,10 +384,14 @@ async function fetchWorkbookPricing(config) {
       throw new Error(`${tab.name} failed: ${sheetResponse.status}`);
     }
     const text = await sheetResponse.text();
+    const matrix = parseCsvMatrix(text).filter((row) => row.some(Boolean));
+    if (!matrix.length) {
+      throw new Error(`${tab.name} returned no pricing rows.`);
+    }
     loadedTabs.push({
       name: tab.name,
       gid: tab.gid,
-      matrix: parseCsvMatrix(text).filter((row) => row.some(Boolean)),
+      matrix,
       rows: parseCsv(text)
     });
   }
@@ -394,38 +399,33 @@ async function fetchWorkbookPricing(config) {
   return pricingFromWorkbook(loadedTabs, config);
 }
 
-async function handlePricing(_request, response) {
-  const config = loadSignageConfig();
-
-  try {
-    const workbookPricing = await fetchWorkbookPricing(config);
-    if (workbookPricing) {
-      send(response, 200, workbookPricing);
-      return;
-    }
-  } catch (error) {
-    const pricing = samplePricing();
-    pricing.source = "sample-fallback";
-    pricing.warning = `Google workbook request failed: ${error.message}`;
-    send(response, 200, pricing);
-    return;
+async function fetchConfiguredPricing(config) {
+  const workbookPricing = await fetchWorkbookPricing(config);
+  if (workbookPricing) {
+    return workbookPricing;
   }
-
   if (!config.googleSheetCsvUrl) {
-    send(response, 200, samplePricing());
-    return;
+    throw new Error("Google Sheet pricing is not configured.");
   }
-
   const sheetResponse = await fetch(config.googleSheetCsvUrl);
   if (!sheetResponse.ok) {
-    const pricing = samplePricing();
-    pricing.source = "sample-fallback";
-    pricing.warning = `Google Sheet request failed: ${sheetResponse.status}`;
-    send(response, 200, pricing);
-    return;
+    throw new Error(`Google Sheet request failed: ${sheetResponse.status}`);
   }
+  return pricingFromRows(parseCsv(await sheetResponse.text()), config);
+}
 
-  send(response, 200, pricingFromRows(parseCsv(await sheetResponse.text()), config));
+const pricingStore = createPricingStore({
+  cachePath: runtimePaths.cachePath,
+  fetchPricing: fetchConfiguredPricing
+});
+
+async function handlePricing(request, response) {
+  const result = await handlePricingApi({
+    method: request.method,
+    config: loadSignageConfig(),
+    store: pricingStore
+  });
+  send(response, result.status, result.body);
 }
 
 function sampleRecognition() {
@@ -557,9 +557,37 @@ async function handleDraft(request, response) {
   send(response, 200, { draft: data.choices?.[0]?.message?.content || "" });
 }
 
+function handleCodexCowartLink(_request, response) {
+  const cowartUrl = "http://127.0.0.1:43217/";
+  const prompt = [
+    "Open the Cowart canvas for this project in the Codex in-app browser.",
+    `Use ${cowartUrl} if the Cowart service is already running.`
+  ].join(" ");
+  const params = new URLSearchParams({
+    path: root,
+    prompt
+  });
+
+  send(response, 200, {
+    codexUrl: `codex://new?${params.toString()}`,
+    cowartUrl,
+    projectPath: root
+  });
+}
+
 async function handleApi(request, response, pathname) {
   try {
+    if (request.method === "GET" && pathname === "/api/codex-cowart-link") {
+      handleCodexCowartLink(request, response);
+      return true;
+    }
+
     if (request.method === "GET" && pathname === "/api/signage/pricing") {
+      await handlePricing(request, response);
+      return true;
+    }
+
+    if (request.method === "POST" && pathname === "/api/signage/pricing/sync") {
       await handlePricing(request, response);
       return true;
     }
@@ -582,10 +610,9 @@ async function handleApi(request, response, pathname) {
 }
 
 function serveStatic(request, response, pathname) {
-  const requestedPath = pathname === "/" ? "index.html" : pathname;
-  const filePath = path.join(root, requestedPath);
+  const filePath = resolveStaticFile(root, pathname);
 
-  if (!filePath.startsWith(root)) {
+  if (!filePath) {
     response.writeHead(403);
     response.end("Forbidden");
     return;
@@ -599,23 +626,87 @@ function serveStatic(request, response, pathname) {
     }
 
     response.writeHead(200, {
+      "Cache-Control": "no-store",
       "Content-Type": types[path.extname(filePath)] || "text/plain; charset=utf-8"
     });
     response.end(data);
   });
 }
 
-const server = http.createServer(async (request, response) => {
-  const url = new URL(request.url, `http://${host}:${port}`);
-  const pathname = decodeURIComponent(url.pathname);
+function createWeesengServer(options = {}) {
+  const office = options.office || (process.env.WEESENG_OFFICE_ADDRESS ? {
+    address: process.env.WEESENG_OFFICE_ADDRESS,
+    subnet: process.env.WEESENG_OFFICE_SUBNET || '192.168.0.0/24'
+  } : null);
+  const tubeFrameApi = createTubeFrameApi(options.tubeFrameService || createTubeFrameService({ configDir: runtimePaths.configDir || root }));
+  const publisherApi = createPublisherApi(root, office);
+  const wordTools = options.wordToolsService || createWordToolsService({
+    appDir: process.env.WEESENG_WORD_TOOLS_ROOT || path.join(root, 'tools', 'word-tools'),
+    configDir: runtimePaths.configDir || process.env.WEESENG_CONFIG_DIR || root
+  });
+  const server = http.createServer(async (request, response) => {
+    if (!allowOfficeRequest(request, office)) { send(response, 403, { error: 'Office network access only' }); return; }
+    const url = new URL(request.url, "http://127.0.0.1");
+    let pathname;
+    try { pathname = decodeURIComponent(url.pathname); }
+    catch { send(response, 400, { error: 'Invalid request path' }); return; }
 
-  if (await handleApi(request, response, pathname)) {
-    return;
-  }
+    if (await publisherApi(request, response, pathname)) return;
+    if (pathname === '/api/health') { send(response, 200, { ok: true, release: process.env.WEESENG_RELEASE_ID || 'development' }); return; }
+    if (pathname.startsWith('/word-tools/')) { await proxyWordTools(request, response, wordTools); return; }
 
-  serveStatic(request, response, pathname);
-});
+    if (await tubeFrameApi(request, response, pathname)) return;
+    if (pathname === '/api/word-tools/start' && request.method === 'POST') {
+      try { await wordTools.ensureStarted(); send(response, 200, { url: '/word-tools/' }); }
+      catch (error) { send(response, 503, { error: error.message }); }
+      return;
+    }
 
-server.listen(port, host, () => {
-  console.log(`Weeseng Software running at http://${host}:${port}/`);
-});
+    if (await handleApi(request, response, pathname)) {
+      return;
+    }
+
+    serveStatic(request, response, pathname);
+  });
+  server.stopWordTools = () => wordTools.stop();
+  server.on('close', () => { wordTools.stop(); });
+  return server;
+}
+
+function startServer(options = {}) {
+  const config = loadSignageConfig();
+  const host = options.host || process.env.HOST || config.serverHost || "127.0.0.1";
+  const port = Number(options.port ?? process.env.PORT ?? config.serverPort ?? 4173);
+  const server = createWeesengServer();
+
+  return new Promise((resolve, reject) => {
+    server.once("error", reject);
+    server.listen(port, host, () => {
+      server.off("error", reject);
+      const address = server.address();
+      const actualPort = typeof address === "object" && address ? address.port : port;
+      const url = `http://127.0.0.1:${actualPort}/`;
+      console.log(`Weeseng Software running at ${url}`);
+      resolve({ server, host, port: actualPort, url });
+    });
+  });
+}
+
+if (require.main === module) {
+  startServer().then(({ server }) => {
+    let closing = false;
+    const shutdown = async () => {
+      if (closing) return;
+      closing = true;
+      await server.stopWordTools();
+      server.close(() => process.exit(0));
+    };
+    process.once('SIGINT', shutdown);
+    process.once('SIGTERM', shutdown);
+  }).catch((error) => {
+    console.error(error);
+    process.exitCode = 1;
+  });
+}
+
+module.exports = { createWeesengServer, startServer };
