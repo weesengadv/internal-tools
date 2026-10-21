@@ -17,3 +17,7 @@ Checks: `npm run test:word-tools`, `npm test`, and the Python backend suite in `
 Startup diagnostics: the panel handles a plain-text 404 from an older server with an update instruction rather than displaying a JSON parser error. Other non-JSON responses include their HTTP status. The startup HTTP route is covered by success/error regression tests. Eight integration tests and the existing Production Tools suite passed.
 
 Resolved on 2026-10-17: the user's actual Chrome tab was at `http://127.0.0.1:55530/`, separate from the Codex preview at 4174 and old desktop server at 4173. Its Node process had loaded `server.js` before the integration was added: static frontend updates appeared immediately, but the startup route remained absent from the running backend. Restarted that specific Node server with the current code on the same port. Verified HTTP 200 JSON, embedded workbench loading, and a successful Generate 2D action in the original Chrome tab. The server is running hidden with logs in `output/word-tools-server.log` and `output/word-tools-server.err.log`. Screenshot: `output/3d-word-tools-chrome-fixed.png`.
+# Delete imported parts
+
+Select one or more letters in Parts or with the drawing selection box, then use **Delete selected parts**. Only selected components are removed, including their holes and exported geometry; matching copies are retained unless selected. Undo/Redo restores/removes the parts. Deleting every part shows an empty state with Import DXF, Open project and Undo available.
+

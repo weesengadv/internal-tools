@@ -1,5 +1,7 @@
 // Each entry accepts either language, so old saved messages also follow the current UI language.
 export const translations = [
+  ['Delete selected parts', '删除选中零件'], ['Selected parts deleted. Undo restores them.', '已删除选中零件，可用 Undo 恢复。'],
+  ['No parts remaining', '没有剩余零件'], ['Import a DXF or Undo to restore deleted parts.', '请导入 DXF，或用 Undo 恢复删除的零件。'],
   ['④ Wall, no base', '④ 只有墙，无底板'], ['Wall height', '墙高'], ['No base', '无底板'],
   ['Outer and opening walls only. Open bottom; base holes are not used.', '只制作外墙和内洞围墙，底部开放，不使用底板洞。'],
   ['No base: screw and wire holes are disabled. Stored layouts are preserved.', '无底板：停用螺丝洞和出线洞，保留已存洞位。'],

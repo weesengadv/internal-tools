@@ -67,3 +67,5 @@
 }
 .letter-dimensions{fill:var(--ink,#263e45);stroke:var(--well,#f5f8f9);stroke-width:3px;paint-order:stroke;stroke-linejoin:round;vector-effect:non-scaling-stroke;font-family:system-ui,sans-serif;font-weight:600}
 .mode-controls{border:0;padding:0;margin:0;min-width:0}.mode-controls:disabled{opacity:.45}.part-dimensions{font-variant-numeric:tabular-nums}.dimension-control select{font:inherit;color:inherit;background:var(--surface,#fff);border:1px solid var(--border,#b9cbce);border-radius:5px;padding:4px}
+.delete-parts-button{width:100%;padding:9px 5px;border:1px solid var(--line);border-radius:5px;color:var(--ink,#192c2b);white-space:normal;font-size:12px}.delete-parts-button:hover{background:var(--tint)}.empty-parts .topbar{height:auto;min-height:68px;flex-wrap:wrap;gap:12px}
+.parts-actions{padding:8px 12px;flex-shrink:0}

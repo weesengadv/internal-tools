@@ -1,4 +1,12 @@
 export const clone = p => JSON.parse(JSON.stringify(p));
+export function deleteParts(project, partIds) {
+  const ids=new Set(partIds);
+  if(!project.parts.some(part=>ids.has(part.id)))return project;
+  const next=clone(project);
+  next.parts=next.parts.filter(part=>!ids.has(part.id));
+  next.modelReady=false;
+  return next;
+}
 export function pathOf(shape) {
   return (shape || []).flatMap(p => [p.outer, ...(p.holes || [])]).map(r => 'M' + r.map(v=>v.join(',')).join('L') + 'Z').join(' ');
 }
