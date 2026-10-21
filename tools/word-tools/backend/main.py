@@ -27,7 +27,7 @@ def checked(project):
     for k in ('wallThickness','clearanceOverall','lipWidth','screwDiameter','holeClearance','baseThickness','height','wireDiameter'):
         if not isinstance(params[k],(float,int)) or not math.isfinite(params[k]) or params[k]<0 or params[k]>1000:raise ValueError('Invalid '+k)
     if params['wallThickness']<=0 or params['screwDiameter']<=0:raise ValueError('Wall and screw diameter must be positive.')
-    if params.get('bodyMode','hollow') not in ('flat','solid','hollow'):raise ValueError('Invalid body mode.')
+    if params.get('bodyMode','hollow') not in ('flat','solid','hollow','wall-only'):raise ValueError('Invalid body mode.')
     if params['holeCount']!='auto' and (isinstance(params['holeCount'],bool) or str(params['holeCount']) not in {str(i) for i in range(1,51)}):raise ValueError('Choose Auto or a custom count from 1 to 50.')
     if params['heightMode'] not in ('total','wall') or params['offsetDirection'] not in ('inward','outward'):raise ValueError('Invalid height or offset mode.')
     if not isinstance(params['linkMatching'],bool):raise ValueError('Invalid matching-letter setting.')

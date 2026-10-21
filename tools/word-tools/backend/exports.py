@@ -6,14 +6,19 @@ from shapely.affinity import translate
 from .geometry import shape_from_data,polygons,offsets,height_values,model_heights,validate_holes,generate_2d
 
 def wire_holes(project,part):
+    if project['parameters'].get('bodyMode')=='wall-only':return []
     return part.get('wireHoles',[]) if project['parameters'].get('wireEnabled') and not part.get('wireOmit') else []
 
 def ensure_valid(project):
     if project.get('stage') not in ('2d','3d'):raise ValueError('Generate and review 2D geometry first.')
     if project.get('roundReviewRequired') and not project.get('classificationConfirmed'):raise ValueError('Review imported contour roles and confirm their classifications first.')
-    if project.get('unassignedHoleCount',0):raise ValueError('Some screw contours are not inside a letter. Correct their positions in the DXF before fabrication.')
+    if project.get('unassignedHoleCount',0) and project['parameters'].get('bodyMode')!='wall-only':raise ValueError('Some screw contours are not inside a letter. Correct their positions in the DXF before fabrication.')
     p=project['parameters'];w=0 if p.get('bodyMode')=='flat' else p['wallThickness'];errors=[]
     for part in project['parts']:
+        if p.get('bodyMode')=='wall-only':
+            q=shape_from_data(part['shape'])
+            if q.buffer(-w,join_style=2).is_empty:errors.append(part['name']+': wall consumes component.')
+            continue
         if part.get('placementUnresolved') and not part.get('allowHoleless'):errors.append(part['name']+': automatic holes do not fit; adjust diameter/clearance or explicitly allow this part without holes.')
         if p.get('wireEnabled') and not part.get('wireOmit') and not part.get('wireHoles'):errors.append(part['name']+': wire outlet does not fit; adjust diameter or omit it.')
         q=shape_from_data(part['shape'])
@@ -29,7 +34,7 @@ def build_mesh(project,part):
     for attempt in range(2):
         if attempt:q=q.buffer(.01).buffer(-.01)
         baseq=q.difference(unary_union(holes));wallq=q.difference(q.buffer(-params['wallThickness'],join_style=2))
-        meshes=[trimesh.creation.extrude_polygon(baseq,base,engine='earcut')]
+        meshes=[] if params.get('bodyMode')=='wall-only' else [trimesh.creation.extrude_polygon(baseq,base,engine='earcut')]
         for ring in ([] if params.get('bodyMode')=='flat' else polygons(wallq)):
             m=trimesh.creation.extrude_polygon(ring,wallheight,engine='earcut');m.apply_translation([0,0,base]);meshes.append(m)
         result=trimesh.boolean.union(meshes,engine='manifold')
@@ -55,7 +60,7 @@ def export_dxf(project,kind):
         if kind=='body':
             add_shape(m,q,'BODY_OUTER')
             if r:add_shape(m,r['opening'],'BODY_INNER')
-            for h in part['holes']:m.add_circle((h['x'],h['y']),h['diameter']/2,dxfattribs={'layer':'SCREW_HOLES'})
+            for h in ([] if params.get('bodyMode')=='wall-only' else part['holes']):m.add_circle((h['x'],h['y']),h['diameter']/2,dxfattribs={'layer':'SCREW_HOLES'})
             for h in wire_holes(project,part):m.add_circle((h['x'],h['y']),h['diameter']/2,dxfattribs={'layer':'WIRE_HOLES'})
         else:
             if r['insert'].is_empty or r['wall'].difference(r['cap']).area>.05:raise ValueError(part['name']+': resolve acrylic fit/coverage before export.')
@@ -73,7 +78,7 @@ def export_stl_zip(project):
         for i,part in enumerate(project['parts']):
             mesh=build_mesh(project,part);name=f'{i+1:03d}_{re.sub(r"[^a-zA-Z0-9_-]","_",part["name"])}.stl';z.writestr(name,mesh.export(file_type='stl'))
             params=project['parameters'];base,above,total=model_heights(params)
-            rows.append(dict(file=name,width_mm=round(mesh.extents[0],3),depth_mm=round(mesh.extents[1],3),total_height_mm=total,base_mm=base,wall_above_base_mm=above,wall_thickness_mm=0 if params.get('bodyMode')=='flat' else params['wallThickness'],screw_holes=len(part['holes']),wire_holes=len(wire_holes(project,part)),numerical_repair_mm=mesh.metadata.get('numerical_repair_mm',0),watertight=True))
+            rows.append(dict(file=name,width_mm=round(mesh.extents[0],3),depth_mm=round(mesh.extents[1],3),total_height_mm=total,base_mm=base,wall_above_base_mm=above,wall_thickness_mm=0 if params.get('bodyMode')=='flat' else params['wallThickness'],screw_holes=0 if params.get('bodyMode')=='wall-only' else len(part['holes']),wire_holes=len(wire_holes(project,part)),numerical_repair_mm=mesh.metadata.get('numerical_repair_mm',0),watertight=True))
             moved=mesh.copy();bounds=shape_from_data(part['shape']).bounds;moved.apply_translation([bounds[0],bounds[1],0]);combined.append(moved)
         if combined:
             assembly=trimesh.util.concatenate(combined);assembly.apply_translation([-assembly.bounds[0,0],-assembly.bounds[0,1],0]);z.writestr('assembly_layout.stl',assembly.export(file_type='stl'))

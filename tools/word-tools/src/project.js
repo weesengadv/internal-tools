@@ -22,7 +22,7 @@ export function changeParameter(project,key,value) {
   if(!['baseThickness','height','heightMode','linkMatching'].includes(key))next.stage='dirty';
   return next;
 }
-export function totalHeight(params) { return params.bodyMode==='flat'?Number(params.baseThickness):params.heightMode==='wall'?Number(params.height)+Number(params.baseThickness):Number(params.height); }
+export function totalHeight(params) { return params.bodyMode==='wall-only'?Number(params.height):params.bodyMode==='flat'?Number(params.baseThickness):params.heightMode==='wall'?Number(params.height)+Number(params.baseThickness):Number(params.height); }
 function holeMatches(source,target) {
   if(source.holes.length!==target.holes.length)return null;
   const used=new Set(),matches=[];

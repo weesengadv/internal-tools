@@ -3,6 +3,7 @@ import React from 'react';
 import {totalHeight} from './project';
 export default function FittingView({parameters:p,compact=false}) {
  const { t, theme } = usePreferences();
+ if(p.bodyMode==='wall-only')return <div className={'fitting-view '+(compact?'compact':'')}><strong>{t("④ Wall, no base")}</strong><p>{t("Outer and opening walls only. Open bottom; base holes are not used.")}</p><p>{t("Wall height")}: {totalHeight(p)} mm · {t("Wall thickness")}: {p.wallThickness} mm</p></div>;
  if(p.bodyMode==='flat')return <div className={'fitting-view '+(compact?'compact':'')}><strong>{t("① 不加墙")}</strong><p>{t("只有底板、原有内洞和螺丝洞。总厚度")} {p.baseThickness} mm.</p><p>{t("没有墙，T 形亚克力盖板配合不适用。")}</p></div>;
  const gap=p.clearanceOverall/2,coverage=Math.round((p.lipWidth-p.wallThickness-gap)*100000)/100000;
  const sx=Math.min(100,80/Math.max(p.wallThickness,.01),80/Math.max(gap,.01),130/Math.max(p.lipWidth,.01));

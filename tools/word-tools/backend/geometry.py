@@ -37,6 +37,10 @@ def height_values(base,height,mode):
     return base,total-base,total
 
 def model_heights(params):
+    if params.get('bodyMode')=='wall-only':
+        height=params['height']
+        if not math.isfinite(height) or height<=0:raise ValueError('Wall height must be positive.')
+        return 0.,height,height
     if params.get('bodyMode')=='flat':
         base=params['baseThickness']
         if not math.isfinite(base) or base<=0:raise ValueError('Base thickness must be positive.')
@@ -292,7 +296,7 @@ def parse_dxf(raw,filename):
 def generate_2d(project,place=False,replace=False,targets=None):
     result=copy.deepcopy(project);params={**DEFAULTS,**result.get('parameters',{})};result['parameters']=params
     mode=params.get('bodyMode','hollow')
-    if mode not in ('flat','solid','hollow'):raise ValueError('Invalid body mode.')
+    if mode not in ('flat','solid','hollow','wall-only'):raise ValueError('Invalid body mode.')
     w,c,l=(0 if mode=='flat' else params['wallThickness']),params['clearanceOverall'],params['lipWidth'];templates={}
     for part in result['parts']:
         if 'sourceShape' not in part:part['sourceShape']=copy.deepcopy(part['shape'])
@@ -318,7 +322,7 @@ def generate_2d(project,place=False,replace=False,targets=None):
         if layers['opening'].is_empty:issues.append('Wall thickness consumes this entire component.')
         if mode!='flat' and layers['insert'].is_empty:issues.append('Acrylic insert collapses at this wall thickness and clearance.')
         if not layers['cap'].is_empty and layers['wall'].difference(layers['cap']).area>.05:issues.append('Acrylic lip does not cover the whole wall.')
-        if place and (targets is None or part['id'] in targets) and (replace or (not part['holes'] and not part.get('manualHoleLayout') and not part.get('allowHoleless'))):
+        if mode!='wall-only' and place and (targets is None or part['id'] in targets) and (replace or (not part['holes'] and not part.get('manualHoleLayout') and not part.get('allowHoleless'))):
             part['manualHoleLayout']=False;part['deletedHoleContours']=[];part['allowHoleless']=False
             group=part['group'];ox,oy=p.bounds[:2]
             if params['linkMatching'] and group in templates:
@@ -333,7 +337,7 @@ def generate_2d(project,place=False,replace=False,targets=None):
             part['placementUnresolved']=not bool(part['holes'])
             if not part['holes']:issues.append('Not enough stroke area for the requested holes and clearance.')
         part.setdefault('wireHoles',[])
-        if params['wireEnabled'] and not part.get('wireOmit'):
+        if mode!='wall-only' and params['wireEnabled'] and not part.get('wireOmit'):
             diameter=params['wireDiameter']
             if not part['wireHoles']:
                 from shapely.ops import polylabel
@@ -346,7 +350,7 @@ def generate_2d(project,place=False,replace=False,targets=None):
             for h in part['wireHoles']:h['diameter']=diameter
             part['wirePlacementUnresolved']=not bool(part['wireHoles'])
             if part['wirePlacementUnresolved']:issues.append('Wire outlet does not fit. Reduce its diameter or omit it for this component.')
-        issues+=validate_holes(p,part['holes']+(part['wireHoles'] if params['wireEnabled'] and not part.get('wireOmit') else []),w,params['holeClearance'])
+        if mode!='wall-only':issues+=validate_holes(p,part['holes']+(part['wireHoles'] if params['wireEnabled'] and not part.get('wireOmit') else []),w,params['holeClearance'])
         if part['holes'] and (not part.get('holeBaseline') or (replace and (targets is None or part['id'] in targets))):
             imported=[copy.deepcopy(c['originalHole']) for c in part.get('roundContours',[]) if c['role']=='screw']
             part['holeBaseline']=copy.deepcopy(part['holes']) if replace else (imported or copy.deepcopy(part['holes']))

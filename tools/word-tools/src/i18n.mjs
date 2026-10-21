@@ -1,5 +1,9 @@
 // Each entry accepts either language, so old saved messages also follow the current UI language.
 export const translations = [
+  ['④ Wall, no base', '④ 只有墙，无底板'], ['Wall height', '墙高'], ['No base', '无底板'],
+  ['Outer and opening walls only. Open bottom; base holes are not used.', '只制作外墙和内洞围墙，底部开放，不使用底板洞。'],
+  ['No base: screw and wire holes are disabled. Stored layouts are preserved.', '无底板：停用螺丝洞和出线洞，保留已存洞位。'],
+  ['Letter dimensions', '字母尺寸'], ['Inch', '英寸'], ['Hidden', '不显示'],
   ['3D word tools', '3D 立体字工具'], ['Opening 3D word tools', '正在打开 3D 立体字工具'],
   ['LOCAL WORKBENCH', '本地工作台'], ['Import DXF', '导入 DXF'], ['Open saved project', '打开已保存的项目'], ['Open project', '打开项目'], ['Save project', '保存项目'],
   ['Undo', '撤销'], ['Redo', '重做'], ['Export', '导出'], ['Body DXF', '底板 DXF'], ['Acrylic DXF', '亚克力 DXF'], ['STL + DXF · ZIP', 'STL + DXF · ZIP'],

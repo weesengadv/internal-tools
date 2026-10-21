@@ -14,6 +14,16 @@ dom.window.SVGElement.prototype.createSVGPoint=function(){return {x:0,y:0,matrix
 dom.window.SVGElement.prototype.getScreenCTM=function(){return {inverse(){return {a:1,b:0,c:0,d:1};}};};
 dom.window.SVGElement.prototype.setPointerCapture=function(){};
 const canvas=document.querySelector('.cad-svg'),initialView=canvas.getAttribute('viewBox'),originalHoleXs=[...canvas.querySelectorAll('.hole-handle circle')].map(c=>c.getAttribute('cx'));
+const dimensions=document.querySelector('select[aria-label="Letter dimensions"]');
+assert.equal(dimensions.value,'mm');
+assert.equal(document.querySelectorAll('.letter-dimensions').length,demo.parts.length);
+assert.equal(document.querySelectorAll('.part-dimensions').length,demo.parts.length);
+const changeDimensions=async value=>act(async()=>{dimensions.value=value;dimensions.dispatchEvent(new dom.window.Event('change',{bubbles:true}));});
+await changeDimensions('inch');assert([...document.querySelectorAll('.letter-dimensions')].every(e=>e.textContent.endsWith(' in')));
+await changeDimensions('hidden');assert.equal(document.querySelectorAll('.letter-dimensions,.part-dimensions').length,0);
+await changeDimensions('mm');assert.equal(document.querySelectorAll('.letter-dimensions').length,demo.parts.length);
+assert.equal(document.querySelector('.cad-svg').getAttribute('viewBox'),initialView);
+assert.deepEqual([...canvas.querySelectorAll('.hole-handle circle')].map(c=>c.getAttribute('cx')),originalHoleXs);
 await act(async()=>canvas.dispatchEvent(new dom.window.WheelEvent('wheel',{bubbles:true,cancelable:true,deltaY:-120,clientX:50,clientY:30})));
 assert(Number(canvas.getAttribute('viewBox').split(' ')[2])<Number(initialView.split(' ')[2]));
 const beforePan=canvas.getAttribute('viewBox').split(' ').map(Number);
@@ -52,7 +62,18 @@ await act(async()=>window.dispatchEvent(new dom.window.KeyboardEvent('keydown',{
 await act(async()=>document.querySelector('button[aria-label="Undo"]').click());assert.equal(document.querySelectorAll('.hole-handle').length,7);
 await act(async()=>button('Fitting').click());assert(document.querySelector('.fitting-view:not(.compact)'));
 await act(async()=>button('Continue to 3D').click());assert(document.body.textContent.includes('1 base + 29.0 wall = 30.0 mm total'));
-const modeSelect=document.querySelector('select[aria-label="Body mode"]');assert(modeSelect);assert.equal(modeSelect.options.length,3);
+const modeSelect=document.querySelector('select[aria-label="Body mode"]');assert(modeSelect);assert.equal(modeSelect.options.length,4);
+await act(async()=>{modeSelect.value='wall-only';modeSelect.dispatchEvent(new dom.window.Event('change',{bubbles:true}));});
+assert(document.querySelector('input[aria-label="Base thickness"]').disabled);
+assert(document.querySelector('input[aria-label="Diameter"]').matches(':disabled'));
+assert(document.querySelector('input[aria-label="Wall height"]'));
+assert(!document.querySelector('select[aria-label="Height mode"]'));
+assert(document.body.textContent.includes('Outer and opening walls only.'));
+await act(async()=>button('2D').click());
+assert.equal(document.querySelectorAll('.hole-handle').length,0);
+await act(async()=>{modeSelect.value='hollow';modeSelect.dispatchEvent(new dom.window.Event('change',{bubbles:true}));});
+assert.equal(document.querySelectorAll('.hole-handle').length,7);
+
 await act(async()=>{modeSelect.value='flat';modeSelect.dispatchEvent(new dom.window.Event('change',{bubbles:true}));});
 assert(document.querySelector('input[aria-label="Wall thickness"]').disabled);assert(!document.querySelector('select[aria-label="Height mode"]'));assert(document.body.textContent.includes('total thickness 1 mm'));
 const countMode=document.querySelector('select[aria-label="Hole count"]');await act(async()=>{countMode.value='custom';countMode.dispatchEvent(new dom.window.Event('change',{bubbles:true}));});

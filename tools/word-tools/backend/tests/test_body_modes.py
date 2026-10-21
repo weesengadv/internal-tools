@@ -82,3 +82,34 @@ def test_zip_includes_body_and_acrylic_cutting_files():
   assert {'dxf/body.dxf','dxf/acrylic.dxf'}<=set(z.namelist())
   for n in ['dxf/body.dxf','dxf/acrylic.dxf']:
    assert ezdxf.read(io.StringIO(z.read(n).decode())).units==4
+
+@pytest.mark.parametrize('height_mode',['total','wall'])
+def test_wall_only_has_no_floor_and_ignores_preserved_base_holes(height_mode):
+ p=project('wall-only');p['parameters'].update(heightMode=height_mode,wireEnabled=True)
+ p['parts'][0]['holes'][0].update(x=0,y=0,diameter=100)
+ p['parts'][0]['wireHoles']=[dict(id='wire1',x=0,y=0,diameter=100)]
+ p=generate_2d(p,place=True)
+ mesh=build_mesh(p,p['parts'][0])
+ assert mesh.is_watertight and mesh.is_volume
+ assert mesh.bounds[0,2]==pytest.approx(0)
+ assert mesh.extents[2]==pytest.approx(30)
+ expected=shape_from_data(p['parts'][0]['wall']).area*30
+ assert mesh.volume==pytest.approx(expected,rel=.001)
+ assert len(mesh.section(plane_normal=[0,0,1],plane_origin=[0,0,.5]).discrete)==4
+ assert len(p['parts'][0]['holes'])==1
+ assert not p['parts'][0]['issues']
+ doc=ezdxf.read(io.StringIO(export_dxf(p,'body').decode()))
+ assert not list(doc.modelspace().query('CIRCLE'))
+ import zipfile,csv
+ with zipfile.ZipFile(io.BytesIO(export_stl_zip(p))) as z:
+  row=next(csv.DictReader(io.StringIO(z.read('parts_manifest.csv').decode())))
+  assert float(row['base_mm'])==0 and int(row['screw_holes'])==0 and int(row['wire_holes'])==0
+
+def test_wall_only_api_accepts_mode_and_returns_to_original_hole_layout():
+ from fastapi.testclient import TestClient
+ from backend.main import app
+ original=project('wall-only');p=generate_2d(original,place=True)
+ r=TestClient(app,base_url='http://localhost').post('/api/model',json={'project':p,'partId':'p'})
+ assert r.status_code==200,r.text
+ p['parameters']['bodyMode']='hollow';p=generate_2d(p)
+ assert p['parts'][0]['holes']==original['parts'][0]['holes']
